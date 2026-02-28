@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hannah & Fidel | Wedding Invitation</title>
+    <meta
+      name="description"
+      content="Join Fidel and Jileen as they celebrate their wedding day."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Great+Vibes&family=Outfit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-ornament bg-ornament-left" aria-hidden="true"></div>
+    <div class="bg-ornament bg-ornament-right" aria-hidden="true"></div>
+
+    <main class="site-wrap">
+      <section id="envelopeGate" class="gate" aria-label="Invitation envelope">
+        <div class="gate-card" aria-hidden="true">
+          <p class="gate-kicker">Together with their families</p>
+          <h1 class="gate-couple">Hannah & Fidel</h1>
+          <p id="gateGuestName" class="gate-dedication">For our beloved guest</p>
+        </div>
+
+        <button
+          id="envelopeBtn"
+          class="envelope"
+          type="button"
+          aria-label="Open envelope"
+        >
+          <span class="envelope-back"></span>
+          <img
+            class="envelope-photo envelope-photo1"
+            src="images/envelope_img1.jpg"
+            alt="Wedding memory photo 1"
+          />
+          <img
+            class="envelope-photo envelope-photo2"
+            src="images/envelope_img2.jpg"
+            alt="Wedding memory photo 2"
+          />
+          <span class="envelope-flap"></span>
+          <span class="envelope-left-fold"></span>
+          <span class="envelope-right-fold"></span>
+          <img
+            class="envelope-seal"
+            src="images/wax_seal_hf.png"
+            alt=""
+            aria-hidden="true"
+          />
+        </button>
+        <p class="gate-open-label">Click to open</p>
+      </section>
+
+      <section id="mainContent" class="content hidden" aria-live="polite">
+        <header class="hero reveal">
+          <p class="small-eyebrow">Together with their families</p>
+          <h2>Hannah & Fidel</h2>
+          <p class="hero-subtitle">invite you to celebrate their wedding day</p>
+          <p id="personalGreeting" class="personal-greeting"></p>
+        </header>
+
+        <section class="panel reveal">
+          <h3>Wedding Countdown</h3>
+          <div id="countdown" class="countdown-grid" aria-live="polite">
+            <article>
+              <span id="days">0</span>
+              <small>Days</small>
+            </article>
+            <article>
+              <span id="hours">0</span>
+              <small>Hours</small>
+            </article>
+            <article>
+              <span id="minutes">0</span>
+              <small>Minutes</small>
+            </article>
+            <article>
+              <span id="seconds">0</span>
+              <small>Seconds</small>
+            </article>
+          </div>
+          <p id="weddingDateText" class="date-text"></p>
+        </section>
+
+        <section class="panel reveal">
+          <h3>Save the Date Calendar</h3>
+          <div class="calendar-wrap">
+            <div id="calendarHeader" class="calendar-header"></div>
+            <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
+            <div class="calendar-grid" id="calendarDays"></div>
+          </div>
+        </section>
+
+        <section class="panel reveal">
+          <h3>Wedding Location</h3>
+          <p id="venueName" class="section-title"></p>
+          <p id="venueAddress" class="muted"></p>
+          <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
+            Open in Maps
+          </a>
+        </section>
+
+        <section class="panel reveal">
+          <h3>Dress Code</h3>
+          <p class="section-title" id="dressCodeTitle"></p>
+          <p class="muted" id="dressCodeNotes"></p>
+          <div class="color-palette" id="dressCodePalette"></div>
+        </section>
+
+        <section class="panel reveal">
+          <h3>RSVP</h3>
+          <p id="rsvpGuestPrompt" class="muted"></p>
+          <form id="rsvpForm" class="rsvp-form">
+            <label>
+              Your Name
+              <input id="guestNameInput" name="name" type="text" required />
+            </label>
+
+            <label>
+              Will you attend?
+              <select id="attendanceInput" name="attendance" required>
+                <option value="">Select one</option>
+                <option value="Yes">Yes, gladly attending</option>
+                <option value="No">Sorry, unable to attend</option>
+              </select>
+            </label>
+
+            <label>
+              Number of attendees
+              <input
+                id="attendeeCountInput"
+                name="attendees"
+                type="number"
+                min="1"
+                max="8"
+                value="1"
+                required
+              />
+            </label>
+
+            <label>
+              Message for Hannah & Fidel
+              <textarea
+                id="messageInput"
+                name="message"
+                rows="4"
+                placeholder="Optional"
+              ></textarea>
+            </label>
+
+            <button class="cta" type="submit">Submit RSVP</button>
+          </form>
+          <p id="rsvpFeedback" class="feedback" aria-live="polite"></p>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
