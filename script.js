@@ -11,11 +11,18 @@ const weddingConfig = {
       "Ladies: long dress or elegant midi. Gentlemen: suit or barong in warm neutral tones.",
     palette: ["#E7D7C9", "#C4A692", "#A8B59B", "#8AA5BA", "#D8B5A8"],
   },
-  rsvpEmail: "fideljileenwedding@example.com",
+  backend: {
+    provider: "supabase",
+    supabaseUrl: "https://loycmpzimwgusjyaqxcn.supabase.co",
+    supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxveWNtcHppbXdndXNqeWFxeGNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NjM3MzMsImV4cCI6MjA4ODAzOTczM30.qzAaiJqnArxet7J9Mmwh1FMj7FpOCtNy8Aw2rkfE8Ko",
+    tableName: "invites",
+    requestTimeoutMs: 4500,
+    requireValidCode: true,
+  },
 };
 
-// Optional RSVP code mapping. Add your own invite codes and seat counts.
-const inviteRegistry = {
+// Optional local fallback for testing when backend URL is not configured.
+const localInviteFallback = {
   fidelfam: { name: "Fidel Family", seats: 4 },
   jileenfam: { name: "Jileen Family", seats: 4 },
   friends1: { name: "Friends Table 1", seats: 2 },
@@ -23,52 +30,130 @@ const inviteRegistry = {
 
 const q = (id) => document.getElementById(id);
 const params = new URLSearchParams(window.location.search);
+const guestCacheConfig = {
+  keyPrefix: "invite_guest_cache_v2_",
+  ttlMs: 1000 * 60 * 60 * 12,
+};
 
 const gate = q("envelopeGate");
 const mainContent = q("mainContent");
 const envelopeBtn = q("envelopeBtn");
+const privateEventGate = q("privateEventGate");
+const privateGateMessage = q("privateGateMessage");
 const gateGuestName = q("gateGuestName");
 const personalGreeting = q("personalGreeting");
 const rsvpGuestPrompt = q("rsvpGuestPrompt");
 const guestNameInput = q("guestNameInput");
 const attendeeCountInput = q("attendeeCountInput");
 const rsvpFeedback = q("rsvpFeedback");
+const rsvpForm = q("rsvpForm");
+const attendanceInput = q("attendanceInput");
+const messageInput = q("messageInput");
 
 let countdownInterval = null;
 let invitationOpened = false;
+let currentGuest = {
+  code: "",
+  id: "general",
+  name: "Valued Guest",
+  seats: 2,
+  source: "default",
+  isValidCode: false,
+};
 
-function resolveGuest() {
-  const code = (params.get("code") || "").trim().toLowerCase();
-  const explicitGuest = (params.get("guest") || "").trim();
-  const explicitSeats = Number(params.get("seats"));
+function normalizeCode(rawCode) {
+  return (rawCode || "").trim().toLowerCase();
+}
 
-  if (code && inviteRegistry[code]) {
-    return {
-      id: code,
-      name: inviteRegistry[code].name,
-      seats: inviteRegistry[code].seats,
-      source: "registry",
-    };
+function getGuestCacheKey(code) {
+  return `${guestCacheConfig.keyPrefix}${normalizeCode(code)}`;
+}
+
+function readGuestCache(code) {
+  if (!code) {
+    return null;
   }
-
-  if (explicitGuest) {
-    return {
-      id: explicitGuest.toLowerCase().replace(/\s+/g, "-"),
-      name: explicitGuest,
-      seats: Number.isFinite(explicitSeats) && explicitSeats > 0 ? explicitSeats : 2,
-      source: "query",
-    };
+  try {
+    const raw = localStorage.getItem(getGuestCacheKey(code));
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.savedAt || !parsed.guest) {
+      return null;
+    }
+    const age = Date.now() - Number(parsed.savedAt);
+    if (!Number.isFinite(age) || age > guestCacheConfig.ttlMs) {
+      localStorage.removeItem(getGuestCacheKey(code));
+      return null;
+    }
+    return parsed.guest;
+  } catch (error) {
+    return null;
   }
+}
 
+function writeGuestCache(code, guest) {
+  if (!code || !guest) {
+    return;
+  }
+  try {
+    localStorage.setItem(
+      getGuestCacheKey(code),
+      JSON.stringify({
+        savedAt: Date.now(),
+        guest,
+      })
+    );
+  } catch (error) {
+    // Ignore storage errors to keep RSVP flow uninterrupted.
+  }
+}
+
+function isBackendConfigured() {
+  const provider = String(weddingConfig.backend.provider || "").toLowerCase();
+  if (provider !== "supabase") {
+    return false;
+  }
+  const url = (weddingConfig.backend.supabaseUrl || "").trim();
+  const anonKey = (weddingConfig.backend.supabaseAnonKey || "").trim();
+  return url.startsWith("https://") && anonKey.length > 20;
+}
+
+function getSupabaseBaseUrl() {
+  return (weddingConfig.backend.supabaseUrl || "").trim().replace(/\/+$/, "");
+}
+
+function getSupabaseHeaders(code) {
+  const key = (weddingConfig.backend.supabaseAnonKey || "").trim();
   return {
-    id: "general",
-    name: "Valued Guest",
-    seats: 2,
-    source: "default",
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    Accept: "application/json",
+    "Content-Type": "application/json",
   };
 }
 
-const guest = resolveGuest();
+function withTimeout(ms) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ms);
+  return {
+    signal: controller.signal,
+    clear: () => clearTimeout(timeoutId),
+  };
+}
+
+async function fetchWithTimeout(url, options = {}) {
+  const timer = withTimeout(weddingConfig.backend.requestTimeoutMs);
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: timer.signal,
+    });
+  } finally {
+    timer.clear();
+  }
+}
 
 function formatEventDate(date) {
   return new Intl.DateTimeFormat("en-US", {
@@ -99,20 +184,240 @@ function hydrateStaticContent() {
   q("dressCodeNotes").textContent = weddingConfig.dressCode.notes;
 
   const palette = q("dressCodePalette");
-  weddingConfig.dressCode.palette.forEach((color) => {
-    const swatch = document.createElement("span");
-    swatch.className = "swatch";
-    swatch.style.backgroundColor = color;
-    swatch.title = color;
-    palette.appendChild(swatch);
-  });
+  if (!palette.dataset.hydrated) {
+    weddingConfig.dressCode.palette.forEach((color) => {
+      const swatch = document.createElement("span");
+      swatch.className = "swatch";
+      swatch.style.backgroundColor = color;
+      swatch.title = color;
+      palette.appendChild(swatch);
+    });
+    palette.dataset.hydrated = "true";
+  }
+}
 
+function applyGuestToUi(guest) {
   gateGuestName.textContent = `For ${guest.name}`;
   personalGreeting.textContent = `We can't wait to celebrate with you, ${guest.name}.`;
   rsvpGuestPrompt.textContent = `Reserved for your invitation: up to ${guest.seats} attendee(s).`;
   guestNameInput.value = guest.name;
   attendeeCountInput.max = String(guest.seats);
-  attendeeCountInput.value = "1";
+  attendeeCountInput.value = guest.seats > 0 ? "1" : "0";
+}
+
+function showPrivateGate(message) {
+  gate.classList.add("hidden");
+  mainContent.classList.add("hidden");
+  privateEventGate.classList.remove("hidden");
+  document.body.classList.add("private-only");
+  privateGateMessage.textContent =
+    message || "This invitation is private. Please use your personalized invite link.";
+  document.body.classList.remove("intro-active");
+}
+
+function showInvitationExperience() {
+  privateEventGate.classList.add("hidden");
+  mainContent.classList.add("hidden");
+  document.body.classList.remove("private-only");
+  gate.classList.remove("hidden");
+}
+
+function setRsvpFormEnabled(enabled, message = "") {
+  const fields = [guestNameInput, attendanceInput, attendeeCountInput, messageInput];
+  fields.forEach((el) => {
+    el.disabled = !enabled;
+  });
+  const submitBtn = rsvpForm.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = !enabled;
+  }
+  rsvpFeedback.textContent = message;
+}
+
+function resolveGuestFromLocalFallback() {
+  const code = normalizeCode(params.get("code"));
+
+  if (code && localInviteFallback[code]) {
+    return {
+      code,
+      id: code,
+      name: localInviteFallback[code].name,
+      seats: localInviteFallback[code].seats,
+      source: "local-fallback",
+      isValidCode: true,
+    };
+  }
+
+  return {
+    code: "",
+    id: "general",
+    name: "Valued Guest",
+    seats: 2,
+    source: "default",
+    isValidCode: false,
+  };
+}
+
+function normalizeLookupGuest(code, record) {
+  const seatsRaw =
+    record.max_seats ??
+    record.maxSeats ??
+    record.seats ??
+    record.reserved_seats ??
+    record.reservedSeats;
+  const parsedSeats = Number(seatsRaw);
+  const name =
+    record.guest_name ||
+    record.guestName ||
+    record.family_name ||
+    record.familyName ||
+    record.name ||
+    "Guest";
+
+  return {
+    code,
+    id: String(record.code || code).toLowerCase(),
+    name: String(name),
+    seats: Number.isFinite(parsedSeats) && parsedSeats > 0 ? parsedSeats : 1,
+    source: "supabase",
+    isValidCode: true,
+    rsvpStatus: String(record.rsvp_status || record.rsvpStatus || ""),
+  };
+}
+
+async function lookupGuestFromBackend(code) {
+  const baseUrl = getSupabaseBaseUrl();
+  const url = `${baseUrl}/rest/v1/rpc/lookup_invite`;
+
+  const response = await fetchWithTimeout(url, {
+    method: "POST",
+    headers: getSupabaseHeaders(),
+    body: JSON.stringify({ p_code: code }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Lookup failed (${response.status})`);
+  }
+
+  const rows = await response.json();
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
+
+  return normalizeLookupGuest(code, rows[0]);
+}
+
+function refreshGuestInBackground(code) {
+  lookupGuestFromBackend(code)
+    .then((freshGuest) => {
+      if (!freshGuest || currentGuest.code !== code) {
+        return;
+      }
+      currentGuest = freshGuest;
+      writeGuestCache(code, currentGuest);
+      applyGuestToUi(currentGuest);
+      setRsvpFormEnabled(true, "");
+    })
+    .catch(() => {
+      // Ignore refresh failures; cached data already rendered.
+    });
+}
+
+async function loadGuestProfile() {
+  const code = normalizeCode(params.get("code"));
+  const requireValidCode = Boolean(weddingConfig.backend.requireValidCode);
+
+  if (!isBackendConfigured()) {
+    currentGuest = resolveGuestFromLocalFallback();
+    applyGuestToUi(currentGuest);
+
+    if (requireValidCode && !currentGuest.isValidCode) {
+      setRsvpFormEnabled(false, "Missing invite code. Please use your unique invitation link.");
+      return {
+        allowed: false,
+        reason: "Invited guests only. Please use your personalized invitation link.",
+      };
+    }
+    setRsvpFormEnabled(true, "Backend not configured yet. Running in local fallback mode.");
+    return { allowed: true };
+  }
+
+  if (!code) {
+    currentGuest = {
+      code: "",
+      id: "missing-code",
+      name: "Invited Guest",
+      seats: 0,
+      source: "missing-code",
+      isValidCode: false,
+    };
+    applyGuestToUi(currentGuest);
+    setRsvpFormEnabled(false, "Missing invite code. Please open your personalized invitation link.");
+    return {
+      allowed: false,
+      reason: "Invited guests only. Please use your personalized invitation link.",
+    };
+  }
+
+  const cachedGuest = readGuestCache(code);
+  if (cachedGuest) {
+    currentGuest = {
+      ...cachedGuest,
+      code,
+      source: "supabase-cache",
+      isValidCode: true,
+    };
+    applyGuestToUi(currentGuest);
+    setRsvpFormEnabled(true, "");
+    refreshGuestInBackground(code);
+    return { allowed: true };
+  }
+
+  setRsvpFormEnabled(false, "Checking your invitation...");
+
+  try {
+    const guestFromBackend = await lookupGuestFromBackend(code);
+    if (!guestFromBackend) {
+      currentGuest = {
+        code,
+        id: code,
+        name: "Invited Guest",
+        seats: 0,
+        source: "invalid-code",
+        isValidCode: false,
+      };
+      applyGuestToUi(currentGuest);
+      setRsvpFormEnabled(false, "This invitation code is invalid. Please contact Hannah or Fidel.");
+      return {
+        allowed: false,
+        reason: "This invitation code is invalid. Invited guests only.",
+      };
+    }
+
+    currentGuest = guestFromBackend;
+    writeGuestCache(code, currentGuest);
+    applyGuestToUi(currentGuest);
+    setRsvpFormEnabled(true, "");
+    return { allowed: true };
+  } catch (error) {
+    currentGuest = {
+      code,
+      id: code,
+      name: "Invited Guest",
+      seats: 0,
+      source: "lookup-error",
+      isValidCode: false,
+    };
+    applyGuestToUi(currentGuest);
+    setRsvpFormEnabled(
+      false,
+      "We could not verify your invite right now. Please try again in a moment."
+    );
+    return {
+      allowed: false,
+      reason: "We could not verify your invitation right now. Please try again shortly.",
+    };
+  }
 }
 
 function startCountdown() {
@@ -195,12 +500,12 @@ function renderCalendar() {
   }
 }
 
-function submitRsvp(event) {
+async function submitRsvp(event) {
   event.preventDefault();
 
-  const attendance = q("attendanceInput").value;
+  const attendance = attendanceInput.value;
   const count = Number(attendeeCountInput.value);
-  const message = q("messageInput").value.trim();
+  const message = messageInput.value.trim();
   const name = guestNameInput.value.trim();
 
   if (!attendance) {
@@ -213,39 +518,70 @@ function submitRsvp(event) {
     return;
   }
 
-  if (!Number.isFinite(count) || count < 1 || count > guest.seats) {
-    rsvpFeedback.textContent = `Attendees should be between 1 and ${guest.seats}.`;
+  if (!currentGuest.isValidCode && weddingConfig.backend.requireValidCode) {
+    rsvpFeedback.textContent = "Invalid or missing invite code.";
     return;
   }
 
-  const payload = {
-    guestId: guest.id,
-    guestName: name,
-    attendance,
-    attendees: count,
-    message,
-    submittedAt: new Date().toISOString(),
-  };
+  if (!Number.isFinite(count) || count < 1 || count > currentGuest.seats) {
+    rsvpFeedback.textContent = `Attendees should be between 1 and ${currentGuest.seats}.`;
+    return;
+  }
 
-  localStorage.setItem(`rsvp_${guest.id}`, JSON.stringify(payload));
+  setRsvpFormEnabled(false, "Submitting RSVP...");
 
-  const body = [
-    `Guest: ${payload.guestName}`,
-    `Attendance: ${payload.attendance}`,
-    `Number of attendees: ${payload.attendees}`,
-    `Message: ${payload.message || "(none)"}`,
-    `Invite ID: ${payload.guestId}`,
-  ].join("\n");
+  try {
+    if (isBackendConfigured() && currentGuest.code) {
+      const baseUrl = getSupabaseBaseUrl();
+      const submitUrl = `${baseUrl}/rest/v1/rpc/submit_invite_rsvp`;
 
-  const mailtoUrl = `mailto:${encodeURIComponent(
-    weddingConfig.rsvpEmail
-  )}?subject=${encodeURIComponent(
-    `RSVP - ${payload.guestName}`
-  )}&body=${encodeURIComponent(body)}`;
+      const response = await fetchWithTimeout(submitUrl, {
+        method: "POST",
+        headers: {
+          ...getSupabaseHeaders(),
+        },
+        body: JSON.stringify({
+          p_code: currentGuest.code,
+          p_guest_name: name,
+          p_attendance: attendance,
+          p_attendees: count,
+          p_message: message,
+        }),
+      });
 
-  window.location.href = mailtoUrl;
-  rsvpFeedback.textContent =
-    "RSVP prepared in your email app. Thank you for responding.";
+      if (!response.ok) {
+        throw new Error(`RSVP submit failed (${response.status})`);
+      }
+
+      const result = await response.json();
+      if (result !== true) {
+        throw new Error("RSVP submit rejected.");
+      }
+    } else {
+      const local = {
+        guestId: currentGuest.id,
+        guestName: name,
+        attendance,
+        attendees: count,
+        message,
+        submittedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(`rsvp_${currentGuest.id}`, JSON.stringify(local));
+    }
+
+    writeGuestCache(currentGuest.code, {
+      ...currentGuest,
+      name,
+      rsvpStatus: attendance,
+    });
+    rsvpFeedback.textContent = "Thank you. Your RSVP has been recorded.";
+  } catch (error) {
+    rsvpFeedback.textContent = "Could not submit RSVP right now. Please retry in a moment.";
+    setRsvpFormEnabled(true, rsvpFeedback.textContent);
+    return;
+  }
+
+  setRsvpFormEnabled(true, rsvpFeedback.textContent);
 }
 
 function openInvitation() {
@@ -271,14 +607,25 @@ function initRevealTiming() {
   });
 }
 
-function init() {
+async function init() {
   document.body.classList.add("intro-active");
+  document.body.classList.remove("private-only");
+  gate.classList.add("hidden");
+  mainContent.classList.add("hidden");
+  privateEventGate.classList.add("hidden");
   hydrateStaticContent();
   renderCalendar();
   initRevealTiming();
 
+  const access = await loadGuestProfile();
+  if (!access || !access.allowed) {
+    showPrivateGate(access && access.reason ? access.reason : "");
+    return;
+  }
+
+  showInvitationExperience();
   envelopeBtn.addEventListener("click", openInvitation);
-  q("rsvpForm").addEventListener("submit", submitRsvp);
+  rsvpForm.addEventListener("submit", submitRsvp);
 }
 
 init();

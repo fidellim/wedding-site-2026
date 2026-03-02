@@ -34,6 +34,14 @@ body.intro-active {
   overflow-y: hidden;
 }
 
+body.private-only {
+  overflow: hidden;
+}
+
+body.private-only .bg-ornament {
+  display: none;
+}
+
 .bg-ornament {
   position: fixed;
   width: 36vw;
@@ -74,6 +82,63 @@ body.intro-active {
   text-transform: uppercase;
   font-size: 0.72rem;
   color: var(--muted);
+}
+
+.private-gate {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  border-radius: 0;
+  background: #ececec;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: clamp(1rem, 3vh, 2rem) 1rem;
+  overflow: hidden;
+}
+
+.private-card {
+  text-align: center;
+  color: #141414;
+}
+
+.private-closed,
+.private-event {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: clamp(2.4rem, 7.4vw, 4.7rem);
+  line-height: 1.04;
+}
+
+.private-for {
+  margin: 0.1rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: clamp(1.35rem, 4.3vw, 2.9rem);
+}
+
+.private-script {
+  margin: -0.2rem 0 -0.45rem;
+  font-family: "Great Vibes", cursive;
+  font-size: clamp(4rem, 13vw, 10rem);
+  line-height: 0.84;
+}
+
+.private-invite {
+  margin: 1.1rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: clamp(1rem, 2.5vw, 2rem);
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+.private-message {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  color: #3d3d3d;
 }
 
 .gate {
@@ -547,6 +612,10 @@ body.intro-active {
     border-radius: 18px;
     padding: 1.6rem 0.8rem;
     background-position: center center;
+  }
+
+  .private-gate {
+    min-height: 100dvh;
   }
 
   .envelope {
