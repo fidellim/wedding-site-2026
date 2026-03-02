@@ -49,9 +49,20 @@ const rsvpFeedback = q("rsvpFeedback");
 const rsvpForm = q("rsvpForm");
 const attendanceInput = q("attendanceInput");
 const messageInput = q("messageInput");
+const registryGrid = q("registryGrid");
+const registryReserveBtn = q("registryReserveBtn");
+const registryFeedback = q("registryFeedback");
+const registryModal = q("registryModal");
+const registryModalMessage = q("registryModalMessage");
+const registryModalList = q("registryModalList");
+const registryModalCancelBtn = q("registryModalCancelBtn");
+const registryModalConfirmBtn = q("registryModalConfirmBtn");
 
 let countdownInterval = null;
 let invitationOpened = false;
+let registryItems = [];
+let selectedRegistryIds = new Set();
+let myReservedRegistryIds = new Set();
 let currentGuest = {
   code: "",
   id: "general",
@@ -155,6 +166,46 @@ async function fetchWithTimeout(url, options = {}) {
   }
 }
 
+function areSetsEqual(a, b) {
+  if (a.size !== b.size) {
+    return false;
+  }
+  for (const value of a) {
+    if (!b.has(value)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function getRegistryItemById(id) {
+  return registryItems.find((item) => item.id === id) || null;
+}
+
+function computeRegistryChanges() {
+  const toReserve = [];
+  const toRelease = [];
+
+  selectedRegistryIds.forEach((id) => {
+    if (!myReservedRegistryIds.has(id)) {
+      toReserve.push(id);
+    }
+  });
+
+  myReservedRegistryIds.forEach((id) => {
+    if (!selectedRegistryIds.has(id)) {
+      toRelease.push(id);
+    }
+  });
+
+  return { toReserve, toRelease };
+}
+
+function updateRegistryReserveButtonState() {
+  const hasChanges = !areSetsEqual(selectedRegistryIds, myReservedRegistryIds);
+  registryReserveBtn.disabled = !hasChanges;
+}
+
 function formatEventDate(date) {
   return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -234,6 +285,136 @@ function setRsvpFormEnabled(enabled, message = "") {
   rsvpFeedback.textContent = message;
 }
 
+function setRegistryFeedback(message) {
+  registryFeedback.textContent = message || "";
+}
+
+function openRegistryModal() {
+  const changes = computeRegistryChanges();
+  if (changes.toReserve.length === 0 && changes.toRelease.length === 0) {
+    setRegistryFeedback("No registry changes selected.");
+    return;
+  }
+
+  registryModalList.innerHTML = "";
+
+  changes.toReserve.forEach((id) => {
+    const item = getRegistryItemById(id);
+    const li = document.createElement("li");
+    li.textContent = `Reserve: ${item ? item.title : `Item #${id}`}`;
+    registryModalList.appendChild(li);
+  });
+
+  changes.toRelease.forEach((id) => {
+    const item = getRegistryItemById(id);
+    const li = document.createElement("li");
+    li.textContent = `Release: ${item ? item.title : `Item #${id}`}`;
+    registryModalList.appendChild(li);
+  });
+
+  registryModalMessage.textContent =
+    "Please confirm these changes to your registry reservations.";
+  registryModal.classList.remove("hidden");
+  registryModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeRegistryModal() {
+  registryModal.classList.add("hidden");
+  registryModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+function renderRegistryItems() {
+  registryGrid.innerHTML = "";
+
+  if (!registryItems.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No registry items available yet.";
+    registryGrid.appendChild(empty);
+    updateRegistryReserveButtonState();
+    return;
+  }
+
+  registryItems.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "registry-card";
+    if (item.reserved && !item.reservedByMe) {
+      card.classList.add("is-reserved");
+    }
+    if (item.reservedByMe) {
+      card.classList.add("is-mine");
+    }
+
+    const image = document.createElement("img");
+    image.className = "registry-image";
+    image.src = item.imageUrl;
+    image.alt = item.title;
+    image.loading = "lazy";
+    card.appendChild(image);
+
+    const title = document.createElement("p");
+    title.className = "registry-title";
+    title.textContent = item.title;
+    card.appendChild(title);
+
+    if (item.description) {
+      const desc = document.createElement("p");
+      desc.className = "muted";
+      desc.textContent = item.description;
+      card.appendChild(desc);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "registry-meta";
+    const tag = document.createElement("span");
+    tag.className = "registry-tag";
+    if (!item.reserved) {
+      tag.classList.add("available");
+      tag.textContent = "Available";
+    } else if (item.reservedByMe) {
+      tag.classList.add("mine");
+      tag.textContent = "Reserved By You";
+    } else {
+      tag.classList.add("reserved");
+      tag.textContent = "Reserved";
+    }
+    meta.appendChild(tag);
+    card.appendChild(meta);
+
+    const buyLink = item.buyLink ? document.createElement("a") : document.createElement("span");
+    buyLink.className = "registry-buy-link";
+    if (item.buyLink) {
+      buyLink.href = item.buyLink;
+      buyLink.target = "_blank";
+      buyLink.rel = "noopener";
+      buyLink.textContent = "View item";
+    } else {
+      buyLink.classList.add("registry-buy-link-placeholder");
+      buyLink.textContent = "View item";
+    }
+    card.appendChild(buyLink);
+
+    const selectRow = document.createElement("label");
+    selectRow.className = "registry-select";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "registry-checkbox";
+    checkbox.dataset.itemId = String(item.id);
+    checkbox.checked = selectedRegistryIds.has(item.id);
+    checkbox.disabled = item.reserved && !item.reservedByMe;
+    const selectText = document.createElement("span");
+    selectText.textContent = item.reservedByMe ? "Keep reserved" : "Reserve this item";
+    selectRow.append(checkbox, selectText);
+    card.appendChild(selectRow);
+
+    registryGrid.appendChild(card);
+  });
+
+  updateRegistryReserveButtonState();
+}
+
 function resolveGuestFromLocalFallback() {
   const code = normalizeCode(params.get("code"));
 
@@ -305,6 +486,60 @@ async function lookupGuestFromBackend(code) {
   }
 
   return normalizeLookupGuest(code, rows[0]);
+}
+
+async function loadRegistryItems() {
+  if (!isBackendConfigured() || !currentGuest.code) {
+    registryItems = [];
+    selectedRegistryIds = new Set();
+    myReservedRegistryIds = new Set();
+    renderRegistryItems();
+    setRegistryFeedback("Registry backend is unavailable.");
+    return;
+  }
+
+  setRegistryFeedback("Loading registry items...");
+  registryReserveBtn.disabled = true;
+
+  try {
+    const baseUrl = getSupabaseBaseUrl();
+    const url = `${baseUrl}/rest/v1/rpc/get_registry_for_invite`;
+    const response = await fetchWithTimeout(url, {
+      method: "POST",
+      headers: getSupabaseHeaders(),
+      body: JSON.stringify({ p_code: currentGuest.code }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Registry lookup failed (${response.status})`);
+    }
+
+    const rows = await response.json();
+    registryItems = Array.isArray(rows)
+      ? rows.map((row) => ({
+          id: Number(row.id),
+          title: String(row.title || "Registry Item"),
+          imageUrl: String(row.image_url || "").trim(),
+          buyLink: String(row.buy_link || "").trim(),
+          description: String(row.description || "").trim(),
+          reserved: Boolean(row.reserved),
+          reservedByMe: Boolean(row.reserved_by_me),
+        }))
+      : [];
+
+    myReservedRegistryIds = new Set(
+      registryItems.filter((item) => item.reservedByMe).map((item) => item.id)
+    );
+    selectedRegistryIds = new Set(myReservedRegistryIds);
+    renderRegistryItems();
+    setRegistryFeedback("");
+  } catch (error) {
+    registryItems = [];
+    selectedRegistryIds = new Set();
+    myReservedRegistryIds = new Set();
+    renderRegistryItems();
+    setRegistryFeedback("Could not load registry items right now.");
+  }
 }
 
 function refreshGuestInBackground(code) {
@@ -584,6 +819,69 @@ async function submitRsvp(event) {
   setRsvpFormEnabled(true, rsvpFeedback.textContent);
 }
 
+function onRegistryGridChange(event) {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) {
+    return;
+  }
+  if (!target.classList.contains("registry-checkbox")) {
+    return;
+  }
+
+  const id = Number(target.dataset.itemId);
+  if (!Number.isFinite(id)) {
+    return;
+  }
+
+  if (target.checked) {
+    selectedRegistryIds.add(id);
+  } else {
+    selectedRegistryIds.delete(id);
+  }
+  updateRegistryReserveButtonState();
+  setRegistryFeedback("");
+}
+
+async function confirmRegistryReservation() {
+  const selectedIds = Array.from(selectedRegistryIds);
+  registryModalConfirmBtn.disabled = true;
+  registryModalCancelBtn.disabled = true;
+  setRegistryFeedback("Saving registry reservation...");
+
+  try {
+    const baseUrl = getSupabaseBaseUrl();
+    const url = `${baseUrl}/rest/v1/rpc/set_registry_reservations`;
+    const response = await fetchWithTimeout(url, {
+      method: "POST",
+      headers: getSupabaseHeaders(),
+      body: JSON.stringify({
+        p_code: currentGuest.code,
+        p_item_ids: selectedIds,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Registry save failed (${response.status})`);
+    }
+
+    const result = await response.json();
+    if (result !== true) {
+      throw new Error("Registry save rejected.");
+    }
+
+    closeRegistryModal();
+    await loadRegistryItems();
+    setRegistryFeedback("Registry reservation updated.");
+  } catch (error) {
+    setRegistryFeedback(
+      "Could not update registry now. Some selected items may have been reserved by others."
+    );
+  } finally {
+    registryModalConfirmBtn.disabled = false;
+    registryModalCancelBtn.disabled = false;
+  }
+}
+
 function openInvitation() {
   if (invitationOpened) {
     return;
@@ -624,8 +922,19 @@ async function init() {
   }
 
   showInvitationExperience();
+  loadRegistryItems();
   envelopeBtn.addEventListener("click", openInvitation);
   rsvpForm.addEventListener("submit", submitRsvp);
+  registryGrid.addEventListener("change", onRegistryGridChange);
+  registryReserveBtn.addEventListener("click", openRegistryModal);
+  registryModalCancelBtn.addEventListener("click", closeRegistryModal);
+  registryModalConfirmBtn.addEventListener("click", confirmRegistryReservation);
+  registryModal.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.dataset.closeRegistryModal === "true") {
+      closeRegistryModal();
+    }
+  });
 }
 
 init();

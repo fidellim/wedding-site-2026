@@ -170,8 +170,35 @@
           </form>
           <p id="rsvpFeedback" class="feedback" aria-live="polite"></p>
         </section>
+
+        <section class="panel reveal">
+          <h3>Wedding Registry</h3>
+          <p class="muted">
+            You may reserve one or more items. Reserved items by other guests are unavailable.
+          </p>
+          <div id="registryGrid" class="registry-grid" aria-live="polite"></div>
+          <div class="registry-actions">
+            <button id="registryReserveBtn" class="cta" type="button" disabled>
+              Reserve Selected Item(s)
+            </button>
+            <p id="registryFeedback" class="feedback" aria-live="polite"></p>
+          </div>
+        </section>
       </section>
     </main>
+
+    <div id="registryModal" class="registry-modal hidden" aria-hidden="true">
+      <div class="registry-modal-backdrop" data-close-registry-modal="true"></div>
+      <div class="registry-modal-card" role="dialog" aria-modal="true" aria-labelledby="registryModalTitle">
+        <h4 id="registryModalTitle">Confirm Registry Reservation</h4>
+        <p id="registryModalMessage" class="muted"></p>
+        <ul id="registryModalList" class="registry-modal-list"></ul>
+        <div class="registry-modal-actions">
+          <button id="registryModalCancelBtn" type="button">Cancel</button>
+          <button id="registryModalConfirmBtn" class="cta" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
 
     <script src="script.js"></script>
   </body>
