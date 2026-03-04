@@ -57,6 +57,9 @@ const registryModalMessage = q("registryModalMessage");
 const registryModalList = q("registryModalList");
 const registryModalCancelBtn = q("registryModalCancelBtn");
 const registryModalConfirmBtn = q("registryModalConfirmBtn");
+const photoSliderRoot = q("photoSlider");
+const sliderPrevBtn = q("sliderPrevBtn");
+const sliderNextBtn = q("sliderNextBtn");
 
 let countdownInterval = null;
 let invitationOpened = false;
@@ -692,6 +695,66 @@ function startCountdown() {
   countdownInterval = setInterval(tick, 1000);
 }
 
+function initPhotoSlider() {
+  if (!photoSliderRoot || !sliderPrevBtn || !sliderNextBtn) {
+    return;
+  }
+
+  if (typeof window.Swiper !== "function") {
+    return;
+  }
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  new window.Swiper(photoSliderRoot, {
+    mousewheel: {
+      invert: true,
+    },
+    slidesPerView: 1,
+    spaceBetween: 30,
+    loop: true,
+    centeredSlides: true,
+    speed: 1200,
+    lazy: true,
+    navigation: {
+      nextEl: ".arrow-next",
+      prevEl: ".arrow-previous",
+    },
+    keyboard: {
+      enabled: true,
+    },
+    autoplay: prefersReducedMotion
+      ? false
+      : {
+          delay: 5000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        },
+    breakpoints: {
+      0: {
+        slidesPerView: 1.5,
+        spaceBetween: 15,
+      },
+      478: {
+        slidesPerView: 3,
+        spaceBetween: 15,
+      },
+      767: {
+        slidesPerView: 2.25,
+        spaceBetween: 30,
+      },
+      988: {
+        slidesPerView: 4.25,
+        spaceBetween: 50,
+      },
+      1920: {
+        slidesPerView: 6.25,
+        spaceBetween: 50,
+      },
+    },
+  });
+}
+
 function renderCalendar() {
   const date = new Date(weddingConfig.weddingDateISO);
   const year = date.getFullYear();
@@ -895,6 +958,7 @@ function openInvitation() {
     gate.innerHTML = "";
     mainContent.classList.remove("hidden");
     document.body.classList.remove("intro-active");
+    initPhotoSlider();
     startCountdown();
   }, 1850);
 }

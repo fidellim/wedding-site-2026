@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Great+Vibes&family=Outfit:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -76,6 +77,71 @@
           <p class="hero-subtitle">invite you to celebrate their wedding day</p>
           <p id="personalGreeting" class="personal-greeting"></p>
         </header>
+
+        <section class="panel reveal slider-panel">
+          <div
+            id="photoSlider"
+            class="swipeflow-slider first-swiper swiper"
+            aria-label="Wedding photo slider"
+          >
+            <button
+              id="sliderPrevBtn"
+              class="slider-nav slider-nav-prev arrow-previous"
+              type="button"
+              aria-label="Previous slide"
+            >
+              <span aria-hidden="true">&#8592;</span>
+            </button>
+
+            <div class="slider-viewport swiper-wrapper">
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/1.jpg" alt="Hannah and Fidel photo 1" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/2.jpg" alt="Hannah and Fidel photo 2" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/3.jpg" alt="Hannah and Fidel photo 3" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/4.jpg" alt="Hannah and Fidel photo 4" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/5.jpg" alt="Hannah and Fidel photo 5" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/6.jpg" alt="Hannah and Fidel photo 6" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/7.jpg" alt="Hannah and Fidel photo 7" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/8.jpg" alt="Hannah and Fidel photo 8" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/9.jpg" alt="Hannah and Fidel photo 9" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/10.jpg" alt="Hannah and Fidel photo 10" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/11.jpg" alt="Hannah and Fidel photo 11" loading="lazy" />
+                </article>
+                <article class="slider-card swiper-slide">
+                  <img src="images/slider/12.jpg" alt="Hannah and Fidel photo 12" loading="lazy" />
+                </article>
+            </div>
+
+            <button
+              id="sliderNextBtn"
+              class="slider-nav slider-nav-next arrow-next"
+              type="button"
+              aria-label="Next slide"
+            >
+              <span aria-hidden="true">&#8594;</span>
+            </button>
+          </div>
+        </section>
 
         <section class="panel reveal">
           <h3>Wedding Countdown</h3>
@@ -200,6 +266,7 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
