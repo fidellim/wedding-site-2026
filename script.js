@@ -41,7 +41,6 @@ const envelopeBtn = q("envelopeBtn");
 const privateEventGate = q("privateEventGate");
 const privateGateMessage = q("privateGateMessage");
 const gateGuestName = q("gateGuestName");
-const personalGreeting = q("personalGreeting");
 const rsvpGuestPrompt = q("rsvpGuestPrompt");
 const guestNameInput = q("guestNameInput");
 const attendeeCountInput = q("attendeeCountInput");
@@ -252,7 +251,6 @@ function hydrateStaticContent() {
 
 function applyGuestToUi(guest) {
   gateGuestName.textContent = `For ${guest.name}`;
-  personalGreeting.textContent = `We can't wait to celebrate with you, ${guest.name}.`;
   rsvpGuestPrompt.textContent = `Reserved for your invitation: up to ${guest.seats} attendee(s).`;
   guestNameInput.value = guest.name;
   attendeeCountInput.max = String(guest.seats);

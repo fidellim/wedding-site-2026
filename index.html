@@ -72,12 +72,61 @@
 
       <section id="mainContent" class="content hidden" aria-live="polite">
         <header class="hero reveal">
-          <p class="small-eyebrow">Together with their families</p>
-          <h2>Hannah & Fidel</h2>
-          <p class="hero-subtitle">invite you to celebrate their wedding day</p>
-          <p id="personalGreeting" class="personal-greeting"></p>
+          <div class="hero-copy">
+            <h2>Fidel &amp; Hannah</h2>
+            <p class="hero-subtitle">THE WEDDING</p>
+          </div>
+          <a class="hero-rsvp-btn" href="#rsvpSection">RSVP HERE</a>
         </header>
 
+        <section class="panel reveal countdown-panel">
+          <div class="countdown-layout">
+            <div class="countdown-left">
+              <p class="countdown-save-date">Save the Date</p>
+            </div>
+            <div class="countdown-right">
+              <p class="countdown-lead">Counting down to the moment we become forever.</p>
+              <div id="countdown" class="countdown-grid" aria-live="polite">
+                <article>
+                  <span id="days">0</span>
+                  <small>Days</small>
+                </article>
+                <article>
+                  <span id="hours">0</span>
+                  <small>Hours</small>
+                </article>
+                <article>
+                  <span id="minutes">0</span>
+                  <small>Minutes</small>
+                </article>
+                <article>
+                  <span id="seconds">0</span>
+                  <small>Seconds</small>
+                </article>
+              </div>
+              <p id="weddingDateText" class="date-text"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel reveal">
+          <h3>Save the Date Calendar</h3>
+          <div class="calendar-wrap">
+            <div id="calendarHeader" class="calendar-header"></div>
+            <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
+            <div class="calendar-grid" id="calendarDays"></div>
+          </div>
+        </section>
+
+        <section class="panel reveal">
+          <h3>Wedding Location</h3>
+          <p id="venueName" class="section-title"></p>
+          <p id="venueAddress" class="muted"></p>
+          <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
+            Open in Maps
+          </a>
+        </section>
+        
         <section class="panel reveal slider-panel">
           <div
             id="photoSlider"
@@ -143,54 +192,6 @@
           </div>
         </section>
 
-        <section class="panel reveal countdown-panel">
-          <div class="countdown-layout">
-            <div class="countdown-left">
-              <p class="countdown-save-date">Save the Date</p>
-            </div>
-            <div class="countdown-right">
-              <p class="countdown-lead">Counting down to the moment we become forever.</p>
-              <div id="countdown" class="countdown-grid" aria-live="polite">
-                <article>
-                  <span id="days">0</span>
-                  <small>Days</small>
-                </article>
-                <article>
-                  <span id="hours">0</span>
-                  <small>Hours</small>
-                </article>
-                <article>
-                  <span id="minutes">0</span>
-                  <small>Minutes</small>
-                </article>
-                <article>
-                  <span id="seconds">0</span>
-                  <small>Seconds</small>
-                </article>
-              </div>
-              <p id="weddingDateText" class="date-text"></p>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel reveal">
-          <h3>Save the Date Calendar</h3>
-          <div class="calendar-wrap">
-            <div id="calendarHeader" class="calendar-header"></div>
-            <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
-            <div class="calendar-grid" id="calendarDays"></div>
-          </div>
-        </section>
-
-        <section class="panel reveal">
-          <h3>Wedding Location</h3>
-          <p id="venueName" class="section-title"></p>
-          <p id="venueAddress" class="muted"></p>
-          <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
-            Open in Maps
-          </a>
-        </section>
-
         <section class="panel reveal">
           <h3>Dress Code</h3>
           <p class="section-title" id="dressCodeTitle"></p>
@@ -198,7 +199,7 @@
           <div class="color-palette" id="dressCodePalette"></div>
         </section>
 
-        <section class="panel reveal">
+        <section id="rsvpSection" class="panel reveal">
           <h3>RSVP</h3>
           <p id="rsvpGuestPrompt" class="muted"></p>
           <form id="rsvpForm" class="rsvp-form">

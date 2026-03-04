@@ -30,6 +30,20 @@ body {
   overflow-y: auto;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+#rsvpSection {
+  scroll-margin-top: clamp(1.25rem, 4vh, 2.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body.intro-active {
   overflow-y: hidden;
 }
@@ -393,24 +407,84 @@ body.modal-open {
 }
 
 .hero {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-top: -2rem;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(3.8rem, 10vh, 7rem) 1.2rem clamp(2rem, 7vh, 3.4rem);
   text-align: center;
-  margin-bottom: 1.6rem;
+  background-image: linear-gradient(
+      180deg,
+      rgba(12, 12, 9, 0.3) 0%,
+      rgba(15, 16, 12, 0.38) 46%,
+      rgba(13, 13, 10, 0.62) 100%
+    ),
+    url("./images/hero_img.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hero-copy {
+  display: grid;
+  gap: 0.2rem;
+  justify-items: center;
 }
 
 .hero h2 {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(2.5rem, 5.3vw, 4rem);
-  margin: 0.4rem 0;
+  font-family: "Great Vibes", cursive;
+  font-size: clamp(2.7rem, 7vw, 5.3rem);
+  margin: 0;
+  color: #fffef8;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
 .hero-subtitle {
-  margin: 0;
-  color: var(--muted);
+  margin: 0.1rem 0 0;
+  color: #f7f2e8;
+  letter-spacing: 0.28em;
+  font-size: clamp(0.75rem, 1.8vw, 1.15rem);
+  font-weight: 500;
 }
 
 .personal-greeting {
-  margin-top: 0.9rem;
+  margin: 0.95rem 0 0;
+  color: #f5eee2;
+  letter-spacing: 0.08em;
+  font-size: clamp(0.76rem, 1.8vw, 0.95rem);
+  text-transform: uppercase;
   font-weight: 500;
+}
+
+.hero-rsvp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 170px;
+  border: 1px solid rgba(250, 241, 227, 0.85);
+  border-radius: 6px;
+  padding: 0.62rem 1.05rem;
+  color: #fff9ef;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: rgba(16, 17, 12, 0.25);
+  backdrop-filter: blur(1px);
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.hero-rsvp-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(20, 21, 15, 0.45);
+  border-color: #fff9ef;
 }
 
 .panel {
@@ -954,6 +1028,17 @@ body.modal-open {
   .site-wrap {
     width: min(960px, 94vw);
     padding-top: 1rem;
+  }
+
+  .hero {
+    margin-top: -1rem;
+    background-image: linear-gradient(
+        180deg,
+        rgba(12, 12, 9, 0.3) 0%,
+        rgba(15, 16, 12, 0.38) 46%,
+        rgba(13, 13, 10, 0.62) 100%
+      ),
+      url("./images/slider/4.jpg");
   }
 
   .gate {
