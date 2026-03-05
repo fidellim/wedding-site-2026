@@ -33,41 +33,43 @@
         </div>
       </section>
 
-      <section id="envelopeGate" class="gate" aria-label="Invitation envelope">
-        <div class="gate-card" aria-hidden="true">
-          <p class="gate-kicker">Together with their families</p>
-          <h1 class="gate-couple">Hannah & Fidel</h1>
-          <p id="gateGuestName" class="gate-dedication">For our beloved guest</p>
-        </div>
+      <section class="envelopeGateContainer" id="envelopeGateContainer">
+        <div id="envelopeGate" class="gate" aria-label="Invitation envelope">
+          <div class="gate-card" aria-hidden="true">
+            <p class="gate-kicker">Together with their families</p>
+            <h1 class="gate-couple">Hannah & Fidel</h1>
+            <p id="gateGuestName" class="gate-dedication">For our beloved guest</p>
+          </div>
 
-        <button
-          id="envelopeBtn"
-          class="envelope"
-          type="button"
-          aria-label="Open envelope"
-        >
-          <span class="envelope-back"></span>
-          <img
-            class="envelope-photo envelope-photo1"
-            src="images/envelope_img1.jpg"
-            alt="Wedding memory photo 1"
-          />
-          <img
-            class="envelope-photo envelope-photo2"
-            src="images/envelope_img2.jpg"
-            alt="Wedding memory photo 2"
-          />
-          <span class="envelope-flap"></span>
-          <span class="envelope-left-fold"></span>
-          <span class="envelope-right-fold"></span>
-          <img
-            class="envelope-seal"
-            src="images/wax_seal_hf.png"
-            alt=""
-            aria-hidden="true"
-          />
-        </button>
-        <p class="gate-open-label">Click to open</p>
+          <button
+            id="envelopeBtn"
+            class="envelope"
+            type="button"
+            aria-label="Open envelope"
+          >
+            <span class="envelope-back"></span>
+            <img
+              class="envelope-photo envelope-photo1"
+              src="images/envelope_img1.jpg"
+              alt="Wedding memory photo 1"
+            />
+            <img
+              class="envelope-photo envelope-photo2"
+              src="images/envelope_img2.jpg"
+              alt="Wedding memory photo 2"
+            />
+            <span class="envelope-flap"></span>
+            <span class="envelope-left-fold"></span>
+            <span class="envelope-right-fold"></span>
+            <img
+              class="envelope-seal"
+              src="images/wax_seal_hf.png"
+              alt=""
+              aria-hidden="true"
+            />
+          </button>
+          <p class="gate-open-label">Click to open</p>
+        </div>
       </section>
 
       <section id="mainContent" class="content hidden" aria-live="polite">
@@ -79,52 +81,83 @@
           <a class="hero-rsvp-btn" href="#rsvpSection">RSVP HERE</a>
         </header>
 
+        <section class="invitation-note reveal" aria-label="Invitation message">
+          <div class="section-wrap invitation-note-wrap">
+            <div class="invitation-note-copy">
+              <h3 class="invitation-note-title">You are invited</h3>
+              <p class="invitation-note-line">
+                We're so delighted you're here and can't wait to celebrate this special moment with you.
+              </p>
+              <p class="invitation-note-line">
+                This space has been thoughtfully created to guide you through all the details as our
+                wedding approaches - from venue information and RSVP to the event schedule and other
+                essentials.
+              </p>
+              <p class="invitation-note-line">
+                Having you with us on this day means everything, and we're truly excited to share these
+                moments, laughter, and memories together.
+              </p>
+              <p class="invitation-note-closing">With all our love,</p>
+              <p class="invitation-note-signature">Fidel and Hannah</p>
+            </div>
+            <img
+              class="invitation-note-flower"
+              src="images/golden_flower.png"
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+            />
+          </div>
+        </section>
+
         <section class="panel reveal countdown-panel">
-          <div class="countdown-layout">
-            <div class="countdown-left">
-              <p class="countdown-save-date">Save the Date</p>
-            </div>
-            <div class="countdown-right">
-              <p class="countdown-lead">Counting down to the moment we become forever.</p>
-              <div id="countdown" class="countdown-grid" aria-live="polite">
-                <article>
-                  <span id="days">0</span>
-                  <small>Days</small>
-                </article>
-                <article>
-                  <span id="hours">0</span>
-                  <small>Hours</small>
-                </article>
-                <article>
-                  <span id="minutes">0</span>
-                  <small>Minutes</small>
-                </article>
-                <article>
-                  <span id="seconds">0</span>
-                  <small>Seconds</small>
-                </article>
+          <div class="section-wrap">
+            <div class="countdown-layout">
+              <div class="countdown-right">
+                <h3 class="countdown-heading">Counting down to the moment we become forever</h3>
+                <div id="countdown" class="countdown-grid" aria-live="polite">
+                  <article>
+                    <span id="days">0</span>
+                    <small>Days</small>
+                  </article>
+                  <article>
+                    <span id="hours">0</span>
+                    <small>Hours</small>
+                  </article>
+                  <article>
+                    <span id="minutes">0</span>
+                    <small>Minutes</small>
+                  </article>
+                  <article>
+                    <span id="seconds">0</span>
+                    <small>Seconds</small>
+                  </article>
+                </div>
+                <p id="weddingDateText" class="date-text"></p>
               </div>
-              <p id="weddingDateText" class="date-text"></p>
             </div>
           </div>
         </section>
 
         <section class="panel reveal">
-          <h3>Save the Date Calendar</h3>
-          <div class="calendar-wrap">
-            <div id="calendarHeader" class="calendar-header"></div>
-            <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
-            <div class="calendar-grid" id="calendarDays"></div>
+          <div class="section-wrap">
+            <div class="calendar-wrap">
+              <h3 id="calendarHeader" class="calendar-header"></h3>
+              <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
+              <div class="calendar-grid" id="calendarDays"></div>
+            </div>
           </div>
         </section>
 
         <section class="panel reveal">
-          <h3>Wedding Location</h3>
-          <p id="venueName" class="section-title"></p>
-          <p id="venueAddress" class="muted"></p>
-          <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
-            Open in Maps
-          </a>
+          <div class="section-wrap">
+            <h3>Wedding Location</h3>
+            <p id="venueName" class="section-title"></p>
+            <p id="venueAddress" class="muted"></p>
+            <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
+              Open in Maps
+            </a>
+          </div>
         </section>
         
         <section class="panel reveal slider-panel">
@@ -193,69 +226,75 @@
         </section>
 
         <section class="panel reveal">
-          <h3>Dress Code</h3>
-          <p class="section-title" id="dressCodeTitle"></p>
-          <p class="muted" id="dressCodeNotes"></p>
-          <div class="color-palette" id="dressCodePalette"></div>
+          <div class="section-wrap">
+            <h3>Dress Code</h3>
+            <p class="section-title" id="dressCodeTitle"></p>
+            <p class="muted" id="dressCodeNotes"></p>
+            <div class="color-palette" id="dressCodePalette"></div>
+          </div>
         </section>
 
         <section id="rsvpSection" class="panel reveal">
-          <h3>RSVP</h3>
-          <p id="rsvpGuestPrompt" class="muted"></p>
-          <form id="rsvpForm" class="rsvp-form">
-            <label>
-              Your Name
-              <input id="guestNameInput" name="name" type="text" required />
-            </label>
+          <div class="section-wrap">
+            <h3>RSVP</h3>
+            <p id="rsvpGuestPrompt" class="muted"></p>
+            <form id="rsvpForm" class="rsvp-form">
+              <label>
+                Your Name
+                <input id="guestNameInput" name="name" type="text" required />
+              </label>
 
-            <label>
-              Will you attend?
-              <select id="attendanceInput" name="attendance" required>
-                <option value="">Select one</option>
-                <option value="Yes">Yes, gladly attending</option>
-                <option value="No">Sorry, unable to attend</option>
-              </select>
-            </label>
+              <label>
+                Will you attend?
+                <select id="attendanceInput" name="attendance" required>
+                  <option value="">Select one</option>
+                  <option value="Yes">Yes, gladly attending</option>
+                  <option value="No">Sorry, unable to attend</option>
+                </select>
+              </label>
 
-            <label>
-              Number of attendees
-              <input
-                id="attendeeCountInput"
-                name="attendees"
-                type="number"
-                min="1"
-                max="8"
-                value="1"
-                required
-              />
-            </label>
+              <label>
+                Number of attendees
+                <input
+                  id="attendeeCountInput"
+                  name="attendees"
+                  type="number"
+                  min="1"
+                  max="8"
+                  value="1"
+                  required
+                />
+              </label>
 
-            <label>
-              Message for Hannah & Fidel
-              <textarea
-                id="messageInput"
-                name="message"
-                rows="4"
-                placeholder="Optional"
-              ></textarea>
-            </label>
+              <label>
+                Message for Hannah & Fidel
+                <textarea
+                  id="messageInput"
+                  name="message"
+                  rows="4"
+                  placeholder="Optional"
+                ></textarea>
+              </label>
 
-            <button class="cta" type="submit">Submit RSVP</button>
-          </form>
-          <p id="rsvpFeedback" class="feedback" aria-live="polite"></p>
+              <button class="cta" type="submit">Submit RSVP</button>
+            </form>
+            <p id="rsvpFeedback" class="feedback" aria-live="polite"></p>
+          </div>
         </section>
 
         <section class="panel reveal">
-          <h3>Wedding Registry</h3>
-          <p class="muted">
-            You may reserve one or more items. Reserved items by other guests are unavailable.
-          </p>
-          <div id="registryGrid" class="registry-grid" aria-live="polite"></div>
-          <div class="registry-actions">
-            <button id="registryReserveBtn" class="cta" type="button" disabled>
-              Reserve Selected Item(s)
-            </button>
-            <p id="registryFeedback" class="feedback" aria-live="polite"></p>
+          <div class="section-wrap">
+            <h3>Wedding Registry</h3>
+            <p class="muted">
+              You may reserve one or more items. Reserved items by other guests are unavailable.
+            </p>
+            <div id="registryGrid" class="registry-grid" aria-live="polite"></div>
+            <div class="registry-actions">
+              <button id="registryReserveBtn" class="cta" type="button" disabled>
+                Reserve Selected Item(s)
+              </button>
+              <p id="registryFeedback" class="feedback" aria-live="polite"></p>
+            </div>
           </div>
         </section>
       </section>

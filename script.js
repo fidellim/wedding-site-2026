@@ -9,7 +9,7 @@ const weddingConfig = {
     title: "Formal Garden Attire",
     notes:
       "Ladies: long dress or elegant midi. Gentlemen: suit or barong in warm neutral tones.",
-    palette: ["#E7D7C9", "#C4A692", "#A8B59B", "#8AA5BA", "#D8B5A8"],
+    palette: ["#13273F", "#C3D9F8", "#E9D4C3", "#694534", "#630000"],
   },
   backend: {
     provider: "supabase",
@@ -35,7 +35,7 @@ const guestCacheConfig = {
   ttlMs: 1000 * 60 * 60 * 12,
 };
 
-const gate = q("envelopeGate");
+const gate = q("envelopeGateContainer");
 const mainContent = q("mainContent");
 const envelopeBtn = q("envelopeBtn");
 const privateEventGate = q("privateEventGate");
