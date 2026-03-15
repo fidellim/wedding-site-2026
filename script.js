@@ -65,6 +65,11 @@ let invitationOpened = false;
 let registryItems = [];
 let selectedRegistryIds = new Set();
 let myReservedRegistryIds = new Set();
+let revealObserver = null;
+let revealReducedMotion = false;
+let revealUsesObserver = false;
+let revealSequence = 0;
+let revealListenersBound = false;
 let currentGuest = {
   code: "",
   id: "general",
@@ -326,6 +331,28 @@ function closeRegistryModal() {
   document.body.classList.remove("modal-open");
 }
 
+function applyRevealUnit(element) {
+  if (!(element instanceof HTMLElement)) {
+    return;
+  }
+  if (element.classList.contains("reveal-unit")) {
+    return;
+  }
+
+  element.classList.add("reveal-unit");
+  element.style.setProperty("--reveal-delay", `${Math.min(revealSequence * 45, 300)}ms`);
+  revealSequence += 1;
+
+  if (revealReducedMotion || !revealUsesObserver) {
+    element.classList.add("is-visible");
+    return;
+  }
+
+  if (revealObserver) {
+    revealObserver.observe(element);
+  }
+}
+
 function renderRegistryItems() {
   registryGrid.innerHTML = "";
 
@@ -334,6 +361,7 @@ function renderRegistryItems() {
     empty.className = "muted";
     empty.textContent = "No registry items available yet.";
     registryGrid.appendChild(empty);
+    applyRevealUnit(empty);
     updateRegistryReserveButtonState();
     return;
   }
@@ -411,6 +439,7 @@ function renderRegistryItems() {
     card.appendChild(selectRow);
 
     registryGrid.appendChild(card);
+    applyRevealUnit(card);
   });
 
   updateRegistryReserveButtonState();
@@ -753,6 +782,32 @@ function initPhotoSlider() {
   });
 }
 
+function initFaqAccordion() {
+  const faqItems = document.querySelectorAll(".faq-item");
+  if (!faqItems.length) {
+    return;
+  }
+
+  faqItems.forEach((item) => {
+    const trigger = item.querySelector(".faq-trigger");
+    const panel = item.querySelector(".faq-panel");
+    if (!(trigger instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) {
+      return;
+    }
+
+    const isOpen = item.classList.contains("is-open");
+    trigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    panel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+
+    trigger.addEventListener("click", () => {
+      const willOpen = !item.classList.contains("is-open");
+      item.classList.toggle("is-open", willOpen);
+      trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      panel.setAttribute("aria-hidden", willOpen ? "false" : "true");
+    });
+  });
+}
+
 function renderCalendar() {
   const date = new Date(weddingConfig.weddingDateISO);
   const year = date.getFullYear();
@@ -956,15 +1011,127 @@ function openInvitation() {
     gate.innerHTML = "";
     mainContent.classList.remove("hidden");
     document.body.classList.remove("intro-active");
+    revealVisibleSectionsNow();
     initPhotoSlider();
     startCountdown();
   }, 1850);
 }
 
-function initRevealTiming() {
-  document.querySelectorAll(".reveal").forEach((el, idx) => {
-    el.style.animationDelay = `${idx * 90}ms`;
+function revealVisibleSectionsNow() {
+  if (mainContent.classList.contains("hidden")) {
+    return;
+  }
+
+  const pending = document.querySelectorAll(".reveal-unit:not(.is-visible)");
+  if (!pending.length) {
+    return;
+  }
+
+  const doc = document.documentElement;
+  const body = document.body;
+  const fullHeight = Math.max(
+    doc.scrollHeight,
+    doc.offsetHeight,
+    doc.clientHeight,
+    body ? body.scrollHeight : 0,
+    body ? body.offsetHeight : 0,
+    body ? body.clientHeight : 0
+  );
+  const scrollTop =
+    window.scrollY ||
+    window.pageYOffset ||
+    doc.scrollTop ||
+    (body ? body.scrollTop : 0) ||
+    0;
+  const atPageBottom = Math.ceil(scrollTop + window.innerHeight) >= fullHeight - 2;
+  if (atPageBottom) {
+    pending.forEach((el) => {
+      el.classList.add("is-visible");
+      if (revealObserver) {
+        revealObserver.unobserve(el);
+      }
+    });
+    return;
+  }
+
+  pending.forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.height <= 0 || rect.width <= 0) {
+      return;
+    }
+    const threshold = window.innerHeight - 12;
+    if (rect.top <= threshold && rect.bottom >= 0) {
+      el.classList.add("is-visible");
+      if (revealObserver) {
+        revealObserver.unobserve(el);
+      }
+    }
   });
+}
+
+function initRevealTiming() {
+  const revealSections = Array.from(document.querySelectorAll(".reveal"));
+  if (!revealSections.length) {
+    return;
+  }
+
+  revealSequence = 0;
+  revealReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  revealUsesObserver = !revealReducedMotion && "IntersectionObserver" in window;
+
+  if (!revealReducedMotion) {
+    document.body.classList.add("scroll-animate");
+  }
+
+  revealSections.forEach((section) => {
+    const sectionWrap = section.querySelector(":scope > .section-wrap");
+    const container = sectionWrap || section;
+    const children = Array.from(container.children).filter((child) => child instanceof HTMLElement);
+    if (!children.length) {
+      applyRevealUnit(container);
+      return;
+    }
+    children.forEach((child) => {
+      if (child.classList.contains("faq-list")) {
+        const faqItems = Array.from(child.querySelectorAll(":scope > .faq-item"));
+        if (faqItems.length) {
+          faqItems.forEach((item) => applyRevealUnit(item));
+          return;
+        }
+      }
+      applyRevealUnit(child);
+    });
+  });
+
+  if (!revealUsesObserver) {
+    return;
+  }
+
+  revealObserver = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      });
+    },
+    {
+      threshold: 0.16,
+      rootMargin: "0px 0px -10% 0px",
+    }
+  );
+
+  document.querySelectorAll(".reveal-unit:not(.is-visible)").forEach((el) => {
+    revealObserver.observe(el);
+  });
+  if (!revealListenersBound) {
+    window.addEventListener("scroll", revealVisibleSectionsNow, { passive: true });
+    window.addEventListener("resize", revealVisibleSectionsNow);
+    revealListenersBound = true;
+  }
+  revealVisibleSectionsNow();
 }
 
 async function init() {
@@ -975,6 +1142,7 @@ async function init() {
   privateEventGate.classList.add("hidden");
   hydrateStaticContent();
   renderCalendar();
+  initFaqAccordion();
   initRevealTiming();
 
   const access = await loadGuestProfile();

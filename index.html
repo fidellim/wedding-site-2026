@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Great+Vibes&family=Outfit:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Pinyon+Script&family=Questrial&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -75,8 +76,9 @@
       <section id="mainContent" class="content hidden" aria-live="polite">
         <header class="hero reveal">
           <div class="hero-copy">
-            <h2>Fidel &amp; Hannah</h2>
-            <p class="hero-subtitle">THE WEDDING</p>
+            <img src="/images/logo-text.png" alt="">
+            <!-- <h2>HANNAH &amp; FIDEL</h2>
+            <p class="hero-subtitle">THE WEDDING</p> -->
           </div>
           <a class="hero-rsvp-btn" href="#rsvpSection">RSVP HERE</a>
         </header>
@@ -84,21 +86,19 @@
         <section class="invitation-note reveal" aria-label="Invitation message">
           <div class="section-wrap invitation-note-wrap">
             <div class="invitation-note-copy">
-              <h3 class="invitation-note-title">You are invited</h3>
               <p class="invitation-note-line">
-                We're so delighted you're here and can't wait to celebrate this special moment with you.
+                Together with our families,
+              </p>
+              <h3 class="invitation-note-title">HANNAH & FIDEL</h3>
+              <p class="invitation-note-line">
+                we request your presence with love and joy at the celebration of our marriage
               </p>
               <p class="invitation-note-line">
-                This space has been thoughtfully created to guide you through all the details as our
-                wedding approaches - from venue information and RSVP to the event schedule and other
-                essentials.
+                <span>SUNDAY, NOVEMBER 15TH, 2026</span> at 4 o'clock in the afternoon
               </p>
               <p class="invitation-note-line">
-                Having you with us on this day means everything, and we're truly excited to share these
-                moments, laughter, and memories together.
+                <span>Shangri-La Qaryat Al Beri</span> Abu Dhabi, United Arab Emirates
               </p>
-              <p class="invitation-note-closing">With all our love,</p>
-              <p class="invitation-note-signature">Fidel and Hannah</p>
             </div>
             <img
               class="invitation-note-flower"
@@ -294,6 +294,150 @@
                 Reserve Selected Item(s)
               </button>
               <p id="registryFeedback" class="feedback" aria-live="polite"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel reveal playlist-section" id="playlistSection" aria-label="Wedding playlist">
+          <div class="section-wrap">
+            <h3>Wedding Playlist</h3>
+            <p class="muted">
+              Press play and enjoy the songs we chose for our celebration.
+            </p>
+            <div class="playlist-embed">
+              <iframe
+                data-testid="embed-iframe"
+                src="https://open.spotify.com/embed/playlist/7yDA2WrJq5Bjn86TOfmMzz?utm_source=generator"
+                title="Hannah and Fidel wedding playlist on Spotify"
+                width="100%"
+                height="352"
+                frameborder="0"
+                allowfullscreen
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel reveal faq-section" id="faqSection" aria-label="Frequently asked questions">
+          <div class="section-wrap">
+            <h3>Frequently Asked Questions</h3>
+            <div class="faq-list">
+              <article class="faq-item is-open">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion1"
+                    aria-expanded="true"
+                    aria-controls="faqAnswer1"
+                  >
+                    <span>Can I bring a plus one?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer1" role="region" aria-labelledby="faqQuestion1" aria-hidden="false">
+                  <div class="faq-panel-inner">
+                    <p>
+                      Your invitation includes the number of reserved seats for your group. Please
+                      RSVP with that exact count so we can finalize seating smoothly.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion2"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer2"
+                  >
+                    <span>When should I arrive at the venue?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer2" role="region" aria-labelledby="faqQuestion2" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      We recommend arriving 20 to 30 minutes before the ceremony starts so you can
+                      settle in comfortably.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion3"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer3"
+                  >
+                    <span>Is there a dress code color palette?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer3" role="region" aria-labelledby="faqQuestion3" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      Yes. Please follow the palette shown above in the Dress Code section to keep
+                      the celebration visually cohesive.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion4"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer4"
+                  >
+                    <span>Can I take photos during the ceremony?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer4" role="region" aria-labelledby="faqQuestion4" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      We kindly ask for an unplugged ceremony. Feel free to capture memories during
+                      the reception and after the ceremony.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion5"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer5"
+                  >
+                    <span>Where should gifts be sent?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer5" role="region" aria-labelledby="faqQuestion5" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      You may reserve from our Wedding Registry section on this page. Thank you for
+                      celebrating with us.
+                    </p>
+                  </div>
+                </div>
+              </article>
             </div>
           </div>
         </section>
