@@ -86,6 +86,30 @@ body.modal-open {
   overflow: hidden;
 }
 
+.click-heart-spark-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.click-heart-spark {
+  position: fixed;
+  left: var(--spark-x);
+  top: var(--spark-y);
+  display: block;
+  line-height: 1;
+  user-select: none;
+  font-size: var(--spark-size, 8px);
+  color: #b30f2f;
+  text-shadow: 0 0 4px rgba(179, 15, 47, 0.25);
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+  animation: clickHeartSparkPop var(--spark-duration, 640ms) cubic-bezier(0.2, 0.72, 0.08, 1)
+    var(--spark-delay, 0ms) forwards;
+}
+
 .bg-ornament {
   position: fixed;
   width: 36vw;
@@ -1290,6 +1314,21 @@ body.scroll-animate .reveal-unit {
 body.scroll-animate .reveal-unit.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+@keyframes clickHeartSparkPop {
+  0% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(0.35) rotate(0deg);
+  }
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--spark-dx)), calc(-50% + var(--spark-dy)))
+      scale(0.95) rotate(var(--spark-rotate));
+  }
 }
 
 @keyframes slideUp {

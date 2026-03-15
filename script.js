@@ -70,6 +70,8 @@ let revealReducedMotion = false;
 let revealUsesObserver = false;
 let revealSequence = 0;
 let revealListenersBound = false;
+let clickHeartSparkLayer = null;
+let clickHeartSparkBound = false;
 let currentGuest = {
   code: "",
   id: "general",
@@ -329,6 +331,75 @@ function closeRegistryModal() {
   registryModal.classList.add("hidden");
   registryModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+}
+
+function spawnHeartSparkBurst(x, y) {
+  if (!clickHeartSparkLayer) {
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  const sparkCount = 10;
+  const ringRadius = 20;
+
+  for (let i = 0; i < sparkCount; i += 1) {
+    const spark = document.createElement("span");
+    spark.className = "click-heart-spark";
+    spark.textContent = "\u2665";
+
+    const angle = (Math.PI * 2 * i) / sparkCount;
+    const dx = Math.cos(angle) * ringRadius;
+    const dy = Math.sin(angle) * ringRadius;
+
+    spark.style.setProperty("--spark-x", `${x}px`);
+    spark.style.setProperty("--spark-y", `${y}px`);
+    spark.style.setProperty("--spark-dx", `${dx.toFixed(2)}px`);
+    spark.style.setProperty("--spark-dy", `${dy.toFixed(2)}px`);
+    spark.style.setProperty("--spark-size", "8px");
+    spark.style.setProperty("--spark-rotate", "0deg");
+    spark.style.setProperty("--spark-duration", "420ms");
+    spark.style.setProperty("--spark-delay", "0ms");
+
+    spark.addEventListener(
+      "animationend",
+      () => {
+        spark.remove();
+      },
+      { once: true }
+    );
+
+    fragment.appendChild(spark);
+  }
+
+  clickHeartSparkLayer.appendChild(fragment);
+}
+
+function initClickHeartSpark() {
+  if (clickHeartSparkBound) {
+    return;
+  }
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion) {
+    return;
+  }
+
+  clickHeartSparkLayer = document.createElement("div");
+  clickHeartSparkLayer.className = "click-heart-spark-layer";
+  document.body.appendChild(clickHeartSparkLayer);
+
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+      spawnHeartSparkBurst(event.clientX, event.clientY);
+    },
+    { passive: true }
+  );
+
+  clickHeartSparkBound = true;
 }
 
 function applyRevealUnit(element) {
@@ -1140,6 +1211,7 @@ async function init() {
   gate.classList.add("hidden");
   mainContent.classList.add("hidden");
   privateEventGate.classList.add("hidden");
+  initClickHeartSpark();
   hydrateStaticContent();
   renderCalendar();
   initFaqAccordion();
