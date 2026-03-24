@@ -47,6 +47,9 @@ const attendeeCountInput = q("attendeeCountInput");
 const rsvpFeedback = q("rsvpFeedback");
 const rsvpForm = q("rsvpForm");
 const attendanceInput = q("attendanceInput");
+const attendanceChoiceInputs = Array.from(
+  document.querySelectorAll('input[name="attendanceChoice"]')
+);
 const messageInput = q("messageInput");
 const registryGrid = q("registryGrid");
 const registryReserveBtn = q("registryReserveBtn");
@@ -282,7 +285,13 @@ function showInvitationExperience() {
 }
 
 function setRsvpFormEnabled(enabled, message = "") {
-  const fields = [guestNameInput, attendanceInput, attendeeCountInput, messageInput];
+  const fields = [
+    guestNameInput,
+    attendanceInput,
+    attendeeCountInput,
+    messageInput,
+    ...attendanceChoiceInputs,
+  ].filter(Boolean);
   fields.forEach((el) => {
     el.disabled = !enabled;
   });
@@ -291,6 +300,62 @@ function setRsvpFormEnabled(enabled, message = "") {
     submitBtn.disabled = !enabled;
   }
   rsvpFeedback.textContent = message;
+}
+
+function setRsvpSubmitLoading(isLoading) {
+  const submitBtn = rsvpForm ? rsvpForm.querySelector('button[type="submit"]') : null;
+  if (!submitBtn) {
+    return;
+  }
+
+  if (!submitBtn.dataset.defaultLabel) {
+    submitBtn.dataset.defaultLabel = submitBtn.textContent.trim();
+  }
+
+  submitBtn.classList.toggle("is-loading", Boolean(isLoading));
+  submitBtn.textContent = isLoading ? "Sending..." : submitBtn.dataset.defaultLabel;
+  submitBtn.setAttribute("aria-busy", isLoading ? "true" : "false");
+}
+
+function setAttendanceValue(value) {
+  const normalized = String(value || "");
+  if (attendanceInput) {
+    attendanceInput.value = normalized;
+  }
+  attendanceChoiceInputs.forEach((option) => {
+    option.checked = option.value === normalized;
+  });
+}
+
+function getAttendanceValue() {
+  const selected = attendanceChoiceInputs.find((option) => option.checked);
+  if (selected) {
+    return selected.value;
+  }
+  if (attendanceInput) {
+    return attendanceInput.value;
+  }
+  return "";
+}
+
+function bindAttendanceControls() {
+  if (attendanceChoiceInputs.length) {
+    attendanceChoiceInputs.forEach((option) => {
+      option.addEventListener("change", () => {
+        if (!option.checked) {
+          return;
+        }
+        setAttendanceValue(option.value);
+      });
+    });
+  }
+
+  if (attendanceInput) {
+    attendanceInput.addEventListener("change", () => {
+      setAttendanceValue(attendanceInput.value);
+    });
+    setAttendanceValue(attendanceInput.value);
+  }
 }
 
 function setRegistryFeedback(message) {
@@ -925,7 +990,7 @@ function renderCalendar() {
 async function submitRsvp(event) {
   event.preventDefault();
 
-  const attendance = attendanceInput.value;
+  const attendance = getAttendanceValue();
   const count = Number(attendeeCountInput.value);
   const message = messageInput.value.trim();
   const name = guestNameInput.value.trim();
@@ -950,7 +1015,9 @@ async function submitRsvp(event) {
     return;
   }
 
-  setRsvpFormEnabled(false, "Submitting RSVP...");
+  setRsvpSubmitLoading(true);
+  setRsvpFormEnabled(false, "");
+  let submitMessage = "";
 
   try {
     if (isBackendConfigured() && currentGuest.code) {
@@ -996,14 +1063,13 @@ async function submitRsvp(event) {
       name,
       rsvpStatus: attendance,
     });
-    rsvpFeedback.textContent = "Thank you. Your RSVP has been recorded.";
+    submitMessage = "Thank you. Your RSVP has been recorded.";
   } catch (error) {
-    rsvpFeedback.textContent = "Could not submit RSVP right now. Please retry in a moment.";
-    setRsvpFormEnabled(true, rsvpFeedback.textContent);
-    return;
+    submitMessage = "Could not submit RSVP right now. Please retry in a moment.";
+  } finally {
+    setRsvpSubmitLoading(false);
+    setRsvpFormEnabled(true, submitMessage);
   }
-
-  setRsvpFormEnabled(true, rsvpFeedback.textContent);
 }
 
 function onRegistryGridChange(event) {
@@ -1216,6 +1282,7 @@ async function init() {
   renderCalendar();
   initFaqAccordion();
   initRevealTiming();
+  bindAttendanceControls();
 
   const access = await loadGuestProfile();
   if (!access || !access.allowed) {

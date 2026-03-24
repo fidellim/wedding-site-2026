@@ -236,49 +236,101 @@
 
         <section id="rsvpSection" class="panel reveal">
           <div class="section-wrap">
-            <h3>RSVP</h3>
-            <p id="rsvpGuestPrompt" class="muted"></p>
-            <form id="rsvpForm" class="rsvp-form">
-              <label>
-                Your Name
-                <input id="guestNameInput" name="name" type="text" required />
-              </label>
+            <div class="rsvp-editorial">
+              <aside class="rsvp-editorial-intro">
+                <div class="rsvp-editorial-media">
+                  <img
+                    src="images/hero_img_3.jpg"
+                    alt="Hannah and Fidel portrait"
+                    loading="lazy"
+                  />
+                </div>
+                <h3 class="rsvp-editorial-title">The Favor of Your Reply</h3>
+                <p class="rsvp-editorial-date">November 15, 2026 &middot; Saadiyat Beach Club</p>
+              </aside>
 
-              <label>
-                Will you attend?
-                <select id="attendanceInput" name="attendance" required>
-                  <option value="">Select one</option>
-                  <option value="Yes">Yes, gladly attending</option>
-                  <option value="No">Sorry, unable to attend</option>
-                </select>
-              </label>
+              <div class="rsvp-editorial-card">
+                <p id="rsvpGuestPrompt" class="muted"></p>
+                <form id="rsvpForm" class="rsvp-form rsvp-editorial-form">
+                  <label class="rsvp-field" for="guestNameInput">
+                    <span class="rsvp-label">Guest Name(s)</span>
+                    <input
+                      id="guestNameInput"
+                      name="name"
+                      type="text"
+                      placeholder="E.g. Mr. and Mrs. Julian Miller"
+                      required
+                    />
+                  </label>
 
-              <label>
-                Number of attendees
-                <input
-                  id="attendeeCountInput"
-                  name="attendees"
-                  type="number"
-                  min="1"
-                  max="8"
-                  value="1"
-                  required
-                />
-              </label>
+                  <fieldset class="rsvp-attendance">
+                    <legend class="rsvp-label">Attendance</legend>
+                    <div class="rsvp-attendance-grid">
+                      <label class="rsvp-attendance-option">
+                        <input
+                          class="rsvp-attendance-input"
+                          type="radio"
+                          name="attendanceChoice"
+                          value="Yes"
+                        />
+                        <span class="rsvp-attendance-control" aria-hidden="true"></span>
+                        <span class="rsvp-attendance-text">Joyfully Attends</span>
+                      </label>
+                      <label class="rsvp-attendance-option">
+                        <input
+                          class="rsvp-attendance-input"
+                          type="radio"
+                          name="attendanceChoice"
+                          value="No"
+                        />
+                        <span class="rsvp-attendance-control" aria-hidden="true"></span>
+                        <span class="rsvp-attendance-text">Regretfully Declines</span>
+                      </label>
+                    </div>
+                    <select
+                      id="attendanceInput"
+                      name="attendance"
+                      class="rsvp-attendance-native"
+                      tabindex="-1"
+                      aria-hidden="true"
+                    >
+                      <option value="">Select one</option>
+                      <option value="Yes">Yes, gladly attending</option>
+                      <option value="No">Sorry, unable to attend</option>
+                    </select>
+                  </fieldset>
 
-              <label>
-                Message for Hannah & Fidel
-                <textarea
-                  id="messageInput"
-                  name="message"
-                  rows="4"
-                  placeholder="Optional"
-                ></textarea>
-              </label>
+                  <label class="rsvp-field" for="attendeeCountInput">
+                    <span class="rsvp-label">Number of Guests</span>
+                    <input
+                      id="attendeeCountInput"
+                      name="attendees"
+                      type="number"
+                      min="1"
+                      max="8"
+                      value="1"
+                      required
+                    />
+                  </label>
 
-              <button class="cta" type="submit">Submit RSVP</button>
-            </form>
-            <p id="rsvpFeedback" class="feedback" aria-live="polite"></p>
+                  <label class="rsvp-field" for="messageInput">
+                    <span class="rsvp-label">Dietary Restrictions / Message</span>
+                    <textarea
+                      id="messageInput"
+                      name="message"
+                      rows="3"
+                      placeholder="Please list allergies or any message for Hannah and Fidel."
+                    ></textarea>
+                  </label>
+
+                  <div class="rsvp-submit-wrap">
+                    <button class="cta rsvp-submit" type="submit">Send Response</button>
+                    <p class="rsvp-reply-note">Please reply by October 1st, 2026</p>
+                  </div>
+                </form>
+                <p id="rsvpFeedback" class="feedback" aria-live="polite"></p>
+              </div>
+            </div>
           </div>
         </section>
 
