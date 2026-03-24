@@ -944,6 +944,165 @@ body.modal-open {
   font-weight: 700;
 }
 
+.date-venue-layout {
+  display: grid;
+  gap: clamp(1.6rem, 4vw, 4.8rem);
+  align-items: center;
+}
+
+.content > section.date-venue-panel {
+  --band-bg: #eee9df;
+  --band-fg: #001a37;
+  --band-muted: #263a54;
+  --band-link: #001a37;
+  --band-surface: #f4f4f4;
+  --band-line: rgba(0, 26, 55, 0.12);
+}
+
+.date-venue-calendar {
+  border: 0;
+  padding: clamp(1.2rem, 3.2vw, 2.4rem);
+  border-radius: 14px;
+  background: #f1f1f1;
+  box-shadow: 0 20px 40px rgba(30, 27, 19, 0.08);
+}
+
+.date-venue-panel .calendar-header {
+  margin: 0 0 clamp(1.2rem, 2vw, 1.8rem);
+  font-size: clamp(2rem, 3.2vw, 3.35rem);
+  color: #021b39;
+  font-weight: 500;
+}
+
+.date-venue-panel .calendar-grid {
+  gap: clamp(0.65rem, 1.3vw, 1rem);
+}
+
+.date-venue-panel .calendar-weekdays div {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #816a00;
+  font-weight: 700;
+}
+
+.date-venue-panel .calendar-day {
+  border: 0;
+  min-height: clamp(36px, 3.2vw, 54px);
+  padding: 0;
+  background: transparent;
+  color: #031d3a;
+  text-align: center;
+  display: grid;
+  place-items: center;
+  font-size: clamp(1rem, 1.45vw, 1.65rem);
+}
+
+.date-venue-panel .calendar-day.is-empty {
+  opacity: 0;
+}
+
+.date-venue-panel .calendar-day.is-before {
+  color: rgba(3, 29, 58, 0.24);
+}
+
+.date-venue-panel .calendar-day.is-wedding {
+  width: clamp(2.3rem, 3.1vw, 3.2rem);
+  height: clamp(2.3rem, 3.1vw, 3.2rem);
+  min-height: 0;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 0;
+  background: #816a00;
+  color: #ffffff;
+  font-weight: 700;
+  position: relative;
+}
+
+.date-venue-panel .calendar-day.is-wedding::after {
+  content: "";
+  position: absolute;
+  width: clamp(6px, 0.65vw, 9px);
+  height: clamp(6px, 0.65vw, 9px);
+  right: -0.35rem;
+  top: 0.2rem;
+  border-radius: 999px;
+  background: #4b0000;
+}
+
+.date-venue-content {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.date-venue-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.17em;
+  font-size: 0.69rem;
+  color: #816a00;
+  font-weight: 700;
+}
+
+.date-venue-name {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(2.3rem, 4.8vw, 4.6rem);
+  line-height: 0.96;
+  color: #001a37;
+}
+
+.date-venue-content #venueAddress,
+.date-venue-note {
+  margin: 0;
+  font-size: clamp(1rem, 1vw, 1.95rem);
+  line-height: 1.42;
+  color: #253750;
+}
+
+.date-venue-note {
+  margin-top: -0.2rem;
+}
+
+.date-venue-content .inline-link {
+  margin-top: 0.35rem;
+  font-weight: 600;
+  color: #001a37;
+  font-size: clamp(0.98rem, 1.12vw, 1.6rem);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.32rem;
+}
+
+.date-venue-media {
+  margin: clamp(0.8rem, 2.3vw, 1.5rem) 0 0;
+  overflow: hidden;
+  border-radius: 13px;
+  border: 0;
+  background: #e8e8e8;
+  box-shadow: 0 18px 32px rgba(19, 39, 63, 0.12);
+}
+
+.date-venue-media img {
+  width: 100%;
+  height: clamp(220px, 26vw, 320px);
+  object-fit: cover;
+  display: block;
+  /* filter: grayscale(100%); */
+}
+
+@media (min-width: 920px) {
+  .date-venue-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 740px) {
+  .date-venue-panel .calendar-header {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+  }
+
+}
+
 .color-palette {
   display: flex;
   gap: 0.5rem;

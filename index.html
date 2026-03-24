@@ -139,26 +139,39 @@
           </div>
         </section>
 
-        <section class="panel reveal">
+        <section class="panel reveal date-venue-panel">
           <div class="section-wrap">
-            <div class="calendar-wrap">
-              <h3 id="calendarHeader" class="calendar-header"></h3>
-              <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
-              <div class="calendar-grid" id="calendarDays"></div>
+            <div class="date-venue-layout">
+              <div class="calendar-wrap date-venue-calendar">
+                <h3 id="calendarHeader" class="calendar-header"></h3>
+                <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
+                <div class="calendar-grid" id="calendarDays"></div>
+              </div>
+
+              <div class="date-venue-content">
+                <p class="date-venue-kicker">The Destination</p>
+                <h3 id="venueName" class="date-venue-name"></h3>
+                <p id="venueAddress" class="muted"></p>
+                <p class="muted date-venue-note">
+                  Ceremony commences at four o&apos;clock in the afternoon.<br />
+                  Dinner and dancing to follow on the terrace.
+                </p>
+                <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
+                  Open in Google Maps
+                </a>
+                <figure class="date-venue-media">
+                  <img
+                    src="images/shangrila-watercolor.png"
+                    alt="Watercolor artwork of Shangri-La Qaryat Al Beri"
+                    loading="lazy"
+                  />
+                </figure>
+              </div>
             </div>
           </div>
         </section>
 
-        <section class="panel reveal">
-          <div class="section-wrap">
-            <h3>Wedding Location</h3>
-            <p id="venueName" class="section-title"></p>
-            <p id="venueAddress" class="muted"></p>
-            <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
-              Open in Maps
-            </a>
-          </div>
-        </section>
+        <section class="hidden" aria-hidden="true"></section>
         
         <section class="panel reveal slider-panel">
           <div
@@ -246,7 +259,7 @@
                   />
                 </div>
                 <h3 class="rsvp-editorial-title">The Favor of Your Reply</h3>
-                <p class="rsvp-editorial-date">November 15, 2026 &middot; Saadiyat Beach Club</p>
+                <p class="rsvp-editorial-date">November 15, 2026 &middot; Shangri-La Qaryat Al Beri</p>
               </aside>
 
               <div class="rsvp-editorial-card">

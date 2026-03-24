@@ -1,10 +1,11 @@
 const weddingConfig = {
   coupleNames: "Hannah & Fidel",
   weddingDateISO: "2026-11-15T16:00:00+04:00",
-  venueName: "Saadiyat Beach Club",
-  venueAddress: "Saadiyat Island, Abu Dhabi, United Arab Emirates",
-  mapQuery: "Saadiyat Beach Club Abu Dhabi",
-  mapUrl: "https://maps.app.goo.gl/3Xz3dgFL5ASc7aD7A",
+  venueName: "Shangri-La Qaryat Al Beri",
+  venueAddress: "Abu Dhabi, United Arab Emirates",
+  mapQuery: "Shangri-La Qaryat Al Beri Abu Dhabi",
+  mapUrl:
+    "https://www.google.com/maps/search/?api=1&query=Shangri-La+Qaryat+Al+Beri+Abu+Dhabi",
   dressCode: {
     title: "Formal Garden Attire",
     notes:
@@ -979,6 +980,9 @@ function renderCalendar() {
   for (let day = 1; day <= daysInMonth; day += 1) {
     const el = document.createElement("div");
     el.className = "calendar-day";
+    if (day < weddingDay) {
+      el.classList.add("is-before");
+    }
     if (day === weddingDay) {
       el.classList.add("is-wedding");
     }
