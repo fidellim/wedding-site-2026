@@ -474,7 +474,7 @@ body.modal-open {
 }
 
 .content > section {
-  --band-bg: #e9d4c3;
+  --band-bg: #eee9df;
   --band-fg: #13273f;
   --band-muted: #694534;
   --band-link: #630000;
@@ -488,12 +488,12 @@ body.modal-open {
 }
 
 .content > section:nth-of-type(even) {
-  --band-bg: #13273f;
-  --band-fg: #e9d4c3;
+  --band-bg: #49111c;
+  --band-fg: #eee9df;
   --band-muted: #c3d9f8;
   --band-link: #c3d9f8;
   --band-surface: rgba(255, 255, 255, 0.92);
-  --band-line: rgba(233, 212, 195, 0.35);
+  --band-line: rgba(238, 233, 223, 0.35);
 }
 
 .hero {
@@ -1580,6 +1580,44 @@ body.modal-open {
   background: #e5c9bc;
   color: #6b4c40;
   box-shadow: none;
+}
+
+.scroll-top-btn {
+  position: fixed;
+  right: clamp(0.9rem, 2.5vw, 1.5rem);
+  bottom: clamp(0.9rem, 2.5vw, 1.5rem);
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(238, 233, 223, 0.65);
+  border-radius: 999px;
+  background: rgba(19, 39, 63, 0.94);
+  color: #eee9df;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 70;
+  box-shadow: 0 12px 28px rgba(7, 16, 27, 0.3);
+  opacity: 0;
+  transform: translateY(14px) scale(0.92);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 0.68, 0.08, 1),
+    box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.scroll-top-btn span {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.scroll-top-btn.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.scroll-top-btn:hover {
+  background: #13273f;
+  box-shadow: 0 16px 30px rgba(7, 16, 27, 0.38);
 }
 
 .playlist-section .muted {

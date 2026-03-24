@@ -63,6 +63,7 @@ const registryModalConfirmBtn = q("registryModalConfirmBtn");
 const photoSliderRoot = q("photoSlider");
 const sliderPrevBtn = q("sliderPrevBtn");
 const sliderNextBtn = q("sliderNextBtn");
+const scrollTopBtn = q("scrollTopBtn");
 
 let countdownInterval = null;
 let invitationOpened = false;
@@ -76,6 +77,8 @@ let revealSequence = 0;
 let revealListenersBound = false;
 let clickHeartSparkLayer = null;
 let clickHeartSparkBound = false;
+let scrollTopBtnVisible = false;
+let scrollTopBtnRafPending = false;
 let currentGuest = {
   code: "",
   id: "general",
@@ -276,6 +279,7 @@ function showPrivateGate(message) {
   privateGateMessage.textContent =
     message || "This invitation is private. Please use your personalized invite link.";
   document.body.classList.remove("intro-active");
+  syncScrollTopButtonVisibility(true);
 }
 
 function showInvitationExperience() {
@@ -466,6 +470,58 @@ function initClickHeartSpark() {
   );
 
   clickHeartSparkBound = true;
+}
+
+function shouldShowScrollTopButton() {
+  if (!scrollTopBtn || mainContent.classList.contains("hidden")) {
+    return false;
+  }
+  return window.scrollY > window.innerHeight;
+}
+
+function syncScrollTopButtonVisibility(force = false) {
+  if (!scrollTopBtn) {
+    return;
+  }
+
+  const nextVisible = shouldShowScrollTopButton();
+  if (!force && nextVisible === scrollTopBtnVisible) {
+    return;
+  }
+
+  scrollTopBtnVisible = nextVisible;
+  scrollTopBtn.classList.toggle("is-visible", nextVisible);
+  scrollTopBtn.setAttribute("aria-hidden", nextVisible ? "false" : "true");
+}
+
+function queueScrollTopButtonSync() {
+  if (scrollTopBtnRafPending) {
+    return;
+  }
+
+  scrollTopBtnRafPending = true;
+  window.requestAnimationFrame(() => {
+    scrollTopBtnRafPending = false;
+    syncScrollTopButtonVisibility();
+  });
+}
+
+function initScrollTopButton() {
+  if (!scrollTopBtn) {
+    return;
+  }
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  scrollTopBtn.addEventListener("click", () => {
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  });
+
+  window.addEventListener("scroll", queueScrollTopButtonSync, { passive: true });
+  window.addEventListener("resize", queueScrollTopButtonSync);
+  syncScrollTopButtonVisibility(true);
 }
 
 function applyRevealUnit(element) {
@@ -1155,6 +1211,7 @@ function openInvitation() {
     revealVisibleSectionsNow();
     initPhotoSlider();
     startCountdown();
+    syncScrollTopButtonVisibility(true);
   }, 1850);
 }
 
@@ -1282,6 +1339,7 @@ async function init() {
   mainContent.classList.add("hidden");
   privateEventGate.classList.add("hidden");
   initClickHeartSpark();
+  initScrollTopButton();
   hydrateStaticContent();
   renderCalendar();
   initFaqAccordion();
