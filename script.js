@@ -1201,7 +1201,13 @@ function openInvitation() {
   }
   invitationOpened = true;
   document.body.classList.add("intro-active");
+  gate.classList.add("gate-opened");
   envelopeBtn.classList.add("open");
+  const gateOpenLabel = document.querySelector("#envelopeGate .gate-open-label");
+  if (gateOpenLabel) {
+    gateOpenLabel.style.opacity = "0";
+    gateOpenLabel.style.pointerEvents = "none";
+  }
   setTimeout(() => {
     gate.classList.add("hidden");
     gate.setAttribute("aria-hidden", "true");
@@ -1212,7 +1218,7 @@ function openInvitation() {
     initPhotoSlider();
     startCountdown();
     syncScrollTopButtonVisibility(true);
-  }, 1850);
+  }, 2500);
 }
 
 function revealVisibleSectionsNow() {
