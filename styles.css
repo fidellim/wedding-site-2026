@@ -1732,7 +1732,7 @@ h3.rsvp-editorial-title {
 
 .registry-note-copy {
   margin: 0;
-  max-width: 760px;
+  max-width: 800px;
   color: rgba(246, 232, 221, 0.95);
   line-height: 1.8;
   font-size: clamp(1rem, 1.7vw, 1.2rem);
