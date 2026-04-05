@@ -2676,7 +2676,7 @@ body.scroll-animate .reveal-unit.is-visible {
     min-height: calc(100dvh - 1.7rem);
     gap: clamp(1.1rem, 3.4vh, 2rem);
     padding: clamp(0.8rem, 2.6vh, 1.6rem) 0.8rem;
-    align-content: space-between;
+    /* align-content: space-between; */
   }
 
   .gate-kicker {
