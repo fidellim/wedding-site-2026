@@ -212,16 +212,19 @@ body.modal-open {
 .envelopeGateContainer {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: clamp(1.5rem, 4vh, 3rem) 1rem;
   background: #630000;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .gate {
   min-height: calc(100vh - clamp(3rem, 8vh, 6rem));
+  min-height: calc(100dvh - clamp(3rem, 8vh, 6rem));
   width: min(1040px, 100%);
   margin: 0 auto;
   display: grid;
@@ -298,28 +301,6 @@ body.modal-open {
   position: relative;
   display: grid;
   place-items: center;
-}
-
-.envelope-bouquet {
-  position: absolute;
-  bottom: clamp(2.2rem, 5vh, 4.6rem);
-  width: clamp(220px, 22vw, 320px);
-  height: auto;
-  pointer-events: none;
-  user-select: none;
-  z-index: 1;
-  opacity: 0.98;
-  filter: drop-shadow(0 14px 24px rgba(11, 4, 5, 0.36));
-}
-
-.envelope-bouquet-left {
-  left: 50%;
-  transform: translate(-126%, 2%) rotate(-2deg);
-}
-
-.envelope-bouquet-right {
-  left: 50%;
-  transform: translate(26%, 2%) scaleX(-1) rotate(-2deg);
 }
 
 .envelope {
@@ -589,7 +570,7 @@ body.modal-open {
 }
 
 .content > section:nth-of-type(even) {
-  --band-bg: #49111c;
+  --band-bg: #630000;
   --band-fg: #eee9df;
   --band-muted: #c3d9f8;
   --band-link: #c3d9f8;
@@ -683,83 +664,128 @@ body.modal-open {
 .invitation-note {
   position: relative;
   width: 100%;
-  background: var(--band-bg);
+  background: #630000;
   overflow: hidden;
 }
 
 .invitation-note-wrap {
   position: relative;
-  border: 3px solid black;
-  padding: 60px 30px;
-}
-
-.invitation-note-wrap::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  left: 20px;
-  top: 20px;
-  border: 1px solid black;
+  min-height: clamp(500px, 55vw, 760px);
+  display: flex;
+  align-items: center;
+  padding: clamp(2.6rem, 4.7vw, 4rem) clamp(1.1rem, 4vw, 3.4rem);
+  background: #630000;
+  overflow: visible;
+  z-index: 0;
 }
 
 .invitation-note-copy {
-  max-width: 840px;
-  margin: 0 auto;
-  text-align: center;
+  max-width: min(600px, 58%);
+  text-align: left;
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  color: #f6f0e6;
 }
 
-.invitation-note-title {
-  margin: 0 0 0.7rem;
-  /* font-family: "Great Vibes", cursive; */
-  font-size: var(--h3-size);
-  font-weight: 400;
-  color: #2f251f;
+.invitation-note-kicker {
+  margin: 0;
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: clamp(0.76rem, 1.05vw, 1.08rem);
+  color: #f1dfd3;
 }
 
-.invitation-note-line {
-  margin: 0.9rem auto 0;
-  max-width: 390px;
-  /* font-family: "Cormorant Garamond", Georgia, serif; */
-  /* font-style: italic; */
-  font-size: 1.25rem;
-  line-height: 1.25;
-  color: #2f251f;
+.invitation-note-name {
+  margin: 0.62rem 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2.65rem, 6.6vw, 6.8rem);
+  line-height: 0.88;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #f8f1e8;
 }
 
-.invitation-note-line > span {
+.invitation-note-script {
+  margin: 0.12rem 0 0;
+  font-family: "Pinyon Script", cursive;
+  font-size: clamp(2.05rem, 3.9vw, 4.3rem);
+  line-height: 0.9;
+  color: #f0ddd1;
+}
+
+.invitation-note-and {
+  margin: 1rem 0 0;
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: clamp(0.82rem, 1.1vw, 1.25rem);
+  color: #f1dfd3;
+}
+
+.invitation-note-body {
+  margin: 1.55rem 0 0;
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  font-size: clamp(0.78rem, 1.16vw, 1.24rem);
+  line-height: 1.28;
+  color: #f3e4d8;
+}
+
+.invitation-note-date {
+  margin: 1.8rem 0 0;
+  color: #f8efe6;
+}
+
+.invitation-note-date span {
   display: block;
 }
 
-.invitation-note-closing {
-  margin: 1.1rem 0 0;
-  /* font-family: "Cormorant Garamond", Georgia, serif; */
-  font-style: italic;
-  font-size: clamp(1.2rem, 2.2vw, 1.9rem);
-  color: #2f251f;
+.invitation-note-date span:first-child {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.85rem, 4.1vw, 4.2rem);
+  line-height: 0.9;
+  letter-spacing: 0.012em;
+  text-transform: uppercase;
 }
 
-.invitation-note-signature {
-  margin: 0.95rem 0 0;
-  /* font-family: "Great Vibes", cursive; */
-  font-family: "Pinyon Script", cursive;
-  font-size: clamp(2.8rem, 6.6vw, 3.5rem);
-  line-height: 0.95;
-  color: #2f251f;
+.invitation-note-date em {
+  font-style: normal;
+  font-size: 0.65em;
+  letter-spacing: 0.06em;
+}
+
+.invitation-note-date span:last-child {
+  margin-top: 0.22rem;
+  font-family: var(--font-body);
+  font-size: clamp(0.84rem, 1.2vw, 1.18rem);
+  text-transform: uppercase;
+  letter-spacing: 0.014em;
+}
+
+.invitation-note-venue {
+  margin: 1.2rem 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.84rem, 1.26vw, 1.34rem);
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  line-height: 1.32;
+  color: #f6e8dd;
 }
 
 .invitation-note-flower {
   position: absolute;
-  right: clamp(0rem, 1.6vw, 1.2rem);
-  bottom: -0.8rem;
-  width: clamp(160px, 22vw, 300px);
+  right: clamp(-340px, -19vw, -140px);
+  top: clamp(-145px, -10vw, -38px);
+  width: clamp(820px, 70vw, 1380px);
   height: auto;
-  opacity: 0.88;
+  max-width: none;
+  opacity: 0.5;
+  filter: saturate(0.9) brightness(0.92);
   pointer-events: none;
   user-select: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 .panel {
@@ -864,13 +890,13 @@ body.modal-open {
   width: 52px;
   height: 52px;
   border-radius: 999px;
-  border: none;
+  border: 1px solid rgba(99, 0, 0, 0.2);
   display: grid;
   place-items: center;
-  background: #630000;
-  color: #e9d4c3;
+  background: #e9d4c3;
+  color: #630000;
   cursor: pointer;
-  box-shadow: 0 10px 20px rgba(99, 0, 0, 0.32);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -881,7 +907,8 @@ body.modal-open {
 
 .slider-nav:hover {
   transform: translateY(-50%) scale(1.05);
-  box-shadow: 0 14px 24px rgba(99, 0, 0, 0.4);
+  background: #f3e8de;
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.24);
 }
 
 .slider-nav-prev {
@@ -1150,6 +1177,7 @@ body.modal-open {
   font-family: var(--font-heading);
   font-size: clamp(2.3rem, 4.8vw, 4.6rem);
   line-height: 0.96;
+  white-space: pre-line;
   color: #001a37;
 }
 
@@ -1161,15 +1189,21 @@ body.modal-open {
   color: #253750;
 }
 
+.date-venue-specific {
+  margin: -0.1rem 0 0;
+  font-size: clamp(0.92rem, 0.95vw, 1.18rem);
+  color: #253750;
+}
+
 .date-venue-note {
   margin-top: -0.2rem;
 }
 
 .date-venue-content .inline-link {
-  margin-top: 0.35rem;
+  margin-top: 0.2rem;
   font-weight: 600;
   color: #001a37;
-  font-size: clamp(0.98rem, 1.12vw, 1.6rem);
+  font-size: clamp(0.82rem, 0.9vw, 1.05rem);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.32rem;
 }
@@ -1204,18 +1238,124 @@ body.modal-open {
 
 }
 
-.color-palette {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.7rem;
+.content > section.dressCodeSection {
+  --band-bg: #efefef;
+  --band-fg: #102a4d;
+  --band-muted: #213a5a;
+  --band-link: #102a4d;
+  background: #efefef;
 }
 
-.swatch {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+.dressCodeSection .dress-code-wrap {
+  max-width: 980px;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+}
+
+.dress-code-script-title {
+  margin: 0;
+  font-family: "Pinyon Script", cursive;
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  line-height: 0.9;
+  color: #132b4e;
+}
+
+.dress-code-theme-label {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: clamp(1.75rem, 3.4vw, 2.9rem);
+  line-height: 0.92;
+  color: #132b4e;
+}
+
+.dress-code-theme-text {
+  margin: 0 0 25px;
+  font-family: var(--font-body);
+  font-size: clamp(1.05rem, 1.8vw, 1.5rem);
+  line-height: 1.15;
+  color: #1d3657;
+}
+
+.dressCodeSection h3.dress-code-main-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: clamp(1.85rem, 3.6vw, 3rem);
+  line-height: 0.92;
+  color: #132b4e;
+}
+
+.dress-code-main-notes {
+  margin: 0.25rem 0 0;
+  max-width: 860px;
+  font-size: clamp(0.95rem, 1.35vw, 1.35rem);
+  line-height: 1.35;
+  color: #1b3454;
+}
+
+.dress-code-visual {
+  margin: 0.65rem 0 0;
+  width: min(860px, 100%);
+}
+
+.dress-code-visual img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.dress-code-swatches {
+  margin-top: 0.45rem;
+  width: min(760px, 100%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.dress-code-swatch-item {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+
+.dress-code-swatch {
+  display: block;
+  width: min(170px, 100%);
+  height: clamp(22px, 2.7vw, 36px);
+  border-radius: 0;
+}
+
+.dress-code-swatch-coffee {
+  background: #694534;
+}
+
+.dress-code-swatch-blue {
+  background: #C3D9F8;
+}
+
+.dress-code-swatch-beige {
+  background: #E9D4C3;
+}
+
+.dress-code-swatch-label {
+  font-family: var(--font-body);
+  font-size: clamp(0.8rem, 1.05vw, 0.98rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1f3653;
+}
+
+.dress-code-note {
+  margin: 1rem 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.98rem, 1.45vw, 1.35rem);
+  line-height: 1.25;
+  color: #1a3453;
 }
 
 .rsvp-form {
@@ -1250,10 +1390,10 @@ body.modal-open {
   filter: grayscale(20%) sepia(10%);
 }
 
-.rsvp-editorial-title {
+h3.rsvp-editorial-title {
   margin: 0;
   color: var(--band-link, #630000);
-  font-size: clamp(2.2rem, 5.8vw, 4.2rem);
+  font-size: clamp(2.2rem, 5.8vw, 3.2rem);
   line-height: 0.94;
 }
 
@@ -1266,7 +1406,11 @@ body.modal-open {
 }
 
 .rsvp-editorial-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   width: 100%;
+  height: 100%;
   background: var(--band-surface, #fffefc);
   color: var(--ink);
   border: 1px solid rgba(105, 69, 52, 0.2);
@@ -1321,6 +1465,12 @@ body.modal-open {
   border-radius: 2px;
   min-height: 110px;
   resize: vertical;
+}
+
+.rsvp-editorial-form input[readonly] {
+  color: #7a6962;
+  border-bottom-style: dashed;
+  cursor: default;
 }
 
 .rsvp-attendance {
@@ -1498,6 +1648,12 @@ body.modal-open {
 
 #rsvpFeedback {
   text-align: center;
+  display: none;
+  color: var(--band-bg);
+}
+
+#rsvpFeedback.is-visible {
+  display: block;
 }
 
 .registry-grid {
@@ -1749,6 +1905,8 @@ body.modal-open {
   --faq-title: #1c314d;
   --faq-title-open: #630000;
   --faq-answer: #5c3c2f;
+  --faq-link: #694534;
+  --faq-link-hover: #630000;
   --faq-icon: #694534;
   --faq-icon-open: #630000;
 }
@@ -1853,6 +2011,68 @@ body.modal-open {
   color: var(--faq-answer);
 }
 
+.faq-panel a {
+  color: var(--faq-link);
+  font-weight: 500;
+  text-decoration-color: currentColor;
+  text-decoration-style: solid;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.faq-panel a:visited {
+  color: var(--faq-link);
+}
+
+.faq-panel a:hover,
+.faq-panel a:focus-visible {
+  color: var(--faq-link-hover);
+  text-decoration-color: currentColor;
+}
+
+.content > section.bible-verse-section {
+  --band-bg: #eee9df;
+  --band-fg: #1c2e22;
+  --band-muted: #334a3b;
+  background: #eee9df;
+}
+
+.bible-verse-section .section-wrap {
+  min-height: clamp(300px, 46vw, 560px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(1.3rem, 3.5vh, 2.1rem);
+}
+
+.verse-reference {
+  margin: 0;
+  font-family: var(--font-body);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  font-size: clamp(0.8rem, 1.15vw, 1.15rem);
+  color: var(--band-muted);
+}
+
+.verse-script {
+  margin: 0;
+  max-width: 1000px;
+  width: 100%;
+  font-family: "Pinyon Script", cursive;
+  font-size: clamp(2.5rem, 7.4vw, 7rem);
+  line-height: 0.95;
+  color: var(--band-fg);
+  transform: rotate(-8deg);
+  transform-origin: center;
+}
+
+.verse-script span {
+  display: block;
+  rotate: -4deg;
+}
+
 body.scroll-animate .reveal-unit {
   opacity: 0;
   transform: translateY(18px);
@@ -1932,14 +2152,45 @@ body.scroll-animate .reveal-unit.is-visible {
   :root {
     --h3-size: 2.35rem;
   }
-  
-  .invitation-note-wrap::before {
-    left: 10px;
-    top: 10px;
+
+  .invitation-note-wrap {
+    min-height: clamp(520px, 108vw, 760px);
+    padding: clamp(2rem, 8vw, 3.1rem) clamp(1rem, 5vw, 1.6rem);
   }
-  
-  .invitation-note-signature {
-    font-size: 2.25rem;
+
+  .invitation-note-copy {
+    max-width: min(480px, 100%);
+  }
+
+  .invitation-note-kicker {
+    letter-spacing: 0.02em;
+  }
+
+  .invitation-note-body,
+  .invitation-note-date span:last-child,
+  .invitation-note-venue {
+    letter-spacing: 0.01em;
+  }
+
+  .invitation-note-name {
+    font-size: clamp(2.35rem, 8.8vw, 4.5rem);
+  }
+
+  .invitation-note-script {
+    font-size: clamp(1.95rem, 7.2vw, 3.6rem);
+  }
+
+  .invitation-note-body {
+    font-size: clamp(0.76rem, 2.9vw, 0.95rem);
+  }
+
+  .invitation-note-date span:first-child {
+    font-size: clamp(1.75rem, 6.8vw, 2.9rem);
+  }
+
+  .invitation-note-date span:last-child,
+  .invitation-note-venue {
+    font-size: clamp(0.8rem, 2.8vw, 1rem);
   }
 
   .site-wrap {
@@ -1971,24 +2222,6 @@ body.scroll-animate .reveal-unit.is-visible {
     width: min(510px, 92vw);
   }
 
-  .envelope-bouquet {
-    width: clamp(132px, 36vw, 200px);
-    bottom: clamp(1rem, 4.8vh, 2.5rem);
-    opacity: 0.94;
-  }
-
-  .envelope-bouquet-left {
-    left: 50%;
-    right: auto;
-    transform: translate(-122%, 5%) rotate(-4deg);
-  }
-
-  .envelope-bouquet-right {
-    left: 50%;
-    right: auto;
-    transform: translate(22%, 5%) scaleX(-1) rotate(-4deg);
-  }
-
   .save-date-polaroid {
     width: 84px;
     --polaroid-rot: -17deg;
@@ -2018,20 +2251,12 @@ body.scroll-animate .reveal-unit.is-visible {
     padding: 3rem 0;
   }
 
-  .invitation-note-line {
-    font-size: clamp(1.1rem, 5.4vw, 1.5rem);
-  }
-
-  .invitation-note-closing {
-    font-size: clamp(1.08rem, 4.9vw, 1.4rem);
-  }
-
   .invitation-note-flower {
-    right: 50%;
-    bottom: -1.2rem;
-    width: min(210px, 55vw);
-    transform: translateX(50%);
-    opacity: 0.72;
+    right: -46%;
+    top: -11%;
+    width: min(860px, 150vw);
+    opacity: 0.45;
+    filter: saturate(0.9) brightness(0.92);
   }
 
   .slider-nav {
@@ -2060,11 +2285,100 @@ body.scroll-animate .reveal-unit.is-visible {
     font-size: 0.97rem;
   }
 
+  .dress-code-script-title {
+    font-size: clamp(2.4rem, 11.8vw, 4.1rem);
+  }
+
+  .dress-code-theme-label {
+    font-size: clamp(1.35rem, 6vw, 2.1rem);
+  }
+
+  .dress-code-theme-text {
+    font-size: clamp(0.95rem, 3.9vw, 1.2rem);
+  }
+
+  .dress-code-main-title {
+    font-size: clamp(1.65rem, 6.9vw, 2.5rem);
+  }
+
+  .dress-code-main-notes {
+    font-size: clamp(0.88rem, 3.2vw, 1.02rem);
+  }
+
+  .dress-code-swatches {
+    gap: 0.8rem;
+  }
+
+  .dress-code-swatch-label {
+    font-size: clamp(0.78rem, 2.9vw, 0.95rem);
+  }
+
+  .dress-code-note {
+    font-size: clamp(0.86rem, 3.5vw, 1.05rem);
+  }
+
+  .bible-verse-section .section-wrap {
+    min-height: clamp(280px, 62vw, 430px);
+  }
+
+  .verse-script {
+    font-size: clamp(2rem, 8.8vw, 4.3rem);
+    transform: rotate(-6deg);
+  }
+
 }
 
 @media (max-width: 440px) {
   :root {
     --h3-size: 2.2rem;
+  }
+
+  .invitation-note-wrap {
+    min-height: clamp(520px, 130vw, 710px);
+    padding: 1.75rem 0.9rem 2rem;
+  }
+
+  .invitation-note-name {
+    font-size: clamp(2.2rem, 13.5vw, 3.6rem);
+  }
+
+  .invitation-note-script {
+    font-size: clamp(1.95rem, 10vw, 3.1rem);
+  }
+
+  .invitation-note-body {
+    margin-top: 1.4rem;
+    font-size: clamp(0.78rem, 3.4vw, 0.9rem);
+  }
+
+  .invitation-note-date {
+    margin-top: 1.6rem;
+  }
+
+  .invitation-note-date span:first-child {
+    font-size: clamp(1.65rem, 9.4vw, 2.4rem);
+  }
+
+  .invitation-note-date span:last-child,
+  .invitation-note-venue {
+    font-size: clamp(0.78rem, 3.3vw, 0.94rem);
+  }
+
+  .invitation-note-flower {
+    right: -66%;
+    top: -8%;
+    width: min(760px, 186vw);
+    opacity: 0.42;
+  }
+
+  .dress-code-swatches {
+    grid-template-columns: 1fr;
+    width: min(280px, 100%);
+    gap: 0.7rem;
+  }
+
+  .dress-code-swatch {
+    width: 100%;
   }
 
   .slider-nav {
@@ -2096,24 +2410,96 @@ body.scroll-animate .reveal-unit.is-visible {
     bottom: 28%;
   }
 
-  .envelope-bouquet {
-    width: clamp(112px, 38vw, 168px);
-    bottom: 1rem;
-    opacity: 0.9;
+  .verse-script {
+    font-size: clamp(1.8rem, 10.2vw, 3.4rem);
+    transform: rotate(-5deg);
+    line-height: 1;
   }
 
-  .envelope-bouquet-left {
-    left: 50%;
-    right: auto;
-    transform: translate(-118%, 6%) rotate(-3deg);
+}
+
+@media (max-height: 820px) {
+  .envelopeGateContainer {
+    padding: 0.85rem 0.9rem;
   }
 
-  .envelope-bouquet-right {
-    left: 50%;
-    right: auto;
-    transform: translate(18%, 6%) scaleX(-1) rotate(-3deg);
+  .gate {
+    min-height: calc(100dvh - 1.7rem);
+    gap: clamp(1.1rem, 3.4vh, 2rem);
+    padding: clamp(0.8rem, 2.6vh, 1.6rem) 0.8rem;
+    align-content: space-between;
   }
 
+  .gate-kicker {
+    font-size: clamp(0.9rem, 1.3vw, 1.2rem);
+  }
+
+  .gate-couple {
+    font-size: clamp(3.1rem, 8.3vw, 6.5rem);
+  }
+
+  .envelope {
+    width: min(500px, 80vw);
+    margin-top: clamp(0.2rem, 1vh, 0.7rem);
+    margin-bottom: 0;
+  }
+
+  .gate-open-label {
+    margin-top: clamp(0.25rem, 1.1vh, 0.6rem);
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+  }
+}
+
+@media (max-height: 680px) {
+  .gate {
+    min-height: calc(100dvh - 1.2rem);
+    gap: clamp(0.85rem, 2.4vh, 1.4rem);
+    padding: 0.6rem 0.65rem;
+  }
+
+  .gate-couple {
+    font-size: clamp(2.5rem, 7.1vw, 5.1rem);
+    line-height: 0.94;
+  }
+
+  .envelope {
+    width: min(430px, 72vw);
+  }
+
+  .gate-open-label {
+    font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  }
+}
+
+@media (max-height: 560px) {
+  .envelopeGateContainer {
+    padding: 0.45rem 0.65rem;
+  }
+
+  .gate {
+    min-height: calc(100dvh - 0.9rem);
+    gap: 0.65rem;
+    padding: 0.45rem 0.5rem;
+  }
+
+  .gate-kicker {
+    font-size: clamp(0.72rem, 1.9vw, 0.92rem);
+  }
+
+  .gate-couple {
+    font-size: clamp(2rem, 6.1vw, 3.9rem);
+    line-height: 0.92;
+  }
+
+  .envelope {
+    width: min(360px, 64vw);
+    margin-top: 0;
+  }
+
+  .gate-open-label {
+    margin-top: 0.12rem;
+    font-size: clamp(1rem, 1.8vw, 1.3rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

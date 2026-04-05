@@ -43,19 +43,6 @@
           </div>
 
           <div class="envelope-stage">
-            <img
-              class="envelope-bouquet envelope-bouquet-left"
-              src="images/white-lily.webp"
-              alt=""
-              aria-hidden="true"
-            />
-            <img
-              class="envelope-bouquet envelope-bouquet-right"
-              src="images/white-lily.webp"
-              alt=""
-              aria-hidden="true"
-            />
-
             <button
               id="envelopeBtn"
               class="envelope"
@@ -66,12 +53,14 @@
                 class="envelope-closed-image"
                 src="images/envelope-brown.webp"
                 alt="Closed envelope"
+                loading="lazy"
               />
               <img
                 class="envelope-closed-seal"
                 src="images/hf-logo-wax-seal.webp"
                 alt=""
                 aria-hidden="true"
+                loading="lazy"
               />
 
               <div class="envelope-open-stack" aria-hidden="true">
@@ -80,6 +69,7 @@
                   src="images/back-envelope.webp"
                   alt="Open back envelope"
                   aria-hidden="true"
+                  loading="lazy"
                 />
 
               <img
@@ -87,6 +77,7 @@
                 src="images/polaroid-strip-img.webp"
                 alt="Polaroid style wedding photo"
                 aria-hidden="true"
+                loading="lazy"
               />
 
                 <div class="save-date-reveal" aria-hidden="true">
@@ -102,6 +93,7 @@
                   src="images/front-envelope.webp"
                   alt="Envelope front"
                   aria-hidden="true"
+                  loading="lazy"
                 />
 
                 <img
@@ -109,6 +101,7 @@
                   src="images/back-wax-seal.webp"
                   alt=""
                   aria-hidden="true"
+                  loading="lazy"
                 />
               </div>
             </button>
@@ -120,7 +113,7 @@
       <section id="mainContent" class="content hidden" aria-live="polite">
         <header class="hero reveal">
           <div class="hero-copy">
-            <img src="/images/logo-text.webp" alt="">
+            <img src="/images/logo-text.webp" alt="" loading="lazy">
             <!-- <h2>HANNAH &amp; FIDEL</h2>
             <p class="hero-subtitle">THE WEDDING</p> -->
           </div>
@@ -128,62 +121,40 @@
         </header>
 
         <section class="invitation-note reveal" aria-label="Invitation message">
+          <img
+            class="invitation-note-flower"
+            src="images/invitation-note-flower.webp"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+          />
           <div class="section-wrap invitation-note-wrap">
             <div class="invitation-note-copy">
-              <p class="invitation-note-line">
-                Together with our families,
+              <p class="invitation-note-kicker">TOGETHER WITH THEIR FAMILIES</p>
+              <p class="invitation-note-name">HANNAH</p>
+              <p class="invitation-note-script">Jileen Romero</p>
+              <p class="invitation-note-and">AND</p>
+              <p class="invitation-note-name">FIDEL</p>
+              <p class="invitation-note-script">Eriko Lim</p>
+              <p class="invitation-note-body">
+                CORDIALLY INVITE YOU WITH LOVE AND JOY
+                <br />
+                TO CELEBRATE THEIR MARRIAGE
               </p>
-              <h3 class="invitation-note-title">HANNAH & FIDEL</h3>
-              <p class="invitation-note-line">
-                we request your presence with love and joy at the celebration of our marriage
+              <p class="invitation-note-date">
+                <span>15 NOVEMBER <em>2026</em></span>
+                <span>4:30 PM ARRIVAL FOR A 5 PM CEREMONY</span>
               </p>
-              <p class="invitation-note-line">
-                <span>SUNDAY, NOVEMBER 15TH, 2026</span> at 4 o'clock in the afternoon
+              <p class="invitation-note-venue">
+                SHANGRI-LA HOTEL, QARYAT AL BERI
+                <br />
+                ABU DHABI, UNITED ARAB EMIRATES
               </p>
-              <p class="invitation-note-line">
-                <span>Shangri-La Qaryat Al Beri</span> Abu Dhabi, United Arab Emirates
-              </p>
-            </div>
-            <img
-              class="invitation-note-flower"
-              src="images/golden_flower.webp"
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-            />
-          </div>
-        </section>
-
-        <section class="panel reveal countdown-panel">
-          <div class="section-wrap">
-            <div class="countdown-layout">
-              <div class="countdown-right">
-                <h3 class="countdown-heading">Counting down to the moment we become forever</h3>
-                <div id="countdown" class="countdown-grid" aria-live="polite">
-                  <article>
-                    <span id="days">0</span>
-                    <small>Days</small>
-                  </article>
-                  <article>
-                    <span id="hours">0</span>
-                    <small>Hours</small>
-                  </article>
-                  <article>
-                    <span id="minutes">0</span>
-                    <small>Minutes</small>
-                  </article>
-                  <article>
-                    <span id="seconds">0</span>
-                    <small>Seconds</small>
-                  </article>
-                </div>
-                <p id="weddingDateText" class="date-text"></p>
-              </div>
             </div>
           </div>
         </section>
 
-        <section class="panel reveal date-venue-panel">
+        <section id="theDestination" class="panel reveal date-venue-panel">
           <div class="section-wrap">
             <div class="date-venue-layout">
               <div class="calendar-wrap date-venue-calendar">
@@ -196,9 +167,8 @@
                 <p class="date-venue-kicker">The Destination</p>
                 <h3 id="venueName" class="date-venue-name"></h3>
                 <p id="venueAddress" class="muted"></p>
-                <p class="muted date-venue-note">
-                  Ceremony commences at four o&apos;clock in the afternoon.<br />
-                  Dinner and dancing to follow on the terrace.
+                <p class="muted date-venue-specific">
+                  The cremony and reception will both take place at the beautiful plaza beach.
                 </p>
                 <a id="mapLink" class="inline-link" target="_blank" rel="noopener">
                   Open in Google Maps
@@ -234,40 +204,40 @@
 
             <div class="slider-viewport swiper-wrapper">
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/1.jpg" alt="Hannah and Fidel photo 1" loading="lazy" />
+                  <img src="images/slider/1.webp" alt="Hannah and Fidel photo 1" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/2.jpg" alt="Hannah and Fidel photo 2" loading="lazy" />
+                  <img src="images/slider/2.webp" alt="Hannah and Fidel photo 2" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/3.jpg" alt="Hannah and Fidel photo 3" loading="lazy" />
+                  <img src="images/slider/3.webp" alt="Hannah and Fidel photo 3" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/4.jpg" alt="Hannah and Fidel photo 4" loading="lazy" />
+                  <img src="images/slider/4.webp" alt="Hannah and Fidel photo 4" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/5.jpg" alt="Hannah and Fidel photo 5" loading="lazy" />
+                  <img src="images/slider/5.webp" alt="Hannah and Fidel photo 5" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/6.jpg" alt="Hannah and Fidel photo 6" loading="lazy" />
+                  <img src="images/slider/6.webp" alt="Hannah and Fidel photo 6" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/7.jpg" alt="Hannah and Fidel photo 7" loading="lazy" />
+                  <img src="images/slider/7.webp" alt="Hannah and Fidel photo 7" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/8.jpg" alt="Hannah and Fidel photo 8" loading="lazy" />
+                  <img src="images/slider/8.webp" alt="Hannah and Fidel photo 8" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/9.jpg" alt="Hannah and Fidel photo 9" loading="lazy" />
+                  <img src="images/slider/9.webp" alt="Hannah and Fidel photo 9" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/10.jpg" alt="Hannah and Fidel photo 10" loading="lazy" />
+                  <img src="images/slider/10.webp" alt="Hannah and Fidel photo 10" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/11.jpg" alt="Hannah and Fidel photo 11" loading="lazy" />
+                  <img src="images/slider/11.webp" alt="Hannah and Fidel photo 11" loading="lazy" />
                 </article>
                 <article class="slider-card swiper-slide">
-                  <img src="images/slider/12.jpg" alt="Hannah and Fidel photo 12" loading="lazy" />
+                  <img src="images/slider/12.webp" alt="Hannah and Fidel photo 12" loading="lazy" />
                 </article>
             </div>
 
@@ -282,12 +252,38 @@
           </div>
         </section>
 
-        <section class="panel reveal">
-          <div class="section-wrap">
-            <h3>Dress Code</h3>
-            <p class="section-title" id="dressCodeTitle"></p>
-            <p class="muted" id="dressCodeNotes"></p>
-            <div class="color-palette" id="dressCodePalette"></div>
+        <section class="panel reveal dressCodeSection" id="dressCodeSection">
+          <div class="section-wrap dress-code-wrap">
+            <p class="dress-code-script-title">The Finer Details</p>
+            <p class="dress-code-theme-label">Theme</p>
+            <p class="dress-code-theme-text" id="dressCodeTheme"></p>
+            <h3 class="dress-code-main-title" id="dressCodeTitle"></h3>
+            <p class="muted dress-code-main-notes" id="dressCodeNotes"></p>
+            <figure class="dress-code-visual">
+              <img
+                src="images/guest-dress-code.webp"
+                alt="Guest dress code inspiration and recommended attire"
+                loading="lazy"
+              />
+            </figure>
+            <div class="dress-code-swatches" aria-label="Dress code color guide">
+              <div class="dress-code-swatch-item">
+                <span class="dress-code-swatch dress-code-swatch-coffee" aria-hidden="true"></span>
+                <span class="dress-code-swatch-label">Chicory Coffee</span>
+              </div>
+              <div class="dress-code-swatch-item">
+                <span class="dress-code-swatch dress-code-swatch-blue" aria-hidden="true"></span>
+                <span class="dress-code-swatch-label">Soft Blue</span>
+              </div>
+              <div class="dress-code-swatch-item">
+                <span class="dress-code-swatch dress-code-swatch-beige" aria-hidden="true"></span>
+                <span class="dress-code-swatch-label">Warm Beige</span>
+              </div>
+            </div>
+            <p class="dress-code-note">
+              For those part of the entourage,<br />
+              the bride and groom will reach out to you separately.
+            </p>
           </div>
         </section>
 
@@ -299,6 +295,8 @@
                   <img
                     src="images/hero_img_3.webp"
                     alt="Hannah and Fidel portrait"
+                    width="490"
+                    height="540"
                     loading="lazy"
                   />
                 </div>
@@ -316,6 +314,21 @@
                       name="name"
                       type="text"
                       placeholder="E.g. Mr. and Mrs. Julian Miller"
+                      readonly
+                      aria-readonly="true"
+                      required
+                    />
+                  </label>
+
+                  <label class="rsvp-field" for="emailInput">
+                    <span class="rsvp-label">Email Address</span>
+                    <input
+                      id="emailInput"
+                      name="email"
+                      type="email"
+                      inputmode="email"
+                      autocomplete="email"
+                      placeholder="E.g. yourname@example.com"
                       required
                     />
                   </label>
@@ -370,22 +383,41 @@
                     />
                   </label>
 
-                  <label class="rsvp-field" for="messageInput">
-                    <span class="rsvp-label">Dietary Restrictions / Message</span>
-                    <textarea
-                      id="messageInput"
-                      name="message"
-                      rows="3"
-                      placeholder="Please list allergies or any message for Hannah and Fidel."
-                    ></textarea>
-                  </label>
-
                   <div class="rsvp-submit-wrap">
                     <button class="cta rsvp-submit" type="submit">Send Response</button>
-                    <p class="rsvp-reply-note">Please reply by October 1st, 2026</p>
+                    <p class="rsvp-reply-note">Please reply by June 15, 2026</p>
                   </div>
                 </form>
                 <p id="rsvpFeedback" class="feedback" aria-live="polite"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel reveal countdown-panel">
+          <div class="section-wrap">
+            <div class="countdown-layout">
+              <div class="countdown-right">
+                <h3 class="countdown-heading">Counting down to the moment we become forever</h3>
+                <div id="countdown" class="countdown-grid" aria-live="polite">
+                  <article>
+                    <span id="days">0</span>
+                    <small>Days</small>
+                  </article>
+                  <article>
+                    <span id="hours">0</span>
+                    <small>Hours</small>
+                  </article>
+                  <article>
+                    <span id="minutes">0</span>
+                    <small>Minutes</small>
+                  </article>
+                  <article>
+                    <span id="seconds">0</span>
+                    <small>Seconds</small>
+                  </article>
+                </div>
+                <p id="weddingDateText" class="date-text"></p>
               </div>
             </div>
           </div>
@@ -442,15 +474,15 @@
                     aria-expanded="true"
                     aria-controls="faqAnswer1"
                   >
-                    <span>Can I bring a plus one?</span>
+                    <span>When will the wedding take place?</span>
                     <span class="faq-icon" aria-hidden="true"></span>
                   </button>
                 </h4>
                 <div class="faq-panel" id="faqAnswer1" role="region" aria-labelledby="faqQuestion1" aria-hidden="false">
                   <div class="faq-panel-inner">
                     <p>
-                      Your invitation includes the number of reserved seats for your group. Please
-                      RSVP with that exact count so we can finalize seating smoothly.
+                      Our wedding will be held on <b>November 15, 2026</b>. The ceremony will begin promptly at <b>5:00 PM</b>,
+                      followed by the reception.
                     </p>
                   </div>
                 </div>
@@ -465,15 +497,16 @@
                     aria-expanded="false"
                     aria-controls="faqAnswer2"
                   >
-                    <span>When should I arrive at the venue?</span>
+                    <span>Where is the venue located?</span>
                     <span class="faq-icon" aria-hidden="true"></span>
                   </button>
                 </h4>
                 <div class="faq-panel" id="faqAnswer2" role="region" aria-labelledby="faqQuestion2" aria-hidden="true">
                   <div class="faq-panel-inner">
                     <p>
-                      We recommend arriving 20 to 30 minutes before the ceremony starts so you can
-                      settle in comfortably.
+                      The celebration will take place at the <b>Plaza Beach of Shangri-La Hotel, Qaryat Al Beri in Abu
+                      Dhabi</b>. Kindly refer to <a href="#theDestination"><b>"The Destination"</b></a> section of this website for full venue details and
+                      directions.
                     </p>
                   </div>
                 </div>
@@ -488,15 +521,15 @@
                     aria-expanded="false"
                     aria-controls="faqAnswer3"
                   >
-                    <span>Is there a dress code color palette?</span>
+                    <span>What is the dress code?</span>
                     <span class="faq-icon" aria-hidden="true"></span>
                   </button>
                 </h4>
                 <div class="faq-panel" id="faqAnswer3" role="region" aria-labelledby="faqQuestion3" aria-hidden="true">
                   <div class="faq-panel-inner">
                     <p>
-                      Yes. Please follow the palette shown above in the Dress Code section to keep
-                      the celebration visually cohesive.
+                      We respectfully request <b>semi-formal attire</b>. Guests are encouraged to dress elegantly in keeping
+                      with the occasion.
                     </p>
                   </div>
                 </div>
@@ -511,15 +544,15 @@
                     aria-expanded="false"
                     aria-controls="faqAnswer4"
                   >
-                    <span>Can I take photos during the ceremony?</span>
+                    <span>What time should guests arrive?</span>
                     <span class="faq-icon" aria-hidden="true"></span>
                   </button>
                 </h4>
                 <div class="faq-panel" id="faqAnswer4" role="region" aria-labelledby="faqQuestion4" aria-hidden="true">
                   <div class="faq-panel-inner">
                     <p>
-                      We kindly ask for an unplugged ceremony. Feel free to capture memories during
-                      the reception and after the ceremony.
+                      We kindly ask guests to arrive by <b>4:30 PM</b> so that everyone may be comfortably seated in time for
+                      the <b>5:00 PM</b> start of the ceremony.
                     </p>
                   </div>
                 </div>
@@ -534,20 +567,176 @@
                     aria-expanded="false"
                     aria-controls="faqAnswer5"
                   >
-                    <span>Where should gifts be sent?</span>
+                    <span>May I bring a plus one?</span>
                     <span class="faq-icon" aria-hidden="true"></span>
                   </button>
                 </h4>
                 <div class="faq-panel" id="faqAnswer5" role="region" aria-labelledby="faqQuestion5" aria-hidden="true">
                   <div class="faq-panel-inner">
                     <p>
-                      You may reserve from our Wedding Registry section on this page. Thank you for
-                      celebrating with us.
+                      As we are hosting an <b>intimate wedding celebration</b>, we are only able to accommodate the guests
+                      specifically named on the invitation. We sincerely appreciate your understanding and support in
+                      honoring this arrangement.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion6"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer6"
+                  >
+                    <span>Are children invited?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer6" role="region" aria-labelledby="faqQuestion6" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      While we adore your little ones, this will be a <b>limited-children celebration</b>. We hope this allows
+                      all guests to relax and fully enjoy the evening with us.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion7"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer7"
+                  >
+                    <span>Are phones and cameras permitted during the ceremony?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer7" role="region" aria-labelledby="faqQuestion7" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      We kindly request an <b>unplugged ceremony</b> and ask that guests refrain from using mobile devices or
+                      cameras during this time. Our professional photographer will be capturing these special moments for
+                      all to cherish.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion8"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer8"
+                  >
+                    <span>Is parking available at the venue?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer8" role="region" aria-labelledby="faqQuestion8" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      Yes, parking facilities are available at the venue. Valet service may also be provided for your
+                      convenience.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion9"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer9"
+                  >
+                    <span>Do you have a gift preference?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer9" role="region" aria-labelledby="faqQuestion9" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>Your presence at our wedding is the most cherished gift of all.</p>
+                    <p>
+                      Should you wish to bless us with something further, a <b>monetary gift</b> would be sincerely appreciated
+                      as we begin this new chapter together. For those who prefer, we would also be delighted if you
+                      chose something from our wedding registry.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion10"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer10"
+                  >
+                    <span>When is the RSVP deadline?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer10" role="region" aria-labelledby="faqQuestion10" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      We kindly request your RSVP by <b>June 15, 2026</b> to assist us in finalizing the arrangements.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="faq-item">
+                <h4 class="faq-item-title">
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    id="faqQuestion11"
+                    aria-expanded="false"
+                    aria-controls="faqAnswer11"
+                  >
+                    <span>Will the event be held indoors or outdoors?</span>
+                    <span class="faq-icon" aria-hidden="true"></span>
+                  </button>
+                </h4>
+                <div class="faq-panel" id="faqAnswer11" role="region" aria-labelledby="faqQuestion11" aria-hidden="true">
+                  <div class="faq-panel-inner">
+                    <p>
+                      The celebration will take place <b>outdoors at the Plaza Beach of Shangri-La Hotel, Qaryat Al Beri</b>.
+                      We recommend dressing accordingly for your comfort throughout the evening.
                     </p>
                   </div>
                 </div>
               </article>
             </div>
+          </div>
+        </section>
+
+        <section
+          class="panel reveal bible-verse-section"
+          id="bibleVerseSection"
+          aria-label="Bible verse from 1 John 4:11"
+        >
+          <div class="section-wrap">
+            <p class="verse-script">
+              <span>Since God so loved us,</span>
+              <span>we also ought to</span>
+              <span>love one another.</span>
+            </p>
+            <p class="verse-reference">1 JOHN 4:11</p>
           </div>
         </section>
       </section>
