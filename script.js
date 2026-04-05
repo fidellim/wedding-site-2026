@@ -795,7 +795,7 @@ function renderRegistryItems() {
     if (item.buyLink) {
       buyLink.href = item.buyLink;
       buyLink.target = "_blank";
-      buyLink.rel = "noopener";
+      buyLink.rel = "noopener noreferrer";
       buyLink.textContent = "View item";
     } else {
       buyLink.classList.add("registry-buy-link-placeholder");
