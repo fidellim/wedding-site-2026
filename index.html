@@ -412,7 +412,13 @@
             <div class="countdown-layout">
               <div class="countdown-right">
                 <h3 class="countdown-heading">Counting down to the moment we become forever</h3>
-                <div id="countdown" class="countdown-grid" aria-live="polite">
+                <div
+                  id="countdown"
+                  class="countdown-grid"
+                  role="timer"
+                  aria-live="off"
+                  aria-label="Time remaining until the wedding"
+                >
                   <article>
                     <span id="days">0</span>
                     <small>Days</small>
@@ -430,7 +436,7 @@
                     <small>Seconds</small>
                   </article>
                 </div>
-                <p id="weddingDateText" class="date-text"></p>
+                <p id="weddingDateText" class="date-text" aria-live="polite"></p>
               </div>
             </div>
           </div>
