@@ -2234,6 +2234,30 @@ body.scroll-animate .reveal-unit.is-visible {
     bottom: 13%;
   }
 
+  .save-date-reveal {
+    bottom: 15%;
+    width: min(58%, 250px);
+    aspect-ratio: 0.8;
+  }
+
+  .save-date-card {
+    gap: 0.18rem;
+    padding-top: clamp(0.72rem, 2.2vw, 0.98rem);
+  }
+
+  .save-date-script {
+    font-size: clamp(1.4rem, 5vw, 2rem);
+  }
+
+  .save-date-title {
+    font-size: clamp(1.15rem, 4.2vw, 1.6rem);
+  }
+
+  .save-date-date {
+    margin-top: 0;
+    font-size: clamp(1.02rem, 3.8vw, 1.45rem);
+  }
+
   .countdown-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2408,6 +2432,29 @@ body.scroll-animate .reveal-unit.is-visible {
     height: auto;
     left: 35%;
     bottom: 28%;
+  }
+
+  .save-date-reveal {
+    bottom: 17%;
+    width: min(56%, 220px);
+    aspect-ratio: 0.78;
+  }
+
+  .save-date-card {
+    gap: 0.14rem;
+    padding-top: clamp(0.62rem, 2.6vw, 0.84rem);
+  }
+
+  .save-date-script {
+    font-size: clamp(1.2rem, 5.3vw, 1.7rem);
+  }
+
+  .save-date-title {
+    font-size: clamp(0.95rem, 4.5vw, 1.28rem);
+  }
+
+  .save-date-date {
+    font-size: clamp(0.88rem, 3.9vw, 1.12rem);
   }
 
   .verse-script {
