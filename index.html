@@ -463,18 +463,23 @@
         </section>
 
         <section class="panel reveal" id="weddingRegistrySection">
-          <div class="section-wrap">
-            <h3>Wedding Registry</h3>
-            <p class="muted">
-              You may reserve one or more items. Reserved items by other guests are unavailable.
+          <div class="section-wrap registry-note-wrap">
+            <h3 class="registry-note-heading">Note on GIFTS</h3>
+            <p class="registry-note-copy">
+              Your presence at our wedding is the greatest gift we could ask for. For those who would like to give a little extra, we've put together a few ideas from our gift list.
             </p>
-            <div id="registryGrid" class="registry-grid" aria-live="polite"></div>
-            <div class="registry-actions">
-              <button id="registryReserveBtn" class="cta" type="button" disabled>
-                Reserve Selected Item(s)
-              </button>
-              <p id="registryFeedback" class="feedback" aria-live="polite"></p>
-            </div>
+            <p class="registry-note-copy">
+              Each suggestion is something we love and would cherish, and your thoughtfulness means so much to us. We are truly greateful for your kindness and support.
+            </p>
+            <button
+              id="registryOpenBtn"
+              class="cta registry-open-btn"
+              type="button"
+              aria-haspopup="dialog"
+              aria-controls="registryListModal"
+            >
+              REGISTRY
+            </button>
           </div>
         </section>
 
@@ -781,15 +786,33 @@
       </section>
     </main>
 
-    <div id="registryModal" class="registry-modal hidden" aria-hidden="true">
-      <div class="registry-modal-backdrop" data-close-registry-modal="true"></div>
-      <div class="registry-modal-card" role="dialog" aria-modal="true" aria-labelledby="registryModalTitle">
-        <h4 id="registryModalTitle">Confirm Registry Reservation</h4>
-        <p id="registryModalMessage" class="muted"></p>
-        <ul id="registryModalList" class="registry-modal-list"></ul>
+    <div id="registryListModal" class="registry-modal hidden" aria-hidden="true">
+      <div class="registry-modal-backdrop" data-close-registry-list-modal="true"></div>
+      <div class="registry-modal-card registry-list-modal-card" role="dialog" aria-modal="true" aria-labelledby="registryListModalTitle">
+        <button id="registryListModalCloseBtn" class="registry-modal-close-btn" type="button" aria-label="Close registry">&times;</button>
+        <h4 id="registryListModalTitle">Wedding Registry</h4>
+        <p class="muted">
+          You may reserve one or more items. Reserved items by other guests are unavailable.
+        </p>
+        <div id="registryGrid" class="registry-grid" aria-live="polite"></div>
+        <div class="registry-actions">
+          <button id="registryReserveBtn" class="cta" type="button" disabled>
+            Reserve Selected Item(s)
+          </button>
+        </div>
+        <p id="registryFeedback" class="feedback" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div id="registryConfirmModal" class="registry-modal hidden" aria-hidden="true">
+      <div class="registry-modal-backdrop" data-close-registry-confirm-modal="true"></div>
+      <div class="registry-modal-card" role="dialog" aria-modal="true" aria-labelledby="registryConfirmModalTitle">
+        <h4 id="registryConfirmModalTitle">Confirm Registry Reservation</h4>
+        <p id="registryConfirmModalMessage" class="muted"></p>
+        <ul id="registryConfirmModalList" class="registry-modal-list"></ul>
         <div class="registry-modal-actions">
-          <button id="registryModalCancelBtn" type="button">Cancel</button>
-          <button id="registryModalConfirmBtn" class="cta" type="button">Confirm</button>
+          <button id="registryConfirmModalCancelBtn" type="button">Cancel</button>
+          <button id="registryConfirmModalConfirmBtn" class="cta" type="button">Confirm</button>
         </div>
       </div>
     </div>

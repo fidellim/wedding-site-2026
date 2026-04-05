@@ -1706,6 +1706,61 @@ h3.rsvp-editorial-title {
   display: block;
 }
 
+.registry-note-wrap {
+  max-width: 960px;
+  display: grid;
+  justify-items: center;
+  gap: 0.95rem;
+  text-align: center;
+  padding: clamp(1.6rem, 3.5vw, 2.6rem) clamp(1rem, 3vw, 2rem);
+  border: 1px solid rgba(233, 212, 195, 0.33);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(233, 212, 195, 0.18), transparent 42%),
+    radial-gradient(circle at 86% 88%, rgba(195, 217, 248, 0.2), transparent 40%),
+    linear-gradient(145deg, rgba(122, 20, 20, 0.34), rgba(86, 8, 8, 0.4));
+  box-shadow: 0 18px 34px rgba(33, 6, 9, 0.26);
+}
+
+.registry-note-heading {
+  margin: 0 0 0.1rem;
+  font-size: clamp(2.35rem, 5vw, 3.6rem);
+  letter-spacing: 0.025em;
+  color: #f8efe6;
+  text-shadow: 0 3px 14px rgba(14, 4, 4, 0.25);
+}
+
+.registry-note-copy {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(246, 232, 221, 0.95);
+  line-height: 1.8;
+  font-size: clamp(1rem, 1.7vw, 1.2rem);
+}
+
+.registry-open-btn {
+  min-width: 190px;
+  margin-top: 0.5rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient(120deg, #9e1b1b 0%, #6b1111 36%, #8e604d 70%, #6b1111 100%);
+  background-size: 220% 100%;
+  box-shadow: 0 10px 24px rgba(18, 2, 3, 0.34);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, background-position 0.38s ease;
+}
+
+.registry-open-btn:hover,
+.registry-open-btn:focus-visible {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 16px 30px rgba(18, 2, 3, 0.42);
+  background-position: 100% 0;
+}
+
+.registry-open-btn:focus-visible {
+  outline: 2px solid rgba(233, 212, 195, 0.95);
+  outline-offset: 2px;
+}
+
 .registry-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 280px));
@@ -1814,6 +1869,8 @@ h3.rsvp-editorial-title {
 }
 
 .registry-actions {
+  display: flex;
+  justify-content: center;
   margin-top: 0.75rem;
 }
 
@@ -1836,17 +1893,39 @@ h3.rsvp-editorial-title {
   position: relative;
   z-index: 1;
   width: min(560px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 14px;
   border: 1px solid var(--line);
   background: #e9d4c3;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
-  padding: 1rem;
+  padding: 1rem 1rem 1.1rem;
+}
+
+.registry-list-modal-card {
+  width: min(1120px, 96vw);
 }
 
 .registry-modal-card h4 {
   margin: 0 0 0.4rem;
   font-family: var(--font-heading);
   font-size: 1.6rem;
+}
+
+.registry-modal-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #3f0000;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .registry-modal-list {
@@ -1862,7 +1941,7 @@ h3.rsvp-editorial-title {
 
 .registry-modal-actions button {
   border-radius: 999px;
-  padding: 0.55rem 0.9rem;
+  padding: 0.62rem 0.95rem;
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink);
@@ -1887,6 +1966,79 @@ h3.rsvp-editorial-title {
   background: #e5c9bc;
   color: #6b4c40;
   box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  .registry-note-wrap {
+    max-width: 100%;
+    border-radius: 18px;
+    padding: 1.35rem 0.95rem 1.55rem;
+    gap: 0.8rem;
+  }
+
+  .registry-note-heading {
+    font-size: clamp(2rem, 9vw, 2.5rem);
+  }
+
+  .registry-note-copy {
+    font-size: 0.98rem;
+    line-height: 1.66;
+  }
+
+  .registry-open-btn {
+    width: min(260px, 100%);
+    min-height: 46px;
+  }
+
+  .registry-modal {
+    align-items: center;
+    justify-items: center;
+    padding: 20px;
+  }
+
+  .registry-modal-card {
+    width: min(100%, calc(100vw - 40px));
+    max-height: calc(100dvh - 40px);
+    border-radius: 18px;
+    padding: 0.85rem 0.82rem calc(0.95rem + env(safe-area-inset-bottom));
+  }
+
+  .registry-list-modal-card {
+    width: min(100%, calc(100vw - 40px));
+  }
+
+  .registry-modal-card h4 {
+    font-size: 2rem;
+    line-height: 0.95;
+    padding-right: 2.2rem;
+  }
+
+  .registry-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .registry-card {
+    max-width: none;
+    border-radius: 12px;
+  }
+
+  .registry-actions {
+    margin-top: 0.8rem;
+  }
+
+  .registry-actions .cta {
+    width: 100%;
+  }
+
+  .registry-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .registry-modal-actions button {
+    width: 100%;
+    min-height: 44px;
+  }
 }
 
 .scroll-top-btn {

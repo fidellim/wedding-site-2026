@@ -53,18 +53,25 @@ const attendanceInput = q("attendanceInput");
 const attendanceChoiceInputs = Array.from(
   document.querySelectorAll('input[name="attendanceChoice"]')
 );
+const registryOpenBtn = q("registryOpenBtn");
 const registryGrid = q("registryGrid");
 const registryReserveBtn = q("registryReserveBtn");
 const registryFeedback = q("registryFeedback");
-const registryModal = q("registryModal");
-const registryModalCard =
-  registryModal instanceof HTMLElement
-    ? registryModal.querySelector(".registry-modal-card")
+const registryListModal = q("registryListModal");
+const registryListModalCard =
+  registryListModal instanceof HTMLElement
+    ? registryListModal.querySelector(".registry-modal-card")
     : null;
-const registryModalMessage = q("registryModalMessage");
-const registryModalList = q("registryModalList");
-const registryModalCancelBtn = q("registryModalCancelBtn");
-const registryModalConfirmBtn = q("registryModalConfirmBtn");
+const registryListModalCloseBtn = q("registryListModalCloseBtn");
+const registryConfirmModal = q("registryConfirmModal");
+const registryConfirmModalCard =
+  registryConfirmModal instanceof HTMLElement
+    ? registryConfirmModal.querySelector(".registry-modal-card")
+    : null;
+const registryConfirmModalMessage = q("registryConfirmModalMessage");
+const registryConfirmModalList = q("registryConfirmModalList");
+const registryConfirmModalCancelBtn = q("registryConfirmModalCancelBtn");
+const registryConfirmModalConfirmBtn = q("registryConfirmModalConfirmBtn");
 const photoSliderRoot = q("photoSlider");
 const sliderPrevBtn = q("sliderPrevBtn");
 const sliderNextBtn = q("sliderNextBtn");
@@ -84,7 +91,8 @@ let clickHeartSparkLayer = null;
 let clickHeartSparkBound = false;
 let scrollTopBtnVisible = false;
 let scrollTopBtnRafPending = false;
-let lastRegistryModalFocus = null;
+let lastRegistryListModalFocus = null;
+let lastRegistryConfirmModalFocus = null;
 let currentGuest = {
   code: "",
   id: "general",
@@ -458,12 +466,175 @@ function setRegistryFeedback(message) {
   registryFeedback.textContent = message || "";
 }
 
-function isRegistryModalOpen() {
+function isModalOpen(modal) {
   return (
-    registryModal instanceof HTMLElement &&
-    !registryModal.classList.contains("hidden") &&
-    registryModal.getAttribute("aria-hidden") !== "true"
+    modal instanceof HTMLElement &&
+    !modal.classList.contains("hidden") &&
+    modal.getAttribute("aria-hidden") !== "true"
   );
+}
+
+function isRegistryListModalOpen() {
+  return isModalOpen(registryListModal);
+}
+
+function isRegistryConfirmModalOpen() {
+  return isModalOpen(registryConfirmModal);
+}
+
+function syncModalOpenState() {
+  const hasOpenModal = isRegistryListModalOpen() || isRegistryConfirmModalOpen();
+  document.body.classList.toggle("modal-open", hasOpenModal);
+}
+
+function getActiveRegistryModalCard() {
+  if (isRegistryConfirmModalOpen()) {
+    return registryConfirmModalCard;
+  }
+  if (isRegistryListModalOpen()) {
+    return registryListModalCard;
+  }
+  return null;
+}
+
+function focusModalStart(card) {
+  const focusable = getFocusableElements(card);
+  if (focusable.length > 0) {
+    focusable[0].focus();
+    return;
+  }
+
+  if (card instanceof HTMLElement) {
+    card.setAttribute("tabindex", "-1");
+    card.focus();
+  }
+}
+
+function handleRegistryModalKeydown(event) {
+  const activeCard = getActiveRegistryModalCard();
+  if (!activeCard) {
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    if (isRegistryConfirmModalOpen()) {
+      closeRegistryConfirmModal();
+    } else {
+      closeRegistryListModal();
+    }
+    return;
+  }
+
+  if (event.key !== "Tab") {
+    return;
+  }
+
+  const focusable = getFocusableElements(activeCard);
+  if (!focusable.length) {
+    event.preventDefault();
+    focusModalStart(activeCard);
+    return;
+  }
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = document.activeElement;
+  const focusInside = active instanceof Node && activeCard.contains(active);
+
+  if (event.shiftKey) {
+    if (!focusInside || active === first) {
+      event.preventDefault();
+      last.focus();
+    }
+    return;
+  }
+
+  if (!focusInside || active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function openRegistryListModal() {
+  if (!(registryListModal instanceof HTMLElement)) {
+    return;
+  }
+  lastRegistryListModalFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  registryListModal.classList.remove("hidden");
+  registryListModal.setAttribute("aria-hidden", "false");
+  syncModalOpenState();
+  window.requestAnimationFrame(() => focusModalStart(registryListModalCard));
+}
+
+function closeRegistryListModal() {
+  if (!isRegistryListModalOpen()) {
+    return;
+  }
+  if (isRegistryConfirmModalOpen()) {
+    closeRegistryConfirmModal();
+  }
+  registryListModal.classList.add("hidden");
+  registryListModal.setAttribute("aria-hidden", "true");
+  syncModalOpenState();
+
+  if (
+    lastRegistryListModalFocus instanceof HTMLElement &&
+    document.contains(lastRegistryListModalFocus)
+  ) {
+    lastRegistryListModalFocus.focus();
+  }
+  lastRegistryListModalFocus = null;
+}
+
+function openRegistryConfirmModal() {
+  const changes = computeRegistryChanges();
+  if (changes.toReserve.length === 0 && changes.toRelease.length === 0) {
+    setRegistryFeedback("No registry changes selected.");
+    return;
+  }
+
+  registryConfirmModalList.innerHTML = "";
+
+  changes.toReserve.forEach((id) => {
+    const item = getRegistryItemById(id);
+    const li = document.createElement("li");
+    li.textContent = `Reserve: ${item ? item.title : `Item #${id}`}`;
+    registryConfirmModalList.appendChild(li);
+  });
+
+  changes.toRelease.forEach((id) => {
+    const item = getRegistryItemById(id);
+    const li = document.createElement("li");
+    li.textContent = `Release: ${item ? item.title : `Item #${id}`}`;
+    registryConfirmModalList.appendChild(li);
+  });
+
+  registryConfirmModalMessage.textContent =
+    "Please confirm these changes to your registry reservations.";
+  lastRegistryConfirmModalFocus =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  registryConfirmModal.classList.remove("hidden");
+  registryConfirmModal.setAttribute("aria-hidden", "false");
+  syncModalOpenState();
+  window.requestAnimationFrame(() => focusModalStart(registryConfirmModalCard));
+}
+
+function closeRegistryConfirmModal() {
+  if (!isRegistryConfirmModalOpen()) {
+    return;
+  }
+  registryConfirmModal.classList.add("hidden");
+  registryConfirmModal.setAttribute("aria-hidden", "true");
+  syncModalOpenState();
+
+  if (
+    lastRegistryConfirmModalFocus instanceof HTMLElement &&
+    document.contains(lastRegistryConfirmModalFocus)
+  ) {
+    lastRegistryConfirmModalFocus.focus();
+  }
+  lastRegistryConfirmModalFocus = null;
 }
 
 function getFocusableElements(container) {
@@ -483,109 +654,6 @@ function getFocusableElements(container) {
   return Array.from(container.querySelectorAll(selector)).filter(
     (el) => el instanceof HTMLElement && el.getClientRects().length > 0
   );
-}
-
-function focusRegistryModalStart() {
-  const focusable = getFocusableElements(registryModalCard);
-  if (focusable.length > 0) {
-    focusable[0].focus();
-    return;
-  }
-
-  if (registryModalCard instanceof HTMLElement) {
-    registryModalCard.setAttribute("tabindex", "-1");
-    registryModalCard.focus();
-  }
-}
-
-function handleRegistryModalKeydown(event) {
-  if (!isRegistryModalOpen()) {
-    return;
-  }
-
-  if (event.key === "Escape") {
-    event.preventDefault();
-    closeRegistryModal();
-    return;
-  }
-
-  if (event.key !== "Tab") {
-    return;
-  }
-
-  const focusable = getFocusableElements(registryModalCard);
-  if (!focusable.length) {
-    event.preventDefault();
-    focusRegistryModalStart();
-    return;
-  }
-
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  const active = document.activeElement;
-  const focusInside = active instanceof Node && registryModalCard && registryModalCard.contains(active);
-
-  if (event.shiftKey) {
-    if (!focusInside || active === first) {
-      event.preventDefault();
-      last.focus();
-    }
-    return;
-  }
-
-  if (!focusInside || active === last) {
-    event.preventDefault();
-    first.focus();
-  }
-}
-
-function openRegistryModal() {
-  const changes = computeRegistryChanges();
-  if (changes.toReserve.length === 0 && changes.toRelease.length === 0) {
-    setRegistryFeedback("No registry changes selected.");
-    return;
-  }
-
-  registryModalList.innerHTML = "";
-
-  changes.toReserve.forEach((id) => {
-    const item = getRegistryItemById(id);
-    const li = document.createElement("li");
-    li.textContent = `Reserve: ${item ? item.title : `Item #${id}`}`;
-    registryModalList.appendChild(li);
-  });
-
-  changes.toRelease.forEach((id) => {
-    const item = getRegistryItemById(id);
-    const li = document.createElement("li");
-    li.textContent = `Release: ${item ? item.title : `Item #${id}`}`;
-    registryModalList.appendChild(li);
-  });
-
-  registryModalMessage.textContent =
-    "Please confirm these changes to your registry reservations.";
-  lastRegistryModalFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  registryModal.classList.remove("hidden");
-  registryModal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("modal-open");
-  window.requestAnimationFrame(focusRegistryModalStart);
-}
-
-function closeRegistryModal() {
-  if (!isRegistryModalOpen()) {
-    return;
-  }
-  registryModal.classList.add("hidden");
-  registryModal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("modal-open");
-
-  if (
-    lastRegistryModalFocus instanceof HTMLElement &&
-    document.contains(lastRegistryModalFocus)
-  ) {
-    lastRegistryModalFocus.focus();
-  }
-  lastRegistryModalFocus = null;
 }
 
 function spawnHeartSparkBurst(x, y) {
@@ -1371,8 +1439,8 @@ function onRegistryGridChange(event) {
 
 async function confirmRegistryReservation() {
   const selectedIds = Array.from(selectedRegistryIds);
-  registryModalConfirmBtn.disabled = true;
-  registryModalCancelBtn.disabled = true;
+  registryConfirmModalConfirmBtn.disabled = true;
+  registryConfirmModalCancelBtn.disabled = true;
   setRegistryFeedback("Saving registry reservation...");
 
   try {
@@ -1396,7 +1464,7 @@ async function confirmRegistryReservation() {
       throw new Error("Registry save rejected.");
     }
 
-    closeRegistryModal();
+    closeRegistryConfirmModal();
     await loadRegistryItems();
     setRegistryFeedback("Registry reservation updated.");
   } catch (error) {
@@ -1404,8 +1472,8 @@ async function confirmRegistryReservation() {
       "Could not update registry now. Some selected items may have been reserved by others."
     );
   } finally {
-    registryModalConfirmBtn.disabled = false;
-    registryModalCancelBtn.disabled = false;
+    registryConfirmModalConfirmBtn.disabled = false;
+    registryConfirmModalCancelBtn.disabled = false;
   }
 }
 
@@ -1578,14 +1646,22 @@ async function init() {
   loadRegistryItems();
   envelopeBtn.addEventListener("click", openInvitation);
   rsvpForm.addEventListener("submit", submitRsvp);
+  registryOpenBtn.addEventListener("click", openRegistryListModal);
   registryGrid.addEventListener("change", onRegistryGridChange);
-  registryReserveBtn.addEventListener("click", openRegistryModal);
-  registryModalCancelBtn.addEventListener("click", closeRegistryModal);
-  registryModalConfirmBtn.addEventListener("click", confirmRegistryReservation);
-  registryModal.addEventListener("click", (event) => {
+  registryReserveBtn.addEventListener("click", openRegistryConfirmModal);
+  registryListModalCloseBtn.addEventListener("click", closeRegistryListModal);
+  registryListModal.addEventListener("click", (event) => {
     const target = event.target;
-    if (target instanceof HTMLElement && target.dataset.closeRegistryModal === "true") {
-      closeRegistryModal();
+    if (target instanceof HTMLElement && target.dataset.closeRegistryListModal === "true") {
+      closeRegistryListModal();
+    }
+  });
+  registryConfirmModalCancelBtn.addEventListener("click", closeRegistryConfirmModal);
+  registryConfirmModalConfirmBtn.addEventListener("click", confirmRegistryReservation);
+  registryConfirmModal.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.dataset.closeRegistryConfirmModal === "true") {
+      closeRegistryConfirmModal();
     }
   });
   document.addEventListener("keydown", handleRegistryModalKeydown);
