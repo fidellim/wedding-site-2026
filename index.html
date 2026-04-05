@@ -36,6 +36,20 @@
     <div class="bg-ornament bg-ornament-right" aria-hidden="true"></div>
 
     <main class="site-wrap">
+      <section
+        id="loadingGate"
+        class="loading-gate hidden"
+        role="status"
+        aria-live="polite"
+        aria-hidden="true"
+      >
+        <div class="loading-card">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <p class="loading-title">Preparing your invitation...</p>
+          <p class="loading-note">Please wait a moment while we verify your invite.</p>
+        </div>
+      </section>
+
       <section id="privateEventGate" class="private-gate hidden" aria-live="polite">
         <div class="private-card">
           <p class="private-closed">Closed</p>
@@ -66,14 +80,12 @@
                 class="envelope-closed-image"
                 src="images/envelope-brown.webp"
                 alt="Closed envelope"
-                loading="lazy"
               />
               <img
                 class="envelope-closed-seal"
                 src="images/hf-logo-wax-seal.webp"
                 alt=""
                 aria-hidden="true"
-                loading="lazy"
               />
 
               <div class="envelope-open-stack" aria-hidden="true">
@@ -82,7 +94,6 @@
                   src="images/back-envelope.webp"
                   alt="Open back envelope"
                   aria-hidden="true"
-                  loading="lazy"
                 />
 
               <img
@@ -90,7 +101,6 @@
                 src="images/polaroid-strip-img.webp"
                 alt="Polaroid style wedding photo"
                 aria-hidden="true"
-                loading="lazy"
               />
 
                 <div class="save-date-reveal" aria-hidden="true">
@@ -106,7 +116,6 @@
                   src="images/front-envelope.webp"
                   alt="Envelope front"
                   aria-hidden="true"
-                  loading="lazy"
                 />
 
                 <img
@@ -114,7 +123,6 @@
                   src="images/back-wax-seal.webp"
                   alt=""
                   aria-hidden="true"
-                  loading="lazy"
                 />
               </div>
             </button>
@@ -127,8 +135,6 @@
         <header class="hero reveal">
           <div class="hero-copy">
             <img src="/images/logo-text.webp" alt="" loading="lazy">
-            <!-- <h2>HANNAH &amp; FIDEL</h2>
-            <p class="hero-subtitle">THE WEDDING</p> -->
           </div>
           <a class="hero-rsvp-btn" href="#rsvpSection">RSVP HERE</a>
         </header>

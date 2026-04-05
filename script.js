@@ -38,6 +38,7 @@ const guestCacheConfig = {
 
 const gate = q("envelopeGateContainer");
 const mainContent = q("mainContent");
+const loadingGate = q("loadingGate");
 const envelopeBtn = q("envelopeBtn");
 const privateEventGate = q("privateEventGate");
 const privateGateMessage = q("privateGateMessage");
@@ -289,7 +290,30 @@ function applyGuestToUi(guest) {
   syncAttendeeCountInputState();
 }
 
+function showLoadingGate() {
+  gate.classList.add("hidden");
+  mainContent.classList.add("hidden");
+  privateEventGate.classList.add("hidden");
+  document.body.classList.remove("private-only");
+  document.body.classList.add("intro-active");
+
+  if (loadingGate instanceof HTMLElement) {
+    loadingGate.classList.remove("hidden");
+    loadingGate.setAttribute("aria-hidden", "false");
+  }
+  syncScrollTopButtonVisibility(true);
+}
+
+function hideLoadingGate() {
+  if (!(loadingGate instanceof HTMLElement)) {
+    return;
+  }
+  loadingGate.classList.add("hidden");
+  loadingGate.setAttribute("aria-hidden", "true");
+}
+
 function showPrivateGate(message) {
+  hideLoadingGate();
   gate.classList.add("hidden");
   mainContent.classList.add("hidden");
   privateEventGate.classList.remove("hidden");
@@ -301,6 +325,7 @@ function showPrivateGate(message) {
 }
 
 function showInvitationExperience() {
+  hideLoadingGate();
   privateEventGate.classList.add("hidden");
   mainContent.classList.add("hidden");
   document.body.classList.remove("private-only");
@@ -1528,11 +1553,7 @@ function initRevealTiming() {
 }
 
 async function init() {
-  document.body.classList.add("intro-active");
-  document.body.classList.remove("private-only");
-  gate.classList.add("hidden");
-  mainContent.classList.add("hidden");
-  privateEventGate.classList.add("hidden");
+  showLoadingGate();
   initClickHeartSpark();
   initScrollTopButton();
   hydrateStaticContent();
@@ -1541,7 +1562,13 @@ async function init() {
   initRevealTiming();
   bindAttendanceControls();
 
-  const access = await loadGuestProfile();
+  let access = null;
+  try {
+    access = await loadGuestProfile();
+  } catch (error) {
+    showPrivateGate("We could not load your invitation right now. Please refresh and try again.");
+    return;
+  }
   if (!access || !access.allowed) {
     showPrivateGate(access && access.reason ? access.reason : "");
     return;

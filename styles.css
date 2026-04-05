@@ -152,6 +152,50 @@ body.modal-open {
   color: var(--muted);
 }
 
+.loading-gate {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  background: #630000;
+  display: grid;
+  place-items: center;
+  z-index: 52;
+  padding: clamp(1rem, 3vh, 2rem) 1rem;
+}
+
+.loading-card {
+  width: min(440px, 92vw);
+  text-align: center;
+  color: #f7e4d8;
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+}
+
+.loading-spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 2px solid rgba(247, 228, 216, 0.35);
+  border-top-color: #f7e4d8;
+  animation: loadingGateSpin 0.85s linear infinite;
+}
+
+.loading-title {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2.05rem, 6vw, 3rem);
+  line-height: 0.95;
+}
+
+.loading-note {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.96rem;
+  letter-spacing: 0.02em;
+  color: rgba(247, 228, 216, 0.88);
+}
+
 .private-gate {
   position: fixed;
   inset: 0;
@@ -207,6 +251,12 @@ body.modal-open {
   margin: 1rem 0 0;
   font-size: 0.95rem;
   color: #3d3d3d;
+}
+
+@keyframes loadingGateSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .envelopeGateContainer {
@@ -2550,6 +2600,10 @@ body.scroll-animate .reveal-unit.is-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+
   .faq-item,
   .faq-icon,
   .faq-panel {
