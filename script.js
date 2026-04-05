@@ -281,8 +281,12 @@ function applyGuestToUi(guest) {
   rsvpGuestPrompt.textContent = `Reserved for your invitation: up to ${guest.seats} attendee(s).`;
   guestNameInput.value = guest.name;
   emailInput.value = normalizeEmail(guest.email || "");
-  attendeeCountInput.max = String(guest.seats);
+  const seats = Number(guest.seats);
+  const maxSeats = Number.isFinite(seats) && seats > 0 ? Math.floor(seats) : 1;
+  attendeeCountInput.max = String(maxSeats);
   attendeeCountInput.value = guest.seats > 0 ? "1" : "0";
+  attendeeCountInput.dataset.lastAcceptedCount = "1";
+  syncAttendeeCountInputState();
 }
 
 function showPrivateGate(message) {
@@ -317,6 +321,9 @@ function setRsvpFormEnabled(enabled) {
   if (submitBtn) {
     submitBtn.disabled = !enabled;
   }
+  if (enabled) {
+    syncAttendeeCountInputState();
+  }
 }
 
 function setRsvpFeedback(message = "") {
@@ -343,6 +350,43 @@ function setRsvpSubmitLoading(isLoading) {
   submitBtn.setAttribute("aria-busy", isLoading ? "true" : "false");
 }
 
+function syncAttendeeCountInputState() {
+  if (!attendeeCountInput) {
+    return;
+  }
+
+  const seats = Number(currentGuest.seats);
+  const maxSeats = Number.isFinite(seats) && seats > 0 ? Math.floor(seats) : 1;
+  attendeeCountInput.max = String(maxSeats);
+
+  const attendance = getAttendanceValue();
+  if (attendance === "No") {
+    const parsedCount = Number(attendeeCountInput.value);
+    if (Number.isFinite(parsedCount) && parsedCount >= 1) {
+      attendeeCountInput.dataset.lastAcceptedCount = String(
+        Math.min(Math.floor(parsedCount), maxSeats)
+      );
+    }
+    attendeeCountInput.value = "0";
+    attendeeCountInput.disabled = true;
+    attendeeCountInput.removeAttribute("required");
+    attendeeCountInput.setAttribute("aria-disabled", "true");
+    return;
+  }
+
+  attendeeCountInput.disabled = false;
+  attendeeCountInput.setAttribute("required", "");
+  attendeeCountInput.removeAttribute("aria-disabled");
+
+  const preferred = Number(attendeeCountInput.dataset.lastAcceptedCount);
+  const current = Number(attendeeCountInput.value);
+  const fallback = Number.isFinite(preferred) && preferred >= 1 ? preferred : 1;
+  const baseCount = Number.isFinite(current) && current >= 1 ? current : fallback;
+  const nextCount = Math.min(Math.floor(baseCount), maxSeats);
+  attendeeCountInput.value = String(nextCount);
+  attendeeCountInput.dataset.lastAcceptedCount = String(nextCount);
+}
+
 function setAttendanceValue(value) {
   const normalized = String(value || "");
   if (attendanceInput) {
@@ -351,6 +395,7 @@ function setAttendanceValue(value) {
   attendanceChoiceInputs.forEach((option) => {
     option.checked = option.value === normalized;
   });
+  syncAttendeeCountInputState();
 }
 
 function getAttendanceValue() {
@@ -1173,7 +1218,7 @@ async function submitRsvp(event) {
   event.preventDefault();
 
   const attendance = getAttendanceValue();
-  const count = Number(attendeeCountInput.value);
+  const rawCount = Number(attendeeCountInput.value);
   const message = "";
   const name = guestNameInput.value.trim();
   const email = normalizeEmail(emailInput.value);
@@ -1203,9 +1248,15 @@ async function submitRsvp(event) {
     return;
   }
 
-  if (!Number.isFinite(count) || count < 1 || count > currentGuest.seats) {
-    setRsvpFeedback(`Attendees should be between 1 and ${currentGuest.seats}.`);
-    return;
+  let attendees = 0;
+  if (attendance === "No") {
+    attendees = 0;
+  } else {
+    if (!Number.isFinite(rawCount) || rawCount < 1 || rawCount > currentGuest.seats) {
+      setRsvpFeedback(`Attendees should be between 1 and ${currentGuest.seats}.`);
+      return;
+    }
+    attendees = Math.floor(rawCount);
   }
 
   setRsvpFeedback("Submitting...");
@@ -1228,7 +1279,7 @@ async function submitRsvp(event) {
           p_guest_name: name,
           p_email: email,
           p_attendance: attendance,
-          p_attendees: count,
+          p_attendees: attendees,
           p_message: message,
         }),
       });
@@ -1247,7 +1298,7 @@ async function submitRsvp(event) {
         guestName: name,
         email,
         attendance,
-        attendees: count,
+        attendees,
         message,
         submittedAt: new Date().toISOString(),
       };
