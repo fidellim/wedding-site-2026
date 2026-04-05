@@ -56,6 +56,10 @@ const registryGrid = q("registryGrid");
 const registryReserveBtn = q("registryReserveBtn");
 const registryFeedback = q("registryFeedback");
 const registryModal = q("registryModal");
+const registryModalCard =
+  registryModal instanceof HTMLElement
+    ? registryModal.querySelector(".registry-modal-card")
+    : null;
 const registryModalMessage = q("registryModalMessage");
 const registryModalList = q("registryModalList");
 const registryModalCancelBtn = q("registryModalCancelBtn");
@@ -79,6 +83,7 @@ let clickHeartSparkLayer = null;
 let clickHeartSparkBound = false;
 let scrollTopBtnVisible = false;
 let scrollTopBtnRafPending = false;
+let lastRegistryModalFocus = null;
 let currentGuest = {
   code: "",
   id: "general",
@@ -383,6 +388,87 @@ function setRegistryFeedback(message) {
   registryFeedback.textContent = message || "";
 }
 
+function isRegistryModalOpen() {
+  return (
+    registryModal instanceof HTMLElement &&
+    !registryModal.classList.contains("hidden") &&
+    registryModal.getAttribute("aria-hidden") !== "true"
+  );
+}
+
+function getFocusableElements(container) {
+  if (!(container instanceof HTMLElement)) {
+    return [];
+  }
+
+  const selector = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(",");
+
+  return Array.from(container.querySelectorAll(selector)).filter(
+    (el) => el instanceof HTMLElement && el.getClientRects().length > 0
+  );
+}
+
+function focusRegistryModalStart() {
+  const focusable = getFocusableElements(registryModalCard);
+  if (focusable.length > 0) {
+    focusable[0].focus();
+    return;
+  }
+
+  if (registryModalCard instanceof HTMLElement) {
+    registryModalCard.setAttribute("tabindex", "-1");
+    registryModalCard.focus();
+  }
+}
+
+function handleRegistryModalKeydown(event) {
+  if (!isRegistryModalOpen()) {
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeRegistryModal();
+    return;
+  }
+
+  if (event.key !== "Tab") {
+    return;
+  }
+
+  const focusable = getFocusableElements(registryModalCard);
+  if (!focusable.length) {
+    event.preventDefault();
+    focusRegistryModalStart();
+    return;
+  }
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = document.activeElement;
+  const focusInside = active instanceof Node && registryModalCard && registryModalCard.contains(active);
+
+  if (event.shiftKey) {
+    if (!focusInside || active === first) {
+      event.preventDefault();
+      last.focus();
+    }
+    return;
+  }
+
+  if (!focusInside || active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 function openRegistryModal() {
   const changes = computeRegistryChanges();
   if (changes.toReserve.length === 0 && changes.toRelease.length === 0) {
@@ -408,15 +494,28 @@ function openRegistryModal() {
 
   registryModalMessage.textContent =
     "Please confirm these changes to your registry reservations.";
+  lastRegistryModalFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   registryModal.classList.remove("hidden");
   registryModal.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
+  window.requestAnimationFrame(focusRegistryModalStart);
 }
 
 function closeRegistryModal() {
+  if (!isRegistryModalOpen()) {
+    return;
+  }
   registryModal.classList.add("hidden");
   registryModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+
+  if (
+    lastRegistryModalFocus instanceof HTMLElement &&
+    document.contains(lastRegistryModalFocus)
+  ) {
+    lastRegistryModalFocus.focus();
+  }
+  lastRegistryModalFocus = null;
 }
 
 function spawnHeartSparkBurst(x, y) {
@@ -1411,6 +1510,7 @@ async function init() {
       closeRegistryModal();
     }
   });
+  document.addEventListener("keydown", handleRegistryModalKeydown);
 }
 
 init();
