@@ -245,7 +245,9 @@ function computeRegistryChanges() {
 
 function updateRegistryReserveButtonState() {
   const hasChanges = !areSetsEqual(selectedRegistryIds, myReservedRegistryIds);
-  registryReserveBtn.disabled = !hasChanges;
+  if (registryReserveBtn) {
+    registryReserveBtn.disabled = !hasChanges;
+  }
 }
 
 function formatEventDate(date) {
@@ -338,10 +340,21 @@ function initVenueMapEmbed() {
 }
 
 function applyGuestToUi(guest) {
-  gateGuestName.textContent = `For ${guest.name}`;
-  rsvpGuestPrompt.textContent = `Reserved for your invitation: up to ${guest.seats} attendee(s).`;
-  guestNameInput.value = guest.name;
-  emailInput.value = normalizeEmail(guest.email || "");
+  if (gateGuestName) {
+    gateGuestName.textContent = `For ${guest.name}`;
+  }
+  if (rsvpGuestPrompt) {
+    rsvpGuestPrompt.textContent = `Reserved for your invitation: up to ${guest.seats} attendee(s).`;
+  }
+  if (guestNameInput) {
+    guestNameInput.value = guest.name;
+  }
+  if (emailInput) {
+    emailInput.value = normalizeEmail(guest.email || "");
+  }
+  if (!attendeeCountInput) {
+    return;
+  }
   const seats = Number(guest.seats);
   const maxSeats = Number.isFinite(seats) && seats > 0 ? Math.floor(seats) : 1;
   attendeeCountInput.max = String(maxSeats);
@@ -351,9 +364,15 @@ function applyGuestToUi(guest) {
 }
 
 function showLoadingGate() {
-  gate.classList.add("hidden");
-  mainContent.classList.add("hidden");
-  privateEventGate.classList.add("hidden");
+  if (gate) {
+    gate.classList.add("hidden");
+  }
+  if (mainContent) {
+    mainContent.classList.add("hidden");
+  }
+  if (privateEventGate) {
+    privateEventGate.classList.add("hidden");
+  }
   document.body.classList.remove("private-only");
   document.body.classList.add("intro-active");
 
@@ -374,22 +393,36 @@ function hideLoadingGate() {
 
 function showPrivateGate(message) {
   hideLoadingGate();
-  gate.classList.add("hidden");
-  mainContent.classList.add("hidden");
-  privateEventGate.classList.remove("hidden");
+  if (gate) {
+    gate.classList.add("hidden");
+  }
+  if (mainContent) {
+    mainContent.classList.add("hidden");
+  }
+  if (privateEventGate) {
+    privateEventGate.classList.remove("hidden");
+  }
   document.body.classList.add("private-only");
-  privateGateMessage.textContent =
-    message || "This invitation is private. Please use your personalized invite link.";
+  if (privateGateMessage) {
+    privateGateMessage.textContent =
+      message || "This invitation is private. Please use your personalized invite link.";
+  }
   document.body.classList.remove("intro-active");
   syncScrollTopButtonVisibility(true);
 }
 
 function showInvitationExperience() {
   hideLoadingGate();
-  privateEventGate.classList.add("hidden");
-  mainContent.classList.add("hidden");
+  if (privateEventGate) {
+    privateEventGate.classList.add("hidden");
+  }
+  if (mainContent) {
+    mainContent.classList.add("hidden");
+  }
   document.body.classList.remove("private-only");
-  gate.classList.remove("hidden");
+  if (gate) {
+    gate.classList.remove("hidden");
+  }
 }
 
 function setRsvpFormEnabled(enabled) {
@@ -402,7 +435,7 @@ function setRsvpFormEnabled(enabled) {
   fields.forEach((el) => {
     el.disabled = !enabled;
   });
-  const submitBtn = rsvpForm.querySelector('button[type="submit"]');
+  const submitBtn = rsvpForm ? rsvpForm.querySelector('button[type="submit"]') : null;
   if (submitBtn) {
     submitBtn.disabled = !enabled;
   }
@@ -515,6 +548,9 @@ function bindAttendanceControls() {
 }
 
 function setRegistryFeedback(message) {
+  if (!registryFeedback) {
+    return;
+  }
   registryFeedback.textContent = message || "";
 }
 
@@ -640,6 +676,14 @@ function closeRegistryListModal() {
 }
 
 function openRegistryConfirmModal() {
+  if (
+    !(registryConfirmModal instanceof HTMLElement) ||
+    !(registryConfirmModalList instanceof HTMLElement) ||
+    !(registryConfirmModalMessage instanceof HTMLElement)
+  ) {
+    return;
+  }
+
   const changes = computeRegistryChanges();
   if (changes.toReserve.length === 0 && changes.toRelease.length === 0) {
     setRegistryFeedback("No registry changes selected.");
@@ -778,7 +822,7 @@ function initClickHeartSpark() {
 }
 
 function shouldShowScrollTopButton() {
-  if (!scrollTopBtn || mainContent.classList.contains("hidden")) {
+  if (!scrollTopBtn || !mainContent || mainContent.classList.contains("hidden")) {
     return false;
   }
   return window.scrollY > window.innerHeight;
@@ -852,6 +896,9 @@ function applyRevealUnit(element) {
 }
 
 function renderRegistryItems() {
+  if (!registryGrid) {
+    return;
+  }
   registryGrid.innerHTML = "";
 
   if (!registryItems.length) {
@@ -1037,7 +1084,9 @@ async function loadRegistryItems() {
   }
 
   setRegistryFeedback("Loading registry items...");
-  registryReserveBtn.disabled = true;
+  if (registryReserveBtn) {
+    registryReserveBtn.disabled = true;
+  }
 
   try {
     const baseUrl = getSupabaseBaseUrl();
@@ -1587,8 +1636,12 @@ function onRegistryGridChange(event) {
 
 async function confirmRegistryReservation() {
   const selectedIds = Array.from(selectedRegistryIds);
-  registryConfirmModalConfirmBtn.disabled = true;
-  registryConfirmModalCancelBtn.disabled = true;
+  if (registryConfirmModalConfirmBtn) {
+    registryConfirmModalConfirmBtn.disabled = true;
+  }
+  if (registryConfirmModalCancelBtn) {
+    registryConfirmModalCancelBtn.disabled = true;
+  }
   setRegistryFeedback("Saving registry reservation...");
 
   try {
@@ -1620,13 +1673,20 @@ async function confirmRegistryReservation() {
       "Could not update registry now. Some selected items may have been reserved by others."
     );
   } finally {
-    registryConfirmModalConfirmBtn.disabled = false;
-    registryConfirmModalCancelBtn.disabled = false;
+    if (registryConfirmModalConfirmBtn) {
+      registryConfirmModalConfirmBtn.disabled = false;
+    }
+    if (registryConfirmModalCancelBtn) {
+      registryConfirmModalCancelBtn.disabled = false;
+    }
   }
 }
 
 function openInvitation() {
   if (invitationOpened) {
+    return;
+  }
+  if (!gate || !envelopeBtn || !mainContent) {
     return;
   }
   invitationOpened = true;
@@ -1652,7 +1712,7 @@ function openInvitation() {
 }
 
 function revealVisibleSectionsNow() {
-  if (mainContent.classList.contains("hidden")) {
+  if (!mainContent || mainContent.classList.contains("hidden")) {
     return;
   }
 
@@ -1798,26 +1858,46 @@ async function init() {
 
   showInvitationExperience();
   loadRegistryItems();
-  envelopeBtn.addEventListener("click", openInvitation);
-  rsvpForm.addEventListener("submit", submitRsvp);
-  registryOpenBtn.addEventListener("click", openRegistryListModal);
-  registryGrid.addEventListener("change", onRegistryGridChange);
-  registryReserveBtn.addEventListener("click", openRegistryConfirmModal);
-  registryListModalCloseBtn.addEventListener("click", closeRegistryListModal);
-  registryListModal.addEventListener("click", (event) => {
-    const target = event.target;
-    if (target instanceof HTMLElement && target.dataset.closeRegistryListModal === "true") {
-      closeRegistryListModal();
-    }
-  });
-  registryConfirmModalCancelBtn.addEventListener("click", closeRegistryConfirmModal);
-  registryConfirmModalConfirmBtn.addEventListener("click", confirmRegistryReservation);
-  registryConfirmModal.addEventListener("click", (event) => {
-    const target = event.target;
-    if (target instanceof HTMLElement && target.dataset.closeRegistryConfirmModal === "true") {
-      closeRegistryConfirmModal();
-    }
-  });
+  if (envelopeBtn) {
+    envelopeBtn.addEventListener("click", openInvitation);
+  }
+  if (rsvpForm) {
+    rsvpForm.addEventListener("submit", submitRsvp);
+  }
+  if (registryOpenBtn) {
+    registryOpenBtn.addEventListener("click", openRegistryListModal);
+  }
+  if (registryGrid) {
+    registryGrid.addEventListener("change", onRegistryGridChange);
+  }
+  if (registryReserveBtn) {
+    registryReserveBtn.addEventListener("click", openRegistryConfirmModal);
+  }
+  if (registryListModalCloseBtn) {
+    registryListModalCloseBtn.addEventListener("click", closeRegistryListModal);
+  }
+  if (registryListModal) {
+    registryListModal.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.dataset.closeRegistryListModal === "true") {
+        closeRegistryListModal();
+      }
+    });
+  }
+  if (registryConfirmModalCancelBtn) {
+    registryConfirmModalCancelBtn.addEventListener("click", closeRegistryConfirmModal);
+  }
+  if (registryConfirmModalConfirmBtn) {
+    registryConfirmModalConfirmBtn.addEventListener("click", confirmRegistryReservation);
+  }
+  if (registryConfirmModal) {
+    registryConfirmModal.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.dataset.closeRegistryConfirmModal === "true") {
+        closeRegistryConfirmModal();
+      }
+    });
+  }
   document.addEventListener("keydown", handleRegistryModalKeydown);
 }
 
