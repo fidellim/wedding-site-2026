@@ -1233,79 +1233,6 @@ body.modal-open {
   margin-top: 0.15rem;
 }
 
-.countdown-calendar {
-  border: 0;
-  padding: clamp(1.2rem, 3.2vw, 2.4rem);
-  border-radius: 14px;
-  background: #f1f1f1;
-  box-shadow: 0 20px 40px rgba(30, 27, 19, 0.08);
-  width: min(760px, 100%);
-  margin-top: clamp(0.7rem, 1.5vw, 1rem);
-}
-
-.countdown-calendar .calendar-header {
-  margin: 0 0 clamp(1.2rem, 2vw, 1.8rem);
-  font-size: clamp(2rem, 3.2vw, 3.35rem);
-  color: #021b39;
-  font-weight: 500;
-}
-
-.countdown-calendar .calendar-grid {
-  gap: clamp(0.65rem, 1.3vw, 1rem);
-}
-
-.countdown-calendar .calendar-weekdays div {
-  font-size: 0.66rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #816a00;
-  font-weight: 700;
-}
-
-.countdown-calendar .calendar-day {
-  border: 0;
-  min-height: clamp(36px, 3.2vw, 54px);
-  padding: 0;
-  background: transparent;
-  color: #031d3a;
-  text-align: center;
-  display: grid;
-  place-items: center;
-  font-size: clamp(1rem, 1.45vw, 1.65rem);
-}
-
-.countdown-calendar .calendar-day.is-empty {
-  opacity: 0;
-}
-
-.countdown-calendar .calendar-day.is-before {
-  color: rgba(3, 29, 58, 0.24);
-}
-
-.countdown-calendar .calendar-day.is-wedding {
-  width: clamp(2.3rem, 3.1vw, 3.2rem);
-  height: clamp(2.3rem, 3.1vw, 3.2rem);
-  min-height: 0;
-  margin: 0 auto;
-  border-radius: 999px;
-  border: 0;
-  background: #816a00;
-  color: #ffffff;
-  font-weight: 700;
-  position: relative;
-}
-
-.countdown-calendar .calendar-day.is-wedding::after {
-  content: "";
-  position: absolute;
-  width: clamp(6px, 0.65vw, 9px);
-  height: clamp(6px, 0.65vw, 9px);
-  right: -0.35rem;
-  top: 0.2rem;
-  border-radius: 999px;
-  background: #4b0000;
-}
-
 @keyframes countdownFlipTop {
   from {
     transform: rotateX(0deg);
@@ -1343,52 +1270,6 @@ body.modal-open {
   }
 }
 
-.calendar-wrap {
-  border: 1px solid var(--band-line, var(--line));
-  border-radius: 16px;
-  padding: 0.7rem;
-  background: var(--band-surface);
-}
-
-.calendar-header {
-  text-align: center;
-  font-weight: 600;
-  margin-bottom: 0.55rem;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.35rem;
-}
-
-.calendar-weekdays div {
-  text-align: center;
-  color: var(--band-muted, var(--muted));
-  font-size: 0.83rem;
-}
-
-.calendar-day {
-  border: 1px solid var(--band-line, var(--line));
-  border-radius: 10px;
-  text-align: center;
-  padding: 0.5rem 0;
-  min-height: 38px;
-  background: var(--band-surface);
-  color: var(--ink);
-}
-
-.calendar-day.is-empty {
-  opacity: 0.3;
-}
-
-.calendar-day.is-wedding {
-  border-color: #630000;
-  background: linear-gradient(130deg, #630000, #694534);
-  color: #e9d4c3;
-  font-weight: 700;
-}
-
 .date-venue-layout {
   display: grid;
   gap: clamp(1.6rem, 4vw, 4.8rem);
@@ -1404,77 +1285,6 @@ body.modal-open {
   --band-line: rgba(0, 26, 55, 0.12);
   --date-venue-media-height: clamp(220px, 26vw, 320px);
   --date-venue-map-height: clamp(280px, 30vw, 390px);
-}
-
-.date-venue-calendar {
-  border: 0;
-  padding: clamp(1.2rem, 3.2vw, 2.4rem);
-  border-radius: 14px;
-  background: #f1f1f1;
-  box-shadow: 0 20px 40px rgba(30, 27, 19, 0.08);
-}
-
-.date-venue-panel .calendar-header {
-  margin: 0 0 clamp(1.2rem, 2vw, 1.8rem);
-  font-size: clamp(2rem, 3.2vw, 3.35rem);
-  color: #021b39;
-  font-weight: 500;
-}
-
-.date-venue-panel .calendar-grid {
-  gap: clamp(0.65rem, 1.3vw, 1rem);
-}
-
-.date-venue-panel .calendar-weekdays div {
-  font-size: 0.66rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #816a00;
-  font-weight: 700;
-}
-
-.date-venue-panel .calendar-day {
-  border: 0;
-  min-height: clamp(36px, 3.2vw, 54px);
-  padding: 0;
-  background: transparent;
-  color: #031d3a;
-  text-align: center;
-  display: grid;
-  place-items: center;
-  font-size: clamp(1rem, 1.45vw, 1.65rem);
-}
-
-.date-venue-panel .calendar-day.is-empty {
-  opacity: 0;
-}
-
-.date-venue-panel .calendar-day.is-before {
-  color: rgba(3, 29, 58, 0.24);
-}
-
-.date-venue-panel .calendar-day.is-wedding {
-  width: clamp(2.3rem, 3.1vw, 3.2rem);
-  height: clamp(2.3rem, 3.1vw, 3.2rem);
-  min-height: 0;
-  margin: 0 auto;
-  border-radius: 999px;
-  border: 0;
-  background: #816a00;
-  color: #ffffff;
-  font-weight: 700;
-  position: relative;
-}
-
-.date-venue-panel .calendar-day.is-wedding::after {
-  content: "";
-  position: absolute;
-  width: clamp(6px, 0.65vw, 9px);
-  height: clamp(6px, 0.65vw, 9px);
-  right: -0.35rem;
-  top: 0.2rem;
-  border-radius: 999px;
-  background: #4b0000;
 }
 
 .date-venue-content {
@@ -1658,18 +1468,6 @@ body.modal-open {
 }
 
 @media (max-width: 740px) {
-  .countdown-calendar {
-    margin-top: 0.7rem;
-  }
-
-  .countdown-calendar .calendar-header {
-    font-size: clamp(1.8rem, 8vw, 2.4rem);
-  }
-
-  .countdown-calendar .calendar-day {
-    min-height: clamp(34px, 8.8vw, 46px);
-  }
-
   .date-venue-content {
     order: 1;
   }
@@ -1682,10 +1480,6 @@ body.modal-open {
   .date-venue-map {
     height: var(--date-venue-media-height);
     min-height: 0;
-  }
-
-  .date-venue-panel .calendar-header {
-    font-size: clamp(1.8rem, 8vw, 2.4rem);
   }
 
 }

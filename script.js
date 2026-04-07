@@ -1453,57 +1453,6 @@ function initFaqAccordion() {
   });
 }
 
-function renderCalendar() {
-  const date = new Date(weddingConfig.weddingDateISO);
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const weddingDay = date.getDate();
-
-  const calendarHeader = q("calendarHeader");
-  const weekdayWrap = q("calendarWeekdays");
-  const dayWrap = q("calendarDays");
-  if (!calendarHeader || !weekdayWrap || !dayWrap) {
-    return;
-  }
-
-  calendarHeader.textContent = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    year: "numeric",
-  }).format(date);
-
-  weekdayWrap.innerHTML = "";
-  dayWrap.innerHTML = "";
-
-  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  weekdays.forEach((day) => {
-    const el = document.createElement("div");
-    el.textContent = day;
-    weekdayWrap.appendChild(el);
-  });
-
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  for (let i = 0; i < firstDay; i += 1) {
-    const empty = document.createElement("div");
-    empty.className = "calendar-day is-empty";
-    dayWrap.appendChild(empty);
-  }
-
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    const el = document.createElement("div");
-    el.className = "calendar-day";
-    if (day < weddingDay) {
-      el.classList.add("is-before");
-    }
-    if (day === weddingDay) {
-      el.classList.add("is-wedding");
-    }
-    el.textContent = String(day);
-    dayWrap.appendChild(el);
-  }
-}
-
 async function submitRsvp(event) {
   event.preventDefault();
 
@@ -1835,7 +1784,6 @@ async function init() {
     initScrollTopButton();
     hydrateStaticContent();
     initVenueMapEmbed();
-    renderCalendar();
     initFaqAccordion();
     initRevealTiming();
     bindAttendanceControls();
