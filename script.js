@@ -1,5 +1,6 @@
 const weddingConfig = {
   coupleNames: "Hannah & Fidel",
+  // weddingDateISO: "2026-04-07T21:48:00+04:00",
   weddingDateISO: "2026-11-15T16:00:00+04:00",
   venueName: "Shangri-La Hotel\nQaryat Al Beri",
   venueAddress: "Abu Dhabi, United Arab Emirates",
@@ -1140,39 +1141,130 @@ async function loadGuestProfile() {
 
 function startCountdown() {
   const target = new Date(weddingConfig.weddingDateISO).getTime();
-  const daysEl = q("days");
-  const hoursEl = q("hours");
-  const minutesEl = q("minutes");
-  const secondsEl = q("seconds");
+  const weddingDateText = q("weddingDateText");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const flipAnimationEnabled = !prefersReducedMotion;
+
+  if (countdownInterval !== null) {
+    window.clearTimeout(countdownInterval);
+    countdownInterval = null;
+  }
+
+  const segments = {
+    days: createCountdownSegmentController("days", flipAnimationEnabled),
+    hours: createCountdownSegmentController("hours", flipAnimationEnabled),
+    minutes: createCountdownSegmentController("minutes", flipAnimationEnabled),
+    seconds: createCountdownSegmentController("seconds", flipAnimationEnabled),
+  };
 
   const tick = () => {
-    const now = Date.now();
-    const delta = target - now;
+    const delta = target - Date.now();
 
     if (delta <= 0) {
-      daysEl.textContent = "0";
-      hoursEl.textContent = "0";
-      minutesEl.textContent = "0";
-      secondsEl.textContent = "0";
-      q("weddingDateText").textContent = "Today is the wedding day.";
-      clearInterval(countdownInterval);
+      renderCountdownValues(segments, {
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+      });
+      if (weddingDateText) {
+        weddingDateText.textContent = "Today is the wedding day!";
+      }
+      if (countdownInterval !== null) {
+        window.clearTimeout(countdownInterval);
+        countdownInterval = null;
+      }
       return;
     }
 
     const totalSeconds = Math.floor(delta / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    renderCountdownValues(segments, {
+      days: Math.floor(totalSeconds / 86400),
+      hours: Math.floor((totalSeconds % 86400) / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+      seconds: totalSeconds % 60,
+    });
 
-    daysEl.textContent = String(days);
-    hoursEl.textContent = String(hours).padStart(2, "0");
-    minutesEl.textContent = String(minutes).padStart(2, "0");
-    secondsEl.textContent = String(seconds).padStart(2, "0");
+    const driftSafeDelay = Math.max(16, 1000 - (Date.now() % 1000) + 8);
+    countdownInterval = window.setTimeout(tick, driftSafeDelay);
   };
 
   tick();
-  countdownInterval = setInterval(tick, 1000);
+}
+
+function createCountdownSegmentController(name, flipAnimationEnabled) {
+  const container = document.querySelector(`[data-countdown-segment="${name}"]`);
+  const card = container ? container.querySelector(".countdown-flip-card") : null;
+  const topValue = container ? container.querySelector('[data-countdown-part="top"]') : null;
+  const bottomValue = container ? container.querySelector('[data-countdown-part="bottom"]') : null;
+  const srValue = container ? container.querySelector("[data-countdown-sr-value]") : null;
+  const flipOld = container ? container.querySelector("[data-countdown-flip-old]") : null;
+  const flipNew = container ? container.querySelector("[data-countdown-flip-new]") : null;
+
+  let currentValue = srValue ? String(srValue.textContent || "").trim() : "00";
+  const flipDurationMs = 360;
+
+  return {
+    update(nextRawValue) {
+      const nextValue = formatCountdownValue(nextRawValue);
+
+      if (
+        !card ||
+        !topValue ||
+        !bottomValue ||
+        !srValue ||
+        !flipOld ||
+        !flipNew
+      ) {
+        return;
+      }
+
+      if (currentValue === nextValue) {
+        return;
+      }
+
+      if (!flipAnimationEnabled) {
+        topValue.textContent = nextValue;
+        bottomValue.textContent = nextValue;
+        srValue.textContent = nextValue;
+        currentValue = nextValue;
+        return;
+      }
+
+      card.classList.remove("is-flipping");
+      void card.offsetWidth;
+
+      flipOld.textContent = currentValue;
+      flipNew.textContent = nextValue;
+      topValue.textContent = currentValue;
+      bottomValue.textContent = currentValue;
+      srValue.textContent = nextValue;
+
+      card.classList.add("is-flipping");
+
+      window.setTimeout(() => {
+        topValue.textContent = nextValue;
+      }, flipDurationMs);
+
+      window.setTimeout(() => {
+        bottomValue.textContent = nextValue;
+        card.classList.remove("is-flipping");
+      }, flipDurationMs * 2);
+
+      currentValue = nextValue;
+    },
+  };
+}
+
+function renderCountdownValues(segments, values) {
+  segments.days.update(values.days);
+  segments.hours.update(values.hours);
+  segments.minutes.update(values.minutes);
+  segments.seconds.update(values.seconds);
+}
+
+function formatCountdownValue(value) {
+  return String(value).padStart(2, "0");
 }
 
 function initPhotoSlider() {
