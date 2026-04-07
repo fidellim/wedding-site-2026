@@ -190,10 +190,19 @@
         <section id="theDestination" class="panel reveal date-venue-panel">
           <div class="section-wrap">
             <div class="date-venue-layout">
-              <div class="calendar-wrap date-venue-calendar">
-                <h3 id="calendarHeader" class="calendar-header"></h3>
-                <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
-                <div class="calendar-grid" id="calendarDays"></div>
+              <div class="date-venue-map-wrap is-loading" id="dateVenueMapWrap">
+                <div class="date-venue-map-placeholder" aria-hidden="true">
+                  <span class="date-venue-map-loader">Google Map is loading...</span>
+                </div>
+                <iframe
+                  id="venueMapEmbed"
+                  class="date-venue-map"
+                  title="Map location of Shangri-La Hotel Qaryat Al Beri, Abu Dhabi"
+                  src="https://www.google.com/maps?q=Shangri-La+Qaryat+Al+Beri+Abu+Dhabi&output=embed"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen
+                ></iframe>
               </div>
 
               <div class="date-venue-content">
@@ -521,6 +530,11 @@
                   </article>
                 </div>
                 <p id="weddingDateText" class="date-text" aria-live="polite"></p>
+                <!-- <div class="calendar-wrap countdown-calendar">
+                  <h3 id="calendarHeader" class="calendar-header"></h3>
+                  <div class="calendar-grid calendar-weekdays" id="calendarWeekdays"></div>
+                  <div class="calendar-grid" id="calendarDays"></div>
+                </div> -->
               </div>
             </div>
           </div>

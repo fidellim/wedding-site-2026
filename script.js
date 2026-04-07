@@ -73,6 +73,8 @@ const registryConfirmModalMessage = q("registryConfirmModalMessage");
 const registryConfirmModalList = q("registryConfirmModalList");
 const registryConfirmModalCancelBtn = q("registryConfirmModalCancelBtn");
 const registryConfirmModalConfirmBtn = q("registryConfirmModalConfirmBtn");
+const dateVenueMapWrap = q("dateVenueMapWrap");
+const venueMapEmbed = q("venueMapEmbed");
 const photoSliderRoot = q("photoSlider");
 const sliderPrevBtn = q("sliderPrevBtn");
 const sliderNextBtn = q("sliderNextBtn");
@@ -260,16 +262,28 @@ function formatEventDate(date) {
 function hydrateStaticContent() {
   const weddingDate = new Date(weddingConfig.weddingDateISO);
 
-  q("weddingDateText").textContent = formatEventDate(weddingDate);
-  q("venueName").textContent = weddingConfig.venueName;
-  q("venueAddress").textContent = weddingConfig.venueAddress;
+  const weddingDateTextEl = q("weddingDateText");
+  const venueNameEl = q("venueName");
+  const venueAddressEl = q("venueAddress");
+
+  if (weddingDateTextEl) {
+    weddingDateTextEl.textContent = formatEventDate(weddingDate);
+  }
+  if (venueNameEl) {
+    venueNameEl.textContent = weddingConfig.venueName;
+  }
+  if (venueAddressEl) {
+    venueAddressEl.textContent = weddingConfig.venueAddress;
+  }
 
   const mapLink = q("mapLink");
-  mapLink.href =
-    weddingConfig.mapUrl ||
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      weddingConfig.mapQuery
-    )}`;
+  if (mapLink) {
+    mapLink.href =
+      weddingConfig.mapUrl ||
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        weddingConfig.mapQuery
+      )}`;
+  }
 
   const dressCodeThemeEl = q("dressCodeTheme");
   const dressCodeTitleEl = q("dressCodeTitle");
@@ -284,6 +298,43 @@ function hydrateStaticContent() {
   if (dressCodeNotesEl) {
     dressCodeNotesEl.textContent = weddingConfig.dressCode.notes || "";
   }
+}
+
+function initVenueMapEmbed() {
+  if (!(dateVenueMapWrap instanceof HTMLElement) || !(venueMapEmbed instanceof HTMLIFrameElement)) {
+    return;
+  }
+
+  const loadingStartedAt = Date.now();
+  const minimumLoadingMs = 900;
+  let didSetLoaded = false;
+  let didScheduleLoaded = false;
+  let fallbackTimerId = null;
+
+  const markLoaded = () => {
+    if (didSetLoaded) {
+      return;
+    }
+    didSetLoaded = true;
+    dateVenueMapWrap.classList.add("is-loaded");
+    dateVenueMapWrap.classList.remove("is-loading");
+    if (fallbackTimerId !== null) {
+      window.clearTimeout(fallbackTimerId);
+    }
+  };
+
+  const scheduleLoaded = () => {
+    if (didScheduleLoaded) {
+      return;
+    }
+    didScheduleLoaded = true;
+    const elapsed = Date.now() - loadingStartedAt;
+    const waitMs = Math.max(0, minimumLoadingMs - elapsed);
+    window.setTimeout(markLoaded, waitMs);
+  };
+
+  fallbackTimerId = window.setTimeout(scheduleLoaded, 4500);
+  venueMapEmbed.addEventListener("load", scheduleLoaded, { once: true });
 }
 
 function applyGuestToUi(guest) {
@@ -1359,13 +1410,18 @@ function renderCalendar() {
   const month = date.getMonth();
   const weddingDay = date.getDate();
 
-  q("calendarHeader").textContent = new Intl.DateTimeFormat("en-US", {
+  const calendarHeader = q("calendarHeader");
+  const weekdayWrap = q("calendarWeekdays");
+  const dayWrap = q("calendarDays");
+  if (!calendarHeader || !weekdayWrap || !dayWrap) {
+    return;
+  }
+
+  calendarHeader.textContent = new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
   }).format(date);
 
-  const weekdayWrap = q("calendarWeekdays");
-  const dayWrap = q("calendarDays");
   weekdayWrap.innerHTML = "";
   dayWrap.innerHTML = "";
 
@@ -1714,13 +1770,19 @@ function initRevealTiming() {
 
 async function init() {
   showLoadingGate();
-  initClickHeartSpark();
-  initScrollTopButton();
-  hydrateStaticContent();
-  renderCalendar();
-  initFaqAccordion();
-  initRevealTiming();
-  bindAttendanceControls();
+  try {
+    initClickHeartSpark();
+    initScrollTopButton();
+    hydrateStaticContent();
+    initVenueMapEmbed();
+    renderCalendar();
+    initFaqAccordion();
+    initRevealTiming();
+    bindAttendanceControls();
+  } catch (error) {
+    showPrivateGate("We could not load your invitation right now. Please refresh and try again.");
+    return;
+  }
 
   let access = null;
   try {
