@@ -1,7 +1,7 @@
 const weddingConfig = {
   coupleNames: "Hannah & Fidel",
   // weddingDateISO: "2026-04-07T21:48:00+04:00",
-  weddingDateISO: "2026-11-15T16:00:00+04:00",
+  weddingDateISO: "2026-11-15T17:00:00+04:00",
   venueName: "Shangri-La Hotel\nQaryat Al Beri",
   venueAddress: "Abu Dhabi, United Arab Emirates",
   mapQuery: "Shangri-La Qaryat Al Beri Abu Dhabi",
