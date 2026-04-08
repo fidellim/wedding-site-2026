@@ -1664,7 +1664,7 @@ h3.rsvp-editorial-title {
     linear-gradient(145deg, rgba(122, 20, 20, 0.34), rgba(86, 8, 8, 0.4));
   background-repeat: no-repeat;
   color: #f8efe6;
-  border: 1px solid rgba(105, 69, 52, 0.2);
+  border: 1px solid rgba(233, 212, 195, 0.33);
   border-radius: 4px;
   padding: clamp(1.05rem, 2.4vw, 2.2rem);
   box-shadow: 0 24px 38px rgba(7, 16, 27, 0.12);
