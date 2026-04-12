@@ -412,8 +412,27 @@
                     </select>
                   </fieldset>
 
-                  <label class="rsvp-field" for="attendeeCountInput">
-                    <span class="rsvp-label">Number of Guests</span>
+                  <div class="rsvp-field rsvp-field-with-info">
+                    <div class="rsvp-field-heading">
+                      <label class="rsvp-label" for="attendeeCountInput">Number of Guests</label>
+                      <span class="rsvp-info-wrap">
+                        <button
+                          class="rsvp-info-trigger"
+                          type="button"
+                          aria-label="Guest seat allocation information"
+                          aria-describedby="attendeeCountInfoMessage"
+                        >
+                          <img src="images/info-icon.webp" alt="" class="rsvp-info-icon" />
+                        </button>
+                        <span
+                          id="attendeeCountInfoMessage"
+                          class="rsvp-info-popover"
+                          role="tooltip"
+                        >
+                          Our wedding will be an intimate and meaningful celebration shared with a carefully chosen circle of family and friends. We kindly ask that you honor the number of seats reserved on your invitation, as each has been thoughtfully allotted.
+                        </span>
+                      </span>
+                    </div>
                     <input
                       id="attendeeCountInput"
                       name="attendees"
@@ -423,7 +442,7 @@
                       value="1"
                       required
                     />
-                  </label>
+                  </div>
 
                   <div class="rsvp-submit-wrap">
                     <button class="cta rsvp-submit" type="submit">Send Response</button>
@@ -886,6 +905,20 @@
         <div class="registry-modal-actions">
           <button id="registryConfirmModalCancelBtn" type="button">Cancel</button>
           <button id="registryConfirmModalConfirmBtn" class="cta" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="rsvpConfirmModal" class="registry-modal rsvp-confirm-modal hidden" aria-hidden="true">
+      <div class="registry-modal-backdrop" data-close-rsvp-confirm-modal="true"></div>
+      <div class="registry-modal-card rsvp-confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="rsvpConfirmModalTitle">
+        <h4 id="rsvpConfirmModalTitle">Confirm RSVP Submission</h4>
+        <p id="rsvpConfirmModalMessage" class="muted">
+          We kindly ask that you submit your RSVP only once your attendance has been firmly decided, as your response will help us prepare every detail with care and consideration.
+        </p>
+        <div class="registry-modal-actions">
+          <button id="rsvpConfirmModalCancelBtn" type="button">Review Again</button>
+          <button id="rsvpConfirmModalConfirmBtn" class="cta" type="button">Yes, Submit RSVP</button>
         </div>
       </div>
     </div>

@@ -36,6 +36,8 @@ const guestCacheConfig = {
   keyPrefix: "invite_guest_cache_v2_",
   ttlMs: 1000 * 60 * 60 * 12,
 };
+const rsvpSubmissionConfirmMessage =
+  "We kindly ask that you submit your RSVP only once your attendance has been firmly decided, as your response will help us prepare every detail with care and consideration.";
 
 const gate = q("envelopeGateContainer");
 const mainContent = q("mainContent");
@@ -73,6 +75,14 @@ const registryConfirmModalMessage = q("registryConfirmModalMessage");
 const registryConfirmModalList = q("registryConfirmModalList");
 const registryConfirmModalCancelBtn = q("registryConfirmModalCancelBtn");
 const registryConfirmModalConfirmBtn = q("registryConfirmModalConfirmBtn");
+const rsvpConfirmModal = q("rsvpConfirmModal");
+const rsvpConfirmModalCard =
+  rsvpConfirmModal instanceof HTMLElement
+    ? rsvpConfirmModal.querySelector(".registry-modal-card")
+    : null;
+const rsvpConfirmModalMessage = q("rsvpConfirmModalMessage");
+const rsvpConfirmModalCancelBtn = q("rsvpConfirmModalCancelBtn");
+const rsvpConfirmModalConfirmBtn = q("rsvpConfirmModalConfirmBtn");
 const dateVenueMapWrap = q("dateVenueMapWrap");
 const venueMapEmbed = q("venueMapEmbed");
 const photoSliderRoot = q("photoSlider");
@@ -96,6 +106,8 @@ let scrollTopBtnVisible = false;
 let scrollTopBtnRafPending = false;
 let lastRegistryListModalFocus = null;
 let lastRegistryConfirmModalFocus = null;
+let lastRsvpConfirmModalFocus = null;
+let rsvpConfirmPromiseResolver = null;
 let currentGuest = {
   code: "",
   id: "general",
@@ -570,12 +582,20 @@ function isRegistryConfirmModalOpen() {
   return isModalOpen(registryConfirmModal);
 }
 
+function isRsvpConfirmModalOpen() {
+  return isModalOpen(rsvpConfirmModal);
+}
+
 function syncModalOpenState() {
-  const hasOpenModal = isRegistryListModalOpen() || isRegistryConfirmModalOpen();
+  const hasOpenModal =
+    isRegistryListModalOpen() || isRegistryConfirmModalOpen() || isRsvpConfirmModalOpen();
   document.body.classList.toggle("modal-open", hasOpenModal);
 }
 
 function getActiveRegistryModalCard() {
+  if (isRsvpConfirmModalOpen()) {
+    return rsvpConfirmModalCard;
+  }
   if (isRegistryConfirmModalOpen()) {
     return registryConfirmModalCard;
   }
@@ -606,7 +626,9 @@ function handleRegistryModalKeydown(event) {
 
   if (event.key === "Escape") {
     event.preventDefault();
-    if (isRegistryConfirmModalOpen()) {
+    if (isRsvpConfirmModalOpen()) {
+      settleRsvpSubmissionConfirmation(false);
+    } else if (isRegistryConfirmModalOpen()) {
       closeRegistryConfirmModal();
     } else {
       closeRegistryListModal();
@@ -731,6 +753,70 @@ function closeRegistryConfirmModal() {
     lastRegistryConfirmModalFocus.focus();
   }
   lastRegistryConfirmModalFocus = null;
+}
+
+function settleRsvpSubmissionConfirmation(confirmed) {
+  if (!(rsvpConfirmModal instanceof HTMLElement)) {
+    if (typeof rsvpConfirmPromiseResolver === "function") {
+      const resolve = rsvpConfirmPromiseResolver;
+      rsvpConfirmPromiseResolver = null;
+      resolve(Boolean(confirmed));
+    }
+    return;
+  }
+
+  if (isRsvpConfirmModalOpen()) {
+    rsvpConfirmModal.classList.add("hidden");
+    rsvpConfirmModal.setAttribute("aria-hidden", "true");
+  }
+  syncModalOpenState();
+
+  if (
+    lastRsvpConfirmModalFocus instanceof HTMLElement &&
+    document.contains(lastRsvpConfirmModalFocus)
+  ) {
+    lastRsvpConfirmModalFocus.focus();
+  }
+  lastRsvpConfirmModalFocus = null;
+
+  if (typeof rsvpConfirmPromiseResolver === "function") {
+    const resolve = rsvpConfirmPromiseResolver;
+    rsvpConfirmPromiseResolver = null;
+    resolve(Boolean(confirmed));
+  }
+}
+
+function requestRsvpSubmissionConfirmation() {
+  if (
+    !(rsvpConfirmModal instanceof HTMLElement) ||
+    !(rsvpConfirmModalCard instanceof HTMLElement)
+  ) {
+    if (typeof window.confirm === "function") {
+      return Promise.resolve(window.confirm(rsvpSubmissionConfirmMessage));
+    }
+    return Promise.resolve(true);
+  }
+
+  if (typeof rsvpConfirmPromiseResolver === "function") {
+    const resolvePrevious = rsvpConfirmPromiseResolver;
+    rsvpConfirmPromiseResolver = null;
+    resolvePrevious(false);
+  }
+
+  if (rsvpConfirmModalMessage) {
+    rsvpConfirmModalMessage.textContent = rsvpSubmissionConfirmMessage;
+  }
+
+  lastRsvpConfirmModalFocus =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  rsvpConfirmModal.classList.remove("hidden");
+  rsvpConfirmModal.setAttribute("aria-hidden", "false");
+  syncModalOpenState();
+  window.requestAnimationFrame(() => focusModalStart(rsvpConfirmModalCard));
+
+  return new Promise((resolve) => {
+    rsvpConfirmPromiseResolver = resolve;
+  });
 }
 
 function getFocusableElements(container) {
@@ -1498,6 +1584,11 @@ async function submitRsvp(event) {
     attendees = Math.floor(rawCount);
   }
 
+  const hasConfirmed = await requestRsvpSubmissionConfirmation();
+  if (!hasConfirmed) {
+    return;
+  }
+
   setRsvpFeedback("Submitting...");
   setRsvpSubmitLoading(true);
   setRsvpFormEnabled(false);
@@ -1843,6 +1934,24 @@ async function init() {
       const target = event.target;
       if (target instanceof HTMLElement && target.dataset.closeRegistryConfirmModal === "true") {
         closeRegistryConfirmModal();
+      }
+    });
+  }
+  if (rsvpConfirmModalCancelBtn) {
+    rsvpConfirmModalCancelBtn.addEventListener("click", () => {
+      settleRsvpSubmissionConfirmation(false);
+    });
+  }
+  if (rsvpConfirmModalConfirmBtn) {
+    rsvpConfirmModalConfirmBtn.addEventListener("click", () => {
+      settleRsvpSubmissionConfirmation(true);
+    });
+  }
+  if (rsvpConfirmModal) {
+    rsvpConfirmModal.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.dataset.closeRsvpConfirmModal === "true") {
+        settleRsvpSubmissionConfirmation(false);
       }
     });
   }

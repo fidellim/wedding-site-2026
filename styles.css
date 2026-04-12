@@ -1680,6 +1680,12 @@ h3.rsvp-editorial-title {
   gap: 0.42rem;
 }
 
+.rsvp-field-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
 .rsvp-label {
   display: block;
   margin: 0;
@@ -1688,6 +1694,75 @@ h3.rsvp-editorial-title {
   font-size: 0.64rem;
   color: #7a6962;
   font-weight: 500;
+}
+
+.rsvp-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rsvp-info-trigger {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.2s ease;
+}
+
+.rsvp-info-icon {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: brightness(0) invert(1);
+  opacity: 0.96;
+}
+
+.rsvp-info-trigger:hover,
+.rsvp-info-trigger:focus-visible {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.rsvp-info-trigger:focus-visible {
+  outline: 2px solid rgba(99, 0, 0, 0.45);
+  outline-offset: 2px;
+}
+
+.rsvp-info-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: min(340px, calc(100vw - 3rem));
+  padding: 0.62rem 0.72rem;
+  border-radius: 9px;
+  border: 1px solid rgba(105, 69, 52, 0.28);
+  background: linear-gradient(165deg, rgba(255, 252, 247, 0.97), rgba(247, 239, 231, 0.97));
+  color: #4f3b33;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  text-transform: none;
+  box-shadow: 0 12px 22px rgba(7, 16, 27, 0.2);
+  opacity: 0;
+  transform: translateY(-5px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 8;
+}
+
+.rsvp-info-wrap:hover .rsvp-info-popover,
+.rsvp-info-wrap:focus-within .rsvp-info-popover {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .rsvp-editorial-form input,
@@ -1872,6 +1947,15 @@ h3.rsvp-editorial-title {
   color: rgba(240, 219, 205, 0.86);
 }
 
+.rsvp-editorial-card .rsvp-info-popover {
+  border-color: rgba(233, 212, 195, 0.4);
+  background:
+    radial-gradient(circle at 10% 14%, rgba(255, 255, 255, 0.18), transparent 48%),
+    linear-gradient(135deg, rgba(132, 13, 13, 0.96), rgba(95, 8, 8, 0.96));
+  color: rgba(246, 232, 221, 0.96);
+  box-shadow: 0 14px 26px rgba(10, 2, 3, 0.4);
+}
+
 .rsvp-editorial-card .rsvp-editorial-form input,
 .rsvp-editorial-card .rsvp-editorial-form textarea {
   color: #f8efe6;
@@ -2004,6 +2088,25 @@ h3.rsvp-editorial-title {
 
   .rsvp-submit {
     width: 100%;
+  }
+
+  .rsvp-info-popover {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: max(0.9rem, env(safe-area-inset-bottom));
+    width: min(340px, calc(100vw - 1.2rem));
+    max-height: min(42vh, 260px);
+    overflow: auto;
+    font-size: 0.8rem;
+    transform: translate(-50%, 14px);
+    z-index: 120;
+  }
+
+  .rsvp-info-wrap:hover .rsvp-info-popover,
+  .rsvp-info-wrap:focus-within .rsvp-info-popover {
+    transform: translate(-50%, 0);
   }
 }
 
@@ -2385,6 +2488,22 @@ h3.rsvp-editorial-title {
   color: #5c1a1f;
 }
 
+.rsvp-confirm-modal-card {
+  width: min(620px, 94vw);
+}
+
+.rsvp-confirm-modal-card .muted {
+  margin-top: 0.25rem;
+}
+
+.rsvp-confirm-modal-card .registry-modal-actions {
+  margin-top: 0.9rem;
+}
+
+.rsvp-confirm-modal-card .registry-modal-actions .cta {
+  min-width: 170px;
+}
+
 @media (max-width: 720px) {
   .registry-note-wrap {
     max-width: 100%;
@@ -2455,6 +2574,10 @@ h3.rsvp-editorial-title {
   .registry-modal-actions button {
     width: 100%;
     min-height: 44px;
+  }
+
+  .rsvp-confirm-modal-card {
+    width: min(100%, calc(100vw - 30px));
   }
 }
 
