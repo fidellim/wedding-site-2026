@@ -318,7 +318,21 @@ body.modal-open {
 }
 
 .gate-dedication {
-  display: none;
+  display: block;
+  margin: 0.25rem 0 0;
+  max-width: min(92vw, 920px);
+  color: #f6e8dc;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.05rem, 2vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: 0.018em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.gate-dedication.is-long {
+  font-size: clamp(0.95rem, 1.7vw, 1.45rem);
+  line-height: 1.24;
 }
 
 .gate-name {
@@ -362,6 +376,8 @@ body.modal-open {
   cursor: pointer;
   position: relative;
   display: block;
+  justify-self: center;
+  margin-inline: auto;
   padding: 0;
   margin-top: clamp(0.9rem, 2.6vh, 1.9rem);
   margin-bottom: clamp(0.08rem, 0.45vh, 0.3rem);
@@ -2972,14 +2988,29 @@ body.scroll-animate .reveal-unit.is-visible {
   .gate {
     min-height: calc(100vh - 1.8rem);
     padding: 1.4rem 0.7rem;
+    gap: clamp(1.55rem, 4.2vh, 2.5rem);
+  }
+
+  .gate-dedication {
+    max-width: min(95vw, 520px);
+    font-size: clamp(0.94rem, 3.9vw, 1.22rem);
+    line-height: 1.23;
   }
 
   .private-gate {
     min-height: 100dvh;
   }
 
+  .envelope-stage {
+    width: 100%;
+    max-width: 540px;
+    justify-self: center;
+  }
+
   .envelope {
     width: min(510px, 92vw);
+    max-width: 510px;
+    margin-top: clamp(0.35rem, 1.4vh, 0.85rem);
   }
 
   .envelope-closed-seal {
@@ -3136,6 +3167,15 @@ body.scroll-animate .reveal-unit.is-visible {
 @media (max-width: 440px) {
   :root {
     --h3-size: 2.2rem;
+  }
+
+  .envelope-stage {
+    max-width: 430px;
+  }
+
+  .envelope {
+    width: min(420px, 88vw);
+    max-width: 420px;
   }
 
   .invitation-note-wrap {
@@ -3333,6 +3373,11 @@ body.scroll-animate .reveal-unit.is-visible {
   .gate-couple {
     font-size: clamp(2rem, 6.1vw, 3.9rem);
     line-height: 0.92;
+  }
+
+  .gate-dedication {
+    font-size: clamp(0.82rem, 2.6vw, 1rem);
+    line-height: 1.2;
   }
 
   .envelope {

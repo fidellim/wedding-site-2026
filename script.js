@@ -353,7 +353,9 @@ function initVenueMapEmbed() {
 
 function applyGuestToUi(guest) {
   if (gateGuestName) {
-    gateGuestName.textContent = `For ${guest.name}`;
+    const safeGuestName = String(guest.name || "our beloved guest").trim();
+    gateGuestName.textContent = `For ${safeGuestName}`;
+    gateGuestName.classList.toggle("is-long", safeGuestName.length > 38);
   }
   if (rsvpGuestPrompt) {
     rsvpGuestPrompt.textContent = `Reserved for your invitation: up to ${guest.seats} attendee(s).`;
