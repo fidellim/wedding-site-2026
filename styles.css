@@ -41,7 +41,7 @@ body {
   min-height: 100vh;
   font-family: var(--font-body);
   color: var(--ink);
-  background: var(--accent-soft);
+  background: var(--accent);
   overflow-x: hidden;
   overflow-y: auto;
 }
