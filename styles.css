@@ -72,6 +72,7 @@ html {
 
 body.intro-active {
   overflow-y: hidden;
+  background: #630000;
 }
 
 body.private-only {
@@ -3388,6 +3389,18 @@ body.scroll-animate .reveal-unit.is-visible {
   .gate-open-label {
     margin-top: 0.12rem;
     font-size: clamp(1rem, 1.8vw, 1.3rem);
+  }
+}
+
+/* Mobile gate viewport lock to avoid beige leak/gap on iOS dynamic toolbars */
+@media (max-width: 740px) {
+  .envelopeGateContainer {
+    min-height: 100svh;
+    height: 100svh;
+  }
+
+  .gate {
+    min-height: 100%;
   }
 }
 
