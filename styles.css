@@ -58,6 +58,8 @@ h6 {
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 #rsvpSection {
@@ -2955,6 +2957,9 @@ body.scroll-animate .reveal-unit.is-visible {
 
   .invitation-note-script {
     font-size: clamp(1.95rem, 7.2vw, 3.6rem);
+    line-height: 1.06;
+    display: inline-block;
+    padding-top: 0.04em;
   }
 
   .invitation-note-body {
@@ -3190,6 +3195,8 @@ body.scroll-animate .reveal-unit.is-visible {
 
   .invitation-note-script {
     font-size: clamp(1.95rem, 10vw, 3.1rem);
+    line-height: 1.08;
+    padding-top: 0.05em;
   }
 
   .invitation-note-body {
