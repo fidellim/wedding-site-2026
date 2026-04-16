@@ -743,7 +743,7 @@ body.modal-open {
   display: flex;
   align-items: center;
   padding: clamp(2.6rem, 4.7vw, 4rem) clamp(1.1rem, 4vw, 3.4rem);
-  background: #630000;
+  /* background: #630000; */
   overflow: visible;
   z-index: 0;
 }
