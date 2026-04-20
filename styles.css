@@ -2182,7 +2182,7 @@ h3.rsvp-editorial-title {
   min-width: 190px;
   margin-top: 0.5rem;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   background: linear-gradient(120deg, #9e1b1b 0%, #6b1111 36%, #8e604d 70%, #6b1111 100%);
   background-size: 220% 100%;
   box-shadow: 0 10px 24px rgba(18, 2, 3, 0.34);
