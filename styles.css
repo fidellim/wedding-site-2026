@@ -1628,6 +1628,23 @@ body.modal-open {
   gap: 1.3rem;
 }
 
+.rsvp-submitted-notice {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 0.2rem;
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border: 1px solid rgba(233, 212, 195, 0.42);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(248, 239, 230, 0.95);
+  line-height: 1.65;
+  text-align: center;
+}
+
+.rsvp-submitted-notice p {
+  margin: 0;
+}
+
 .rsvp-editorial {
   display: grid;
   gap: 1.25rem;

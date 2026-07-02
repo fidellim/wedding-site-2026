@@ -51,6 +51,7 @@ const guestNameInput = q("guestNameInput");
 const emailInput = q("emailInput");
 const attendeeCountInput = q("attendeeCountInput");
 const rsvpFeedback = q("rsvpFeedback");
+const rsvpSubmittedNotice = q("rsvpSubmittedNotice");
 const rsvpForm = q("rsvpForm");
 const attendanceInput = q("attendanceInput");
 const attendanceChoiceInputs = Array.from(
@@ -440,6 +441,7 @@ function showInvitationExperience() {
 }
 
 function setRsvpFormEnabled(enabled) {
+  const isEnabled = Boolean(enabled) && !hasSubmittedRsvp();
   const fields = [
     emailInput,
     attendanceInput,
@@ -447,15 +449,36 @@ function setRsvpFormEnabled(enabled) {
     ...attendanceChoiceInputs,
   ].filter(Boolean);
   fields.forEach((el) => {
-    el.disabled = !enabled;
+    el.disabled = !isEnabled;
   });
   const submitBtn = rsvpForm ? rsvpForm.querySelector('button[type="submit"]') : null;
   if (submitBtn) {
-    submitBtn.disabled = !enabled;
+    submitBtn.disabled = !isEnabled;
   }
-  if (enabled) {
+  if (isEnabled) {
     syncAttendeeCountInputState();
   }
+}
+
+function hasSubmittedRsvp(guest = currentGuest) {
+  return Boolean(String((guest && guest.rsvpStatus) || "").trim());
+}
+
+function syncRsvpFormState(enabled) {
+  const isSubmitted = hasSubmittedRsvp();
+  if (rsvpSubmittedNotice) {
+    rsvpSubmittedNotice.classList.toggle("hidden", !isSubmitted);
+    rsvpSubmittedNotice.setAttribute("aria-hidden", isSubmitted ? "false" : "true");
+  }
+  if (rsvpGuestPrompt) {
+    rsvpGuestPrompt.classList.toggle("hidden", isSubmitted);
+    rsvpGuestPrompt.setAttribute("aria-hidden", isSubmitted ? "true" : "false");
+  }
+  if (rsvpForm) {
+    rsvpForm.classList.toggle("hidden", isSubmitted);
+    rsvpForm.setAttribute("aria-hidden", isSubmitted ? "true" : "false");
+  }
+  setRsvpFormEnabled(Boolean(enabled) && !isSubmitted);
 }
 
 function setRsvpFeedback(message = "") {
@@ -1226,7 +1249,7 @@ function refreshGuestInBackground(code) {
       currentGuest = freshGuest;
       writeGuestCache(code, currentGuest);
       applyGuestToUi(currentGuest);
-      setRsvpFormEnabled(true);
+      syncRsvpFormState(true);
     })
     .catch(() => {
       // Ignore refresh failures; cached data already rendered.
@@ -1242,13 +1265,13 @@ async function loadGuestProfile() {
     applyGuestToUi(currentGuest);
 
     if (requireValidCode && !currentGuest.isValidCode) {
-      setRsvpFormEnabled(false);
+      syncRsvpFormState(false);
       return {
         allowed: false,
         reason: "Invited guests only. Please use your personalized invitation link.",
       };
     }
-    setRsvpFormEnabled(true);
+    syncRsvpFormState(true);
     return { allowed: true };
   }
 
@@ -1262,7 +1285,7 @@ async function loadGuestProfile() {
       isValidCode: false,
     };
     applyGuestToUi(currentGuest);
-    setRsvpFormEnabled(false);
+    syncRsvpFormState(false);
     return {
       allowed: false,
       reason: "Invited guests only. Please use your personalized invitation link.",
@@ -1278,12 +1301,12 @@ async function loadGuestProfile() {
       isValidCode: true,
     };
     applyGuestToUi(currentGuest);
-    setRsvpFormEnabled(true);
+    syncRsvpFormState(true);
     refreshGuestInBackground(code);
     return { allowed: true };
   }
 
-  setRsvpFormEnabled(false);
+  syncRsvpFormState(false);
 
   try {
     const guestFromBackend = await lookupGuestFromBackend(code);
@@ -1297,7 +1320,7 @@ async function loadGuestProfile() {
         isValidCode: false,
       };
       applyGuestToUi(currentGuest);
-      setRsvpFormEnabled(false);
+      syncRsvpFormState(false);
       return {
         allowed: false,
         reason: "This invitation code is invalid. Invited guests only.",
@@ -1307,7 +1330,7 @@ async function loadGuestProfile() {
     currentGuest = guestFromBackend;
     writeGuestCache(code, currentGuest);
     applyGuestToUi(currentGuest);
-    setRsvpFormEnabled(true);
+    syncRsvpFormState(true);
     return { allowed: true };
   } catch (error) {
     currentGuest = {
@@ -1319,7 +1342,7 @@ async function loadGuestProfile() {
       isValidCode: false,
     };
     applyGuestToUi(currentGuest);
-    setRsvpFormEnabled(false);
+    syncRsvpFormState(false);
     return {
       allowed: false,
       reason: "We could not verify your invitation right now. Please try again shortly.",
@@ -1544,6 +1567,12 @@ function initFaqAccordion() {
 async function submitRsvp(event) {
   event.preventDefault();
 
+  if (hasSubmittedRsvp()) {
+    syncRsvpFormState(true);
+    setRsvpFeedback("");
+    return;
+  }
+
   const attendance = getAttendanceValue();
   const rawCount = Number(attendeeCountInput.value);
   const message = "";
@@ -1622,6 +1651,14 @@ async function submitRsvp(event) {
 
       const result = await response.json();
       if (result !== true) {
+        const freshGuest = await lookupGuestFromBackend(currentGuest.code).catch(() => null);
+        if (freshGuest && hasSubmittedRsvp(freshGuest)) {
+          currentGuest = freshGuest;
+          writeGuestCache(currentGuest.code, currentGuest);
+          applyGuestToUi(currentGuest);
+          submitMessage = "";
+          return;
+        }
         throw new Error("RSVP submit rejected.");
       }
     } else {
@@ -1637,18 +1674,19 @@ async function submitRsvp(event) {
       localStorage.setItem(`rsvp_${currentGuest.id}`, JSON.stringify(local));
     }
 
-    writeGuestCache(currentGuest.code, {
+    currentGuest = {
       ...currentGuest,
       name,
       email,
       rsvpStatus: attendance,
-    });
+    };
+    writeGuestCache(currentGuest.code, currentGuest);
     submitMessage = "Thank you. Your RSVP has been recorded.";
   } catch (error) {
     submitMessage = "Could not submit RSVP right now. Please retry in a moment.";
   } finally {
     setRsvpSubmitLoading(false);
-    setRsvpFormEnabled(true);
+    syncRsvpFormState(true);
     setRsvpFeedback(submitMessage);
   }
 }
