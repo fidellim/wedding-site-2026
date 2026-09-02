@@ -13,9 +13,17 @@ through narrowly scoped guest-facing operations.
 
 The planner will use individually named Invitees and numbered Seats while
 preserving the current collective, locked RSVP for each Invitation Party. The
-database remains the canonical source for invitations, RSVPs, tables, seats,
-assignments, and published-plan state. The exact rule that turns an accepted
-party-level Attending Count into named Confirmed Attendees remains unresolved.
+Administrators will turn an accepted party-level Attending Count into named
+Confirmed Attendees from their existing attendance list. The database remains
+the canonical source for invitations, RSVPs, RSVP Amendments, tables, seats,
+assignments, and published-plan state.
+
+The planner will provide manual drag-and-drop over a visual Floor Plan, with
+numbered Seats, validation, realtime updates between both Administrators, and
+atomic conflict rejection when two moves target the same Seat. Editing affects
+only a private draft; an explicit publish operation replaces the guest-visible
+revision. An invite code may retrieve only its own party's assignments and a
+privacy-safe Floor Plan, never the full guest list.
 
 ## Considered Options
 
@@ -32,3 +40,6 @@ party-level Attending Count into named Confirmed Attendees remains unresolved.
 - Publishing must be separate from editing so drafts are never revealed early.
 - The guest-facing invitation will eventually need a narrowly scoped lookup for
   the published Seats belonging to its own Invitation Party.
+- Guest RSVP submissions remain locked; Administrators correct them only by
+  appending auditable RSVP Amendments.
+- The venue and other third parties will not receive administrative access.
