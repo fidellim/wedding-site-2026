@@ -1,0 +1,20 @@
+project_id = "finnahlimarried-site"
+
+[api]
+enabled = true
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+major_version = 15
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173/admin/"
+additional_redirect_urls = ["http://localhost:5173/admin/"]
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true
+enable_confirmations = true
+
