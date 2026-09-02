@@ -1,4 +1,16 @@
 apps_script/*
-supabase/*
 frontend_design/*
 prototype_design/
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+backups/
