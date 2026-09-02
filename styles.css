@@ -72,6 +72,88 @@ html {
   }
 }
 
+/* Published seating lookup: party names only, shown after a valid private lookup. */
+.seating-plan-section {
+  color: #4a3b31;
+  background:
+    radial-gradient(circle at 10% 20%, rgb(193 151 132 / 12%), transparent 32%),
+    #f8f3eb;
+}
+
+.seating-plan-wrap {
+  max-width: 960px;
+  padding-top: clamp(4.5rem, 9vw, 8rem);
+  padding-bottom: clamp(4.5rem, 9vw, 8rem);
+}
+
+.seating-plan-heading {
+  max-width: 650px;
+  margin: 0 auto 2.2rem;
+  text-align: center;
+}
+
+.seating-plan-kicker {
+  margin: 0 0 .55rem;
+  color: #9e765e;
+  font-size: .74rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.seating-plan-heading h3 {
+  margin: 0 0 .7rem;
+  color: #5b4135;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.seating-plan-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.seating-place-card {
+  min-height: 145px;
+  display: grid;
+  align-content: center;
+  padding: 1.5rem;
+  border: 1px solid rgb(137 103 83 / 24%);
+  border-radius: 4px;
+  background: rgb(255 253 248 / 78%);
+  text-align: center;
+  box-shadow: 0 15px 35px rgb(77 58 47 / 7%);
+}
+
+.seating-place-card h4 {
+  margin: 0 0 .55rem;
+  color: #5b4135;
+  font: 500 1.5rem "Cormorant Garamond", serif;
+}
+
+.seating-place-detail {
+  margin: 0;
+  color: #795d4e;
+  font-size: .86rem;
+  letter-spacing: .035em;
+}
+
+.seating-place-detail.no-seat-required { font-style: italic; }
+
+.seating-plan-revision {
+  margin: 1.4rem 0 0;
+  color: #9a887d;
+  font-size: .7rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .seating-plan-results { grid-template-columns: 1fr; }
+  .seating-place-card { min-height: 125px; }
+}
+
 body.intro-active {
   overflow-y: hidden;
   background: #630000;
