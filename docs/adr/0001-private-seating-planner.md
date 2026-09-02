@@ -15,8 +15,9 @@ The planner will use individually named Invitees and numbered Seats while
 preserving the current collective, locked RSVP for each Invitation Party. The
 Administrators will turn an accepted party-level Attending Count into named
 Confirmed Attendees from their existing attendance list. The database remains
-the canonical source for invitations, RSVPs, RSVP Amendments, tables, seats,
-assignments, and published-plan state.
+the canonical source for invitations, Invitees, RSVPs, RSVP Amendments,
+Attendance Roster Changes, tables, seats, assignments, and published-plan
+state.
 
 The first release will provide manual Invitee entry and drag-and-drop assignment
 to round or rectangular Tables with stable, clockwise numbered Seats. It will
@@ -53,6 +54,11 @@ shows table and seat numbers without waiting for the later visual Floor Plan.
 
 - Family invitations must be expanded into individually named Invitees before
   they can receive Seat Assignments.
+- Every person, including a single-person Invitation Party, is an independent
+  Invitee record. A multi-name text field is not used.
+- Initially mapping an Attending Count to named Invitees does not amend the
+  RSVP. Replacing those names later records an audited Attendance Roster Change
+  even when the count stays the same.
 - Publishing must be separate from editing so drafts are never revealed early.
 - The guest-facing invitation will eventually need a narrowly scoped lookup for
   the published Seats belonging to its own Invitation Party.
@@ -95,6 +101,6 @@ shows table and seat numbers without waiting for the later visual Floor Plan.
 - Guest lookup remains enabled after the wedding but Administrators retain a
   manual privacy switch to disable it. Published Wedding Archive revisions are
   immutable; corrections start from a restored draft and create a new revision.
-- On the Free tier, manual logical backups are taken before schema migrations
-  and after every publication. At least three encrypted backups are retained
-  outside Git and outside the application repository.
+- Production seating rows are retained indefinitely. Unassignment, capacity
+  reduction, and revision restoration change current state without deleting
+  records or cascading deletions.

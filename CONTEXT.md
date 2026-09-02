@@ -35,6 +35,11 @@ The number of people attending from an Invitation Party; it does not identify
 which Invitees are the Confirmed Attendees.
 _Avoid_: Accepted guests, seats
 
+**Attendance Roster Change**:
+An audited replacement of one or more Confirmed Attendees that leaves the
+Invitation Party's submitted Attending Count unchanged.
+_Avoid_: RSVP amendment, name edit
+
 **RSVP Amendment**:
 An Administrator's recorded correction to a locked RSVP that preserves the
 original response, the reason for the change, and when it was made.
@@ -61,6 +66,11 @@ _Avoid_: Spot, position
 **Seat Assignment**:
 The placement of one Confirmed Attendee into one Seat within a Seating Plan.
 _Avoid_: Allocation, placement
+
+**Retained Planning Record**:
+A Table, Seat, or Seat Assignment that is no longer part of the current Draft
+Seating Plan but remains in the Wedding Archive for historical integrity.
+_Avoid_: Deleted record, removed row
 
 **Seat Requirement**:
 Whether a Confirmed Attendee must receive a numbered Seat before the Seating
