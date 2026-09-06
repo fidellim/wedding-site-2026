@@ -90,12 +90,14 @@ Supabase project member alone does not grant access to `/admin`.
 
 ## 4. Apply the reviewed migrations
 
-The two versioned files are:
+The versioned files, in order, are:
 
 - `20260902000100_create_seating_planner.sql`: tables, constraints, RLS, and
   the administrator authorization boundary;
 - `20260902000200_create_seating_planner_functions.sql`: atomic commands,
-  validation, audit history, publication, realtime, and party-only lookup.
+  validation, audit history, publication, realtime, and party-only lookup;
+- `20260906000100_add_physical_table_layout.sql`: rectangular chair counts and
+  Seat 1 position, including workspace reads and revision restores.
 
 Apply them through the normal Supabase migration workflow only after explicit
 approval. Do not paste fragments selectively into production: the functions
@@ -162,3 +164,21 @@ invalidates the previous seating token for that Invitation Party.
 
 No automatic email or message is sent by publishing. Hannah and Fidel decide
 when and how to share the private links.
+
+
+## Physical table layout upgrade
+
+For an existing Seating Studio installation, apply only
+`supabase/migrations/20260906000100_add_physical_table_layout.sql` through the
+reviewed migration workflow before deploying the new admin build. The full
+installation and validation generators above are for a fresh seating schema.
+The upgrade retains all Seat IDs, assignments, and immutable published snapshots.
+Legacy rectangular Tables and restored older revisions default to top/bottom
+chair counts, with the extra chair on top for an odd capacity.
+
+Review Visual and List assignment, expanded full names, clockwise numbering,
+round orientation, rectangular side counts and Seat 1 selection. Change the
+layout of an occupied Table and verify that attendee-to-seat-number assignments
+remain intact. Verify that shrinking past an occupied Seat is rejected, and that
+publishing then restoring a revision restores its geometry. Mobile remains
+read-only, with both views and table expansion available.
