@@ -29,6 +29,10 @@ export interface SeatingTable {
   shape: TableShape;
   capacity: number;
   seatOneAngle: number;
+  /** Absent on legacy revisions; defaults to the two long sides. */
+  sideCounts?: import("./tableLayout").SideCounts;
+  /** Zero-based physical chair index, clockwise from the top-left. */
+  seatOnePosition?: number;
 }
 
 export interface Seat {

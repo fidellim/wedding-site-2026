@@ -1,3 +1,4 @@
+import { defaultSideCounts, validSideCounts } from "../domain/tableLayout";
 import {
   applyCommand,
   publishDraft,
@@ -241,14 +242,29 @@ export function createMemorySeatingRepository(
       if (command.type === "upsert_table") {
         ensureVersion(command.expectedVersion);
         const tableId = command.table.id ?? id();
-        const seatingTable: SeatingTable = {
+        const seatingTable = {
           id: tableId,
           name: command.table.name.trim(),
           number: command.table.number,
           shape: command.table.shape,
           capacity: command.table.capacity,
           seatOneAngle: command.table.seatOneAngle ?? 0,
-        };
+          sideCounts: command.table.sideCounts ?? defaultSideCounts(command.table.capacity),
+          seatOnePosition: command.table.seatOnePosition ?? 0,
+        } satisfies SeatingTable;
+        if (!Number.isInteger(seatingTable.capacity) || seatingTable.capacity < 1 || seatingTable.capacity > 30
+          || !validSideCounts(seatingTable.sideCounts, seatingTable.capacity)
+          || !Number.isInteger(seatingTable.seatOnePosition) || seatingTable.seatOnePosition < 0
+          || seatingTable.seatOnePosition >= seatingTable.capacity
+          || !Number.isInteger(seatingTable.seatOneAngle) || seatingTable.seatOneAngle < 0 || seatingTable.seatOneAngle > 359) {
+          throw new SeatingRepositoryError("Invalid table layout.");
+        }
+        const removedSeatIds = new Set(workspace.draft.seats.filter(
+          (seat) => seat.tableId === tableId && seat.number > seatingTable.capacity,
+        ).map((seat) => seat.id));
+        if (workspace.draft.assignments.some((assignment) => removedSeatIds.has(assignment.seatId))) {
+          throw new SeatingRepositoryError("Capacity cannot remove an occupied seat.");
+        }
         const existingIndex = workspace.draft.tables.findIndex((table) => table.id === tableId);
         const tables = [...workspace.draft.tables];
         if (existingIndex >= 0) tables[existingIndex] = seatingTable;

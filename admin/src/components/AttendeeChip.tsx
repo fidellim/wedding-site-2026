@@ -1,4 +1,3 @@
-import { CSS } from "@dnd-kit/utilities";
 import { useDraggable } from "@dnd-kit/core";
 import type { Invitee } from "../domain/types";
 
@@ -10,7 +9,7 @@ interface AttendeeChipProps {
 }
 
 export function AttendeeChip({ invitee, selected, disabled, onSelect }: AttendeeChipProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: invitee.id,
     disabled,
   });
@@ -20,8 +19,9 @@ export function AttendeeChip({ invitee, selected, disabled, onSelect }: Attendee
       ref={setNodeRef}
       type="button"
       className={`attendee-chip${selected ? " is-selected" : ""}${isDragging ? " is-dragging" : ""}`}
-      style={{ transform: CSS.Translate.toString(transform) }}
-      onClick={onSelect}
+      title={invitee.fullName}
+      disabled={disabled}
+      onClick={() => { if (!disabled) onSelect(); }}
       {...listeners}
       {...attributes}
     >
