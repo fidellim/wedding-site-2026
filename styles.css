@@ -2789,6 +2789,13 @@ h3.rsvp-editorial-title {
   color: var(--faq-answer);
 }
 
+.faq-panel b,
+.faq-panel strong {
+  font-weight: 700;
+  /* Keep emphasis visible with Questrial's light letterforms. */
+  -webkit-text-stroke: 0.025em currentColor;
+}
+
 .faq-panel a {
   color: var(--faq-link);
   font-weight: 500;
