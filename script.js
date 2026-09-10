@@ -84,10 +84,6 @@ const rsvpConfirmModalCard =
 const rsvpConfirmModalMessage = q("rsvpConfirmModalMessage");
 const rsvpConfirmModalCancelBtn = q("rsvpConfirmModalCancelBtn");
 const rsvpConfirmModalConfirmBtn = q("rsvpConfirmModalConfirmBtn");
-const seatingPlanSection = q("seatingPlanSection");
-const seatingPlanParty = q("seatingPlanParty");
-const seatingPlanResults = q("seatingPlanResults");
-const seatingPlanRevision = q("seatingPlanRevision");
 const dateVenueMapWrap = q("dateVenueMapWrap");
 const venueMapEmbed = q("venueMapEmbed");
 const photoSliderRoot = q("photoSlider");
@@ -1188,87 +1184,6 @@ async function lookupGuestFromBackend(code) {
   return normalizeLookupGuest(code, rows[0]);
 }
 
-function renderPublishedSeating(result) {
-  if (
-    !seatingPlanSection ||
-    !seatingPlanParty ||
-    !seatingPlanResults ||
-    !seatingPlanRevision ||
-    !result ||
-    !Array.isArray(result.invitees) ||
-    result.invitees.length === 0
-  ) {
-    return;
-  }
-
-  const tables = Array.isArray(result.tables) ? result.tables : [];
-  const seats = Array.isArray(result.seats) ? result.seats : [];
-  const assignments = Array.isArray(result.assignments) ? result.assignments : [];
-  const tableById = new Map(tables.map((table) => [String(table.id), table]));
-  const seatById = new Map(seats.map((seat) => [String(seat.id), seat]));
-  const assignmentByInviteeId = new Map(
-    assignments.map((assignment) => [String(assignment.inviteeId), assignment])
-  );
-
-  seatingPlanParty.textContent = result.party?.label
-    ? `Seating for ${result.party.label}`
-    : "Your party's published seating";
-  seatingPlanResults.replaceChildren();
-
-  result.invitees.forEach((invitee) => {
-    const card = document.createElement("article");
-    card.className = "seating-place-card";
-    const name = document.createElement("h4");
-    name.textContent = String(invitee.fullName || "Guest");
-    const place = document.createElement("p");
-
-    if (invitee.requiresSeat === false) {
-      place.className = "seating-place-detail no-seat-required";
-      place.textContent = "No separate seat required";
-    } else {
-      const assignment = assignmentByInviteeId.get(String(invitee.id));
-      const seat = assignment ? seatById.get(String(assignment.seatId)) : null;
-      const table = seat ? tableById.get(String(seat.tableId)) : null;
-      if (!seat || !table) return;
-      place.className = "seating-place-detail";
-      place.textContent = `Table ${table.number} · ${table.name} · Seat ${seat.number}`;
-    }
-
-    card.append(name, place);
-    seatingPlanResults.appendChild(card);
-  });
-
-  if (!seatingPlanResults.childElementCount) return;
-  seatingPlanRevision.textContent = `Published seating plan · Revision ${Number(result.revisionNumber) || 1}`;
-  seatingPlanSection.classList.remove("hidden");
-  seatingPlanSection.setAttribute("aria-hidden", "false");
-}
-
-async function loadPublishedSeating() {
-  if (!seatingPlanSection || !isBackendConfigured() || !currentGuest.code) return;
-  const seatingToken = String(params.get("seating") || currentGuest.code || "").trim();
-  if (!seatingToken) return;
-
-  try {
-    const baseUrl = getSupabaseBaseUrl();
-    const response = await fetchWithTimeout(
-      `${baseUrl}/rest/v1/rpc/get_published_seating_for_invite`,
-      {
-        method: "POST",
-        headers: getSupabaseHeaders(),
-        body: JSON.stringify({
-          p_code: currentGuest.code,
-          p_seating_token: seatingToken,
-        }),
-      }
-    );
-    if (!response.ok) return;
-    renderPublishedSeating(await response.json());
-  } catch (error) {
-    // A missing or unavailable seating plan stays private and invisible.
-  }
-}
-
 async function loadRegistryItems() {
   if (!isBackendConfigured() || !currentGuest.code) {
     registryItems = [];
@@ -2022,7 +1937,6 @@ async function init() {
 
   showInvitationExperience();
   loadRegistryItems();
-  void loadPublishedSeating();
   if (envelopeBtn) {
     envelopeBtn.addEventListener("click", openInvitation);
   }
