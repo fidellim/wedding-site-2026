@@ -3335,7 +3335,8 @@ body.scroll-animate .reveal-unit.is-visible {
   }
 }
 
-@media (max-height: 820px) {
+/* Keep the full envelope intro visible on laptop-height viewports. */
+@media (max-height: 1000px) {
   .envelopeGateContainer {
     padding: 0.85rem 0.9rem;
   }
