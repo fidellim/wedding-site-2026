@@ -1022,7 +1022,10 @@ function renderRegistryItems() {
     return;
   }
 
-  registryItems.forEach((item) => {
+  const sortedItems = [...registryItems].sort(
+    (a, b) => Number(b.reserved) - Number(a.reserved)
+  );
+  sortedItems.forEach((item) => {
     const card = document.createElement("article");
     card.className = "registry-card";
     if (item.reserved && !item.reservedByMe) {
