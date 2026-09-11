@@ -2297,15 +2297,15 @@ h3.rsvp-editorial-title {
 }
 
 .registry-tag.available {
-  background: #e9d4c3;
-  border-color: #694534;
-  color: #13273f;
+  background: #EAF7EE;
+  border: 1px solid #2F6B3F;
+  color: #1F5D37;
 }
 
 .registry-tag.reserved {
-  background: #f4d9d9;
-  border-color: #630000;
-  color: #630000;
+  background: #FCE9E8;
+  border: 1px solid #9B3A36;
+  color: #8A1C1C;
 }
 
 .registry-tag.mine {
