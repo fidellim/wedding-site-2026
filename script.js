@@ -58,6 +58,7 @@ const attendanceChoiceInputs = Array.from(
   document.querySelectorAll('input[name="attendanceChoice"]')
 );
 const registryOpenBtn = q("registryOpenBtn");
+const rsvpRegistryOpenBtn = q("rsvpRegistryOpenBtn");
 const registryGrid = q("registryGrid");
 const registryReserveBtn = q("registryReserveBtn");
 const registryFeedback = q("registryFeedback");
@@ -1948,6 +1949,9 @@ async function init() {
   }
   if (registryOpenBtn) {
     registryOpenBtn.addEventListener("click", openRegistryListModal);
+  }
+  if (rsvpRegistryOpenBtn) {
+    rsvpRegistryOpenBtn.addEventListener("click", openRegistryListModal);
   }
   if (registryGrid) {
     registryGrid.addEventListener("change", onRegistryGridChange);

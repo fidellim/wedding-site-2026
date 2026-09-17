@@ -2197,12 +2197,20 @@ h3.rsvp-editorial-title {
 
 .registry-open-btn {
   min-width: 190px;
-  margin-top: 0.5rem;
-  letter-spacing: 0.14em;
-  /* text-transform: uppercase; */
-  background: linear-gradient(120deg, #9e1b1b 0%, #6b1111 36%, #8e604d 70%, #6b1111 100%);
+  max-width: 100%;
+  min-height: 50px;
+  margin-top: 1rem;
+  padding: 0.95rem 1.6rem;
+  color: #5a090f;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(255, 247, 238, 0.92);
+  background: linear-gradient(120deg, #fff5ed 0%, #f4e1d4 36%, #e9d4c3 70%, #f7e8dd 100%);
   background-size: 220% 100%;
-  box-shadow: 0 10px 24px rgba(18, 2, 3, 0.34);
+  box-shadow:
+    0 10px 24px rgba(18, 2, 3, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: transform 0.24s ease, box-shadow 0.24s ease, background-position 0.38s ease;
 }
 
