@@ -55,6 +55,22 @@ The spatial arrangement of Tables and Seats that helps a Confirmed Attendee
 locate their assigned place at the venue.
 _Avoid_: Seating plan, room map
 
+**Venue**:
+The permanent architecture and landscape of the wedding site, independent of
+the temporary wedding furniture and Seat Assignments.
+_Avoid_: Wedding layout, seating plan
+
+**Wedding Layout**:
+The temporary arrangement of wedding furniture and event features within the
+Venue, including Tables, chairs, aisles, and any stage or dance floor.
+_Avoid_: Venue, permanent architecture
+
+**Seating Guide**:
+The guest-facing presentation of an Invitation Party's published Seat
+Assignments and the Floor Plan, used to find their places and preview the
+reception.
+_Avoid_: Seating planner, draft plan
+
 **Table**:
 A named or numbered group of Seats with a fixed capacity.
 _Avoid_: Section, group
