@@ -53,8 +53,10 @@ function rpcForCommand(command: RepositoryCommand): [string, Record<string, unkn
         p_expected_version: command.expectedVersion,
         p_table: command.table,
       }];
+    case "save_venue_layout":
+      return ["admin_save_venue_layout", { p_expected_version: command.expectedVersion, p_layout: command.layout }];
     case "publish":
-      return ["admin_publish_seating_plan", { p_expected_version: command.expectedVersion }];
+      return ["admin_publish_seating_plan", { p_expected_version: command.expectedVersion, p_acknowledge_layout_warnings: command.acknowledgeLayoutWarnings ?? false }];
     case "restore_revision":
       return ["admin_restore_seating_revision", {
         p_expected_version: command.expectedVersion,

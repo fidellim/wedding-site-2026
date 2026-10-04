@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useVenueLayout } from "./venue/useVenueLayout";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { inspectWorkspace } from "./domain/seating";
 import type { SeatingRepository } from "./data/seatingRepository";
 import { useSeatingWorkspace } from "./hooks/useSeatingWorkspace";
@@ -7,7 +8,9 @@ import { TablesPanel } from "./components/TablesPanel";
 import { PlannerPanel } from "./components/PlannerPanel";
 import { PublishPanel } from "./components/PublishPanel";
 
-type Section = "overview" | "invitees" | "tables" | "planner" | "publish";
+const VenuePreview = lazy(() => import("./venue/VenuePreview"));
+
+type Section = "venue" | "overview" | "invitees" | "tables" | "planner" | "publish";
 
 const navigation: { id: Section; label: string; short: string }[] = [
   { id: "overview", label: "Overview", short: "01" },
@@ -15,6 +18,7 @@ const navigation: { id: Section; label: string; short: string }[] = [
   { id: "tables", label: "Tables", short: "03" },
   { id: "planner", label: "Seat planner", short: "04" },
   { id: "publish", label: "Publish", short: "05" },
+  { id: "venue", label: "Venue preview", short: "06" },
 ];
 
 export function App({
@@ -28,7 +32,7 @@ export function App({
   demo?: boolean;
   onSignOut?: () => Promise<void>;
 }) {
-  const [section, setSection] = useState<Section>("overview");
+  const [section, setSection] = useState<Section>(() => window.location.hash === "#venue" ? "venue" : "overview");
   const [mobileReadOnly, setMobileReadOnly] = useState(
     () => window.matchMedia("(max-width: 720px)").matches,
   );
@@ -43,6 +47,9 @@ export function App({
     lastMoveAuditId,
     provisionGuestAccess,
   } = useSeatingWorkspace(repository);
+  const venueHistory = useVenueLayout(workspace, execute);
+  const [layoutReadOnly, setLayoutReadOnly] = useState(() => window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches);
+  useEffect(() => { const media = window.matchMedia("(max-width: 1023px), (pointer: coarse)"); const update = () => setLayoutReadOnly(media.matches); media.addEventListener("change", update); return () => media.removeEventListener("change", update); }, []);
   const planner = useMemo(() => workspace ? inspectWorkspace(workspace) : null, [workspace]);
 
   useEffect(() => {
@@ -73,15 +80,15 @@ export function App({
         </nav>
         <div className="nav-footer">
           <p>{adminName}</p>
-          <span className={online ? "status-online" : "status-offline"}>{online ? "Online · autosaving" : "Offline · read only"}</span>
+          <span className={online ? "status-online" : "status-offline"}>{online ? (section === "venue" ? "Private venue preview" : "Online · autosaving") : "Offline · read only"}</span>
           {onSignOut && <button className="text-button" onClick={() => void onSignOut()}>Sign out</button>}
         </div>
       </aside>
 
       <main className="admin-main">
-        {demo && <div className="demo-banner"><strong>Local demo mode</strong><span>No Supabase project is connected; changes exist only in memory.</span></div>}
+        {demo && <div className="demo-banner"><strong>Local demo mode</strong><span>{section === "venue" ? "No Supabase project is connected. Changes exist only in memory." : "No Supabase project is connected; changes exist only in memory."}</span></div>}
         {!online && <div className="offline-banner">Connection lost. Editing is paused until the latest plan can be loaded.</div>}
-        {mobileReadOnly && <div className="mobile-banner">Mobile view is read-only. Use a tablet or desktop to edit the plan.</div>}
+        {mobileReadOnly && section !== "venue" && <div className="mobile-banner">Mobile view is read-only. Use a tablet or desktop to edit the plan.</div>}
         {message && <div className="message-banner" role="status">{message}</div>}
 
         {section === "overview" && (
@@ -111,6 +118,7 @@ export function App({
             </div>
           </section>
         )}
+        {section === "venue" && <Suspense fallback={<div className="surface-card" role="status">Preparing the venue…</div>}><VenuePreview workspace={workspace} disabled={disabled || layoutReadOnly} history={venueHistory} /></Suspense>}
         {section === "invitees" && <InviteesPanel workspace={workspace} disabled={disabled} execute={execute} />}
         {section === "tables" && <TablesPanel workspace={workspace} disabled={disabled} execute={execute} />}
         {section === "planner" && (

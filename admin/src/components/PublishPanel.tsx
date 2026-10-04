@@ -1,7 +1,7 @@
 import { inspectWorkspace } from "../domain/seating";
 import type { SeatingWorkspace } from "../domain/types";
 import type { RepositoryCommand } from "../data/seatingRepository";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export function PublishPanel({
   workspace,
@@ -15,10 +15,15 @@ export function PublishPanel({
   provisionGuestAccess: (invitationPartyId: string) => Promise<string | null>;
 }) {
   const validation = inspectWorkspace(workspace).validation;
+  const [acknowledgedVersion, setAcknowledgedVersion] = useState<number | null>(null);
+  const layoutWarnings = validation.warnings.some(w => w.code === "layout_clearance");
+  const warningsAcknowledged = !layoutWarnings || acknowledgedVersion === workspace.draft.version;
   const [linkMessage, setLinkMessage] = useState("");
+  const publishModal = useRef<HTMLDialogElement>(null);
   const publish = () => {
-    if (!window.confirm("Publish this complete seating plan to invited guests?")) return;
-    void execute({ type: "publish", expectedVersion: workspace.draft.version });
+    if (disabled || !validation.canPublish || !warningsAcknowledged) return;
+    publishModal.current?.close();
+    void execute({ type: "publish", expectedVersion: workspace.draft.version, acknowledgeLayoutWarnings: layoutWarnings && warningsAcknowledged });
   };
 
   const copyGuestLink = async (invitationPartyId: string) => {
@@ -41,7 +46,7 @@ export function PublishPanel({
       <section className="surface-card publication-card">
         <p className="eyebrow">Publication gate</p>
         <h2>{validation.canPublish ? "Ready when you are." : "The draft still needs attention."}</h2>
-        <p className="helper-text">Publishing creates one immutable revision. Guests continue seeing the previous revision until this completes.</p>
+        <p className="helper-text">Publishing saves seating assignments, table positions, and venue setup together in one immutable revision. Guests continue seeing the previous revision until this completes.</p>
         <div className="validation-columns">
           <div>
             <h3>Blocking errors <span>{validation.errors.length}</span></h3>
@@ -54,8 +59,19 @@ export function PublishPanel({
             {!validation.warnings.length && <p className="empty-state">No warnings.</p>}
           </div>
         </div>
-        <button className="primary-button publish-button" disabled={disabled || !validation.canPublish} onClick={publish}>Publish complete plan</button>
+        {layoutWarnings && <label className="layout-verified"><input type="checkbox" checked={warningsAcknowledged} disabled={disabled} onChange={e => setAcknowledgedVersion(e.target.checked ? workspace.draft.version : null)} />I reviewed the approximate overlap and clearance warnings for this draft.</label>}
+        <button className="primary-button publish-button" disabled={disabled || !validation.canPublish || !warningsAcknowledged} onClick={() => publishModal.current?.showModal()}>Publish complete plan</button>
       </section>
+
+      <dialog ref={publishModal} className="publish-modal" aria-labelledby="publish-modal-title" aria-describedby="publish-modal-description">
+        <p className="eyebrow">Publish seating plan</p>
+        <h2 id="publish-modal-title">Ready to share this plan?</h2>
+        <p id="publish-modal-description" className="helper-text">Publish this complete seating plan to invited guests? This creates a new revision and replaces the seating plan guests currently see.</p>
+        <div className="publish-modal-actions">
+          <button className="secondary-button" autoFocus onClick={() => publishModal.current?.close()}>Cancel</button>
+          <button className="primary-button" disabled={disabled || !validation.canPublish || !warningsAcknowledged} onClick={publish}>Publish plan</button>
+        </div>
+      </dialog>
 
       <aside className="publish-sidebar">
         <section className="surface-card">

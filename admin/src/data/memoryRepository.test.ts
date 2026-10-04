@@ -1,3 +1,4 @@
+import { defaultVenueLayout } from "../venue/layout";
 import { describe, expect, it } from "vitest";
 import { createMemorySeatingRepository } from "./memoryRepository";
 
@@ -81,6 +82,10 @@ describe("table geometry persistence", () => {
     workspace = await repository.execute({ type: "upsert_table", expectedVersion: workspace.draft.version,
       table: { ...workspace.draft.tables[1], sideCounts: { top: 1, right: 1, bottom: 1, left: 1 }, seatOnePosition: 2 },
     });
+    workspace = await repository.execute({ type: "save_venue_layout", expectedVersion: workspace.draft.version, layout: { ...defaultVenueLayout(), tables: {
+      "table-1": { x: 10, y: 0, rotation: 0, width: 1.8, depth: 1.8, dimensionsVerified: false },
+      "table-2": { x: 18, y: 0, rotation: 0, width: 2.4, depth: 1.2, dimensionsVerified: false },
+    } } });
     workspace = await repository.execute({ type: "publish", expectedVersion: workspace.draft.version });
     const published = workspace.published!;
     workspace = await repository.execute({ type: "upsert_table", expectedVersion: workspace.draft.version,

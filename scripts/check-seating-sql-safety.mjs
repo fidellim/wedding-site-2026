@@ -6,6 +6,7 @@ const migrationPaths = [
   "supabase/migrations/20260902000100_create_seating_planner.sql",
   "supabase/migrations/20260902000200_create_seating_planner_functions.sql",
   "supabase/migrations/20260906000100_add_physical_table_layout.sql",
+  "supabase/migrations/20261002000100_add_shared_venue_layout.sql",
 ];
 
 const forbiddenPatterns = [

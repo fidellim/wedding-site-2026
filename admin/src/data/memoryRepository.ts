@@ -1,3 +1,4 @@
+import { isVenueLayout } from "../venue/layout";
 import { defaultSideCounts, validSideCounts } from "../domain/tableLayout";
 import {
   applyCommand,
@@ -112,9 +113,17 @@ export function createMemorySeatingRepository(
         return update(result.value);
       }
 
+      if (command.type === "save_venue_layout") {
+        ensureVersion(command.expectedVersion);
+        if (!isVenueLayout(command.layout) || Object.keys(command.layout.tables).some(id => !workspace.draft.tables.some(t => t.id === id))) {
+          throw new SeatingRepositoryError("Invalid venue layout.");
+        }
+        return update({ ...workspace, draft: { ...workspace.draft, version: workspace.draft.version + 1, venueLayout: structuredClone(command.layout) } });
+      }
+
       if (command.type === "publish") {
         ensureVersion(command.expectedVersion);
-        const result = publishDraft(workspace, { actorId, at: now(), auditId: id() }, id());
+        const result = publishDraft(workspace, { actorId, at: now(), auditId: id() }, id(), command.acknowledgeLayoutWarnings);
         if (!result.ok) throw new SeatingRepositoryError(result.error.message, result.error.code);
         return update(result.value);
       }

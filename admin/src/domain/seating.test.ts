@@ -1,3 +1,4 @@
+import { defaultVenueLayout } from "../venue/layout";
 import { describe, expect, it } from "vitest";
 import {
   applyCommand,
@@ -67,6 +68,10 @@ function workspace(): SeatingWorkspace {
         { id: "t2-s2", tableId: "table-2", number: 2 },
       ],
       assignments: [],
+      venueLayout: { ...defaultVenueLayout(), tables: {
+        "table-1": { x: 10, y: 0, rotation: 0, width: 1.8, depth: 1.8, dimensionsVerified: false },
+        "table-2": { x: 18, y: 0, rotation: 0, width: 2.4, depth: 1.2, dimensionsVerified: false },
+      } },
     },
     published: null,
     revisions: [],

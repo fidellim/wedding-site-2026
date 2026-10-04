@@ -1,3 +1,4 @@
+import { layoutValidation } from "../venue/layout";
 import type {
   AuditEntry,
   CommandContext,
@@ -183,6 +184,9 @@ export function validatePublication(snapshot: SeatingSnapshot): PublicationValid
     );
   }
 
+  const layout = layoutValidation(snapshot);
+  errors.push(...layout.errors);
+  warnings.push(...layout.warnings);
   return { canPublish: errors.length === 0, errors, warnings };
 }
 
@@ -364,9 +368,10 @@ export function publishDraft(
   workspace: SeatingWorkspace,
   context: CommandContext,
   revisionId: Id,
+  acknowledgeLayoutWarnings = false,
 ): DomainResult<SeatingWorkspace> {
   const validation = validatePublication(workspace.draft);
-  if (!validation.canPublish) {
+  if (!validation.canPublish || (!acknowledgeLayoutWarnings && validation.warnings.some(w => w.code === "layout_clearance"))) {
     return {
       ok: false,
       error: {
@@ -389,6 +394,7 @@ export function publishDraft(
     tables: snapshot.tables,
     seats: snapshot.seats,
     assignments: snapshot.assignments,
+    venueLayout: snapshot.venueLayout,
   };
 
   return {
@@ -438,6 +444,7 @@ export function restoreRevision(
     tables: restored.tables,
     seats: restored.seats,
     assignments: restored.assignments,
+    venueLayout: restored.venueLayout ?? null,
   };
 
   return {

@@ -47,6 +47,8 @@ export interface SeatAssignment {
 }
 
 export interface SeatingSnapshot {
+  /** Absent on revisions published before venue placement was introduced. */
+  venueLayout?: import("../venue/layout").VenueLayout | null;
   invitationParties: InvitationParty[];
   invitees: Invitee[];
   tables: SeatingTable[];
@@ -103,9 +105,11 @@ export type PublicationErrorCode =
   | "seat_conflict"
   | "invitee_assigned_more_than_once"
   | "table_over_capacity"
-  | "ineligible_assignment";
+  | "ineligible_assignment"
+  | "table_unplaced"
+  | "table_outside_venue";
 
-export type SeatingWarningCode = "split_invitation_party" | "keep_together_split";
+export type SeatingWarningCode = "split_invitation_party" | "keep_together_split" | "layout_clearance";
 
 export interface PublicationIssue<TCode extends string> {
   code: TCode;

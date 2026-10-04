@@ -7,7 +7,8 @@ export type RepositoryCommand =
   | { type: "resolve_roster"; expectedVersion: number; invitationPartyId: Id; confirmedInviteeIds: Id[]; reason?: string }
   | { type: "amend_rsvp"; expectedVersion: number; invitationPartyId: Id; nextStatus: "accepted" | "declined"; nextAttendingCount: number; reason: string }
   | { type: "upsert_table"; expectedVersion: number; table: Partial<SeatingTable> & Pick<SeatingTable, "name" | "number" | "shape" | "capacity"> }
-  | { type: "publish"; expectedVersion: number }
+  | { type: "save_venue_layout"; expectedVersion: number; layout: import("../venue/layout").VenueLayout }
+  | { type: "publish"; expectedVersion: number; acknowledgeLayoutWarnings?: boolean }
   | { type: "restore_revision"; expectedVersion: number; revisionId: Id }
   | { type: "set_guest_lookup"; enabled: boolean };
 
