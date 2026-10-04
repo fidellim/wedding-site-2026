@@ -1,4 +1,5 @@
 apps_script/*
+.DS_Store
 frontend_design/*
 prototype_design/
 node_modules/
