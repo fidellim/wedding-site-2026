@@ -7,6 +7,7 @@ const migrationPaths = [
   "supabase/migrations/20260902000200_create_seating_planner_functions.sql",
   "supabase/migrations/20260906000100_add_physical_table_layout.sql",
   "supabase/migrations/20261002000100_add_shared_venue_layout.sql",
+  "supabase/migrations/20261004000100_add_venue_reconstruction_estimates.sql",
 ];
 const outputPath = resolve(
   projectRoot,

@@ -38,6 +38,7 @@ try {
   await db.exec(await readFile(new URL("../supabase/.temp/venue-upgrade-validate.sql", import.meta.url), "utf8"));
   assert.equal((await db.query("select exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'seating_plan_state' and column_name = 'venue_layout') as present")).rows[0].present, false);
   await execFile("20261002000100_add_shared_venue_layout.sql");
+  await execFile("20261004000100_add_venue_reconstruction_estimates.sql");
   assert.deepEqual(await db.query("select (select count(*) from public.seating_tables) as tables, (select count(*) from public.seating_seats) as seats, (select count(*) from public.seating_assignments) as assignments, (select count(*) from public.invites) as invites"), baseline);
   assert.equal((await db.query(inspectionSql)).rows[0].save_function_exists, true);
   w = await workspace(); assert.equal(w.draft.venueLayout, null);
@@ -51,6 +52,15 @@ try {
     [b.id]: { x: 10, y: 0, rotation: 90, width: 4, depth: 1.2, dimensionsVerified: false },
   } };
   await rejected("admin_save_venue_layout", [w.draft.version, {}], /INVALID_VENUE_LAYOUT/);
+  // Optional reconstruction fields preserve older immutable layouts; provided values are bounded.
+  const legacyLayout = structuredClone(layout);
+  for (const key of ["approachLength", "pavilionPlazaGap", "bridgeHeight", "bridgeStepCount", "bridgeTread"]) delete legacyLayout.parameters[key];
+  assert.equal((await db.query("select public.valid_seating_venue_layout($1::jsonb) as valid", [legacyLayout])).rows[0].valid, true);
+  for (const [key, value] of [["approachLength", 2], ["pavilionPlazaGap", 100], ["bridgeHeight", 999], ["bridgeStepCount", 7], ["bridgeTread", .31]]) {
+    const invalid = structuredClone(layout); invalid.parameters[key] = value;
+    await rejected("admin_save_venue_layout", [w.draft.version, invalid], /INVALID_VENUE_LAYOUT/);
+  }
+
   w = await rpc("admin_save_venue_layout", [w.draft.version, layout]);
   assert.deepEqual(w.draft.assignments, assignments); assert.deepEqual(w.draft.seats, seats);
   await rejected("admin_save_venue_layout", [w.draft.version - 1, layout], /STALE_VERSION/);

@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
-const migration = await readFile(resolve(root, "supabase/migrations/20261002000100_add_shared_venue_layout.sql"), "utf8");
+const migration = (await Promise.all(["20261002000100_add_shared_venue_layout.sql", "20261004000100_add_venue_reconstruction_estimates.sql"].map(name => readFile(resolve(root, "supabase/migrations", name), "utf8")))).join("\n");
 const apply = process.argv.includes("--apply");
 const tables = ["invites", "registry_items", "registry_reservations", "seating_admins", "seating_keep_together_groups", "seating_invitees", "seating_invitation_rosters", "seating_attendance_roster_changes", "seating_rsvp_amendments", "seating_tables", "seating_seats", "seating_assignments", "seating_plan_revisions", "seating_plan_state", "seating_guest_tokens", "seating_audit_log"];
 const sql = `-- Additive upgrade for an already-installed seating planner only.
