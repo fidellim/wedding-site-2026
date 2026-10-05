@@ -2,9 +2,10 @@
 
 **Project:** Interactive 3D Wedding Venue + Guest Seating Experience  
 **Document role:** PRIMARY AND AUTHORITATIVE SOURCE OF TRUTH  
-**Revision:** 1.7  
+**Revision:** 1.10
 **Created:** 21 September 2026  
 **Primary source used to author this specification:** user-supplied venue walkthrough video (`shangrila-venue.MP4`, approximately 150.5 seconds)  
+**Additional owner-authorized source:** [September 29 walkthrough](<reference-video/Shangri-la AD - 29-9-26.MOV>), 63.96 seconds; reviewed on 4 October 2026.
 **Intended use:** web-based 3D venue reconstruction, wedding-layout visualization, table/seat search, and guest navigation  
 
 ---
@@ -21,9 +22,10 @@ When new verified measurements, coordinator drawings, floor plans, or venue info
 
 1. **`VENUE_MASTER_SPEC.md`** — authoritative.
 2. **Owner-supplied floor-plan diagram, `reference-images/Floor Plan - Plaza Beach.png`** — event-zone relationships incorporated below; no scale or verified dimensions.
-3. **Labeled reference stills in `reference-images/` (relative to this specification)** — visual clarification only.
-4. **Original venue video** — archival evidence and ambiguity resolution only.
-5. **Developer/modeler assumptions** — last resort; assumptions must remain parameterized and documented.
+3. **Owner-authorized video review of 4 October 2026** — visible permanent architectural relationships and appearance guide revisions 1.8–1.10; numerical dimensions remain estimates.
+4. **Labeled reference stills in `reference-images/` (relative to this specification)** — visual clarification only.
+5. **Original venue video** — archival evidence and ambiguity resolution only.
+6. **Developer/modeler assumptions** — last resort; assumptions must remain parameterized and documented.
 
 If a reference image seems to conflict with this document, follow this document until the document is deliberately revised.
 
@@ -193,6 +195,38 @@ The initial venue preview must reflect these relationships. It may show named
 event zones without baking temporary furniture into the venue. A scaled venue
 plan and approved furniture positions are still required for accurate seating.
 
+### Owner-authorized video revision — 4 October 2026
+
+The owner requested a whole-visible-venue revision so guests will recognize the
+setting on arrival, authorizing the video to guide permanent architectural
+relationships and keeping 2D/3D consistent. Guest presentation choices are deferred.
+This revision stays in the private admin preview pending owner venue-recognition
+review; it is not a measured plan or an approved guest-facing reconstruction.
+
+- Original video 01:08 and 02:24–02:28, plus the September 29 video 00:46–00:50, support raised planting beds, leafy shade trees,
+  hedges and planters framing circulation between ceremony and pavilion.
+- Video 01:48–02:00 and 02:16–02:24 support low stone terrace walls/coping and
+  a clear broad stair opening, rather than an uninterrupted bare paving slab.
+- The ceremony-frontage curve follows the supplied schematic, not a surveyed
+  edge visible in the video. Its radius/projection remains an adjustable-scale
+  visual assumption derived from the existing dimensions.
+- Video 02:00–02:08 supports a rounded pavilion roof and pale broad perimeter
+  counter over dark timber panels. The separate pale resort dome is retained.
+- Video 01:16–01:28 supports lawn → narrow sand → water. Replace the initial
+  10 m default sand estimate with a **3 m design estimate**, not a measurement.
+  Previously saved widths remain intact until the owner chooses and saves a
+  revision. Do not assert a continuous concrete seawall at the lawn/sand boundary.
+- Retain the unmeasured ceremony/pavilion horizontal positions for this review.
+  The apparent gap must be assessed with permanent planting/circulation present;
+  neither footage nor the unscaled schematic supplies a reliable distance.
+- Guest-book, photobooth, Pinkberry and seat-signage volumes are optional
+  schematic event fixtures. Their session-only toggle must not save/publish a
+  new arrangement or imply that they are permanent architecture. Hide fixtures
+  when the approximate terrace cannot contain them.
+
+See [video revision evidence](video-revision-2026-10-04.md) for timestamps,
+remaining uncertainties and the owner-review checklist.
+
 ## 7. Arrival / approach zone
 
 **Status: CONFIRMED-VISUAL for character; APPROXIMATED-VISUAL for exact layout**  
@@ -208,6 +242,55 @@ Visible characteristics:
 - dark timber pedestrian/bridge/stair elements;
 - dark traditional-style lamp posts along parts of the route;
 - narrow path segments between architecture, planting, and timber structure.
+
+### Owner proportion correction — 4 October 2026
+
+Revision 1.10 supersedes the short approach, symmetric bridge stairs, lawn-based
+plaza-width cap and broad flat terrace behind the pavilion. The owner requested
+a longer approach, larger ceremony area, compact pavilion connection around the
+existing tree, and a continuing canal. The owner explicitly deferred a drone-view
+feature; no new view or flight animation is part of this revision.
+
+New adjustable DESIGN-DECISION estimates: approach length 36 m, ceremony plaza
+24 × 26 m, pavilion roof-to-plaza gap 6 m, approach bridge rise 2.2 m, thirteen
+risers at 0.3 m tread depth. These replace modeling placeholders, not measured
+venue facts. The visible stair flight follows the near canal bank and turns at
+a raised landing onto the bridge deck; its unseen opposite end is not assumed
+to have a matching flight. The canal continues behind the ceremony/pavilion
+connection and around the pavilion-side terrace, whose inland footprint is
+trimmed accordingly. The precise canal course and staircase orientation remain
+visual interpretations for owner review.
+
+The owner's subsequent canal-side photograph refines that footprint: its inland
+edge follows the curved venue-side canal bank instead of a square notch. Low
+stone coping and chain posts follow the same contour. A curved hedge bed with
+palms and leafy trees follows the pavilion bend, replacing the straight inland
+hedge. The canal course and existing connection tree remain in place; planting
+positions are visual estimates.
+
+The 4.5 × 2.6 m connection tree-bed estimate is retained. Ceremony width is no
+longer capped to a fixed lawn percentage. Pavilion placement follows the
+parameterized gap to the ceremony edge; the terrace can extend left of the lawn
+when needed. Reception-lawn coordinates and guest assignments remain unchanged.
+
+Existing layouts lacking the new estimate fields receive these proportions
+in the local preview. Their tables, landmarks and stored records are retained;
+Save venue setup explicitly persists the preview estimates. Existing new-format
+custom proportions are respected. Optional server validation accepts legacy
+revisions and bounds new estimates without rewriting rows.
+
+### September 29 walkthrough refinement
+
+00:00–00:25 shows a substantial timber stair bridge, square lattice landing rails,
+traditional lanterns above capped posts, and a stone pedestrian path beside the
+canal with dark posts and sagging chains. Planting strips and a cream resort wall
+frame the walking route, which opens into the ceremony plaza. The filmed route
+passes beside the bridge; a mandatory bridge crossing is not established.
+
+The shared plan/3D approach footprint bends around the stair foot and joins the
+plaza without placing planting inside the path. Exact canal curvature, bridge
+position, step count, post spacing and path length remain modeled estimates.
+Seven bridge risers per side and a 12 m approach are retained placeholders.
 
 ### Modeling requirement
 
@@ -435,7 +518,9 @@ The pavilion sits on the paved/raised terrace adjacent to the main lawn and has 
 - repeated vertical support posts;
 - continuous lower perimeter/counter/railing treatment;
 - deep roof overhang;
-- broad low-pitched polygonal/faceted roof form;
+- broad rounded, low roof profile with deep timber eaves (video 02:00); roof radius and rise remain visual estimates;
+- brown roof with narrow radial/vertical ribbing and a flared eave, upper timber
+  lattice bands, dark timber counter sills, and framed dark lower panels (September 29, approximately 00:54);
 - shaded interior;
 - stone-paved exterior terrace surrounding it;
 - waterfront visible directly from/through the pavilion.
@@ -1274,7 +1359,10 @@ Whenever a physical fact changes or becomes confirmed, add a revision entry belo
 
 | Revision | Date | Change |
 |---|---|---|
+| 1.10 | 2026-10-04 | Owner-directed proportion correction: longer adjustable approach, taller turning stair flight, larger ceremony plaza, compact pavilion/tree connection, continuing canal and shaped inland terrace; existing layout compatibility, no drone-view feature. |
+| 1.9 | 2026-10-04 | Owner-authorized September 29 video refinement: canal-side approach and bridge clearance, chain barriers and lanterns, circular plaza inlays, ribbed pavilion roof/eaves and lattice/panel framing, mature planting and stone coping; dimensions remain estimates. |
 | 1.0 | 2026-09-21 | Initial venue specification derived from supplied walkthrough video; labeled reference set created. |
+| 1.8 | 2026-10-04 | Owner-authorized whole-visible-venue video revision: landscaped terrace connection, coping and frontage, rounded pavilion roof/counter, narrower estimated sand strip, optional schematic cocktail fixtures; private pending recognition review. |
 | 1.7 | 2026-09-22 | Clarified ceremony palms on the water-facing plaza margin from video; removed duplicate perimeter rows and kept stair clearance. |
 | 1.6 | 2026-09-22 | Reviewed supplied archival video: clarified starburst plaza paving, textured retaining stone, and palm versus shade-tree character; documented timestamps without changing the approved site layout. |
 | 1.5 | 2026-09-22 | REF-05 and owner clarification refine the ceremony backdrop to tall date-palm-like trees along its back edge, superseding the earlier broad-canopy cluster. |

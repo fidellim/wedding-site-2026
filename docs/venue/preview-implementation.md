@@ -228,7 +228,7 @@ require venue/AV confirmation; these supports are spatial placeholders.
 Comparison images: `led-center-preview.png` and `led-side-preview.png`.
 
 
-## Ceremony tiered structure
+## Ceremony fountain
 
 The dark circular structure visible in REF-04 (00:45) and REF-05 (00:58) is
 represented in both 3D and the shared 2D plan near the plaza's water-facing edge,
@@ -237,9 +237,11 @@ of 00:58–01:02 shows it left of the medallion when facing water, rather than
 centered along the plaza edge. Initial placement keeps its base 1.5 m inside
 both the water-facing and outer plaza edges; these setbacks are estimates.
 Five dark stacked circular tiers use initial estimates of 3 m base diameter and
-0.9 m total height, adjustable in Ceremony structure dimensions. Position and
-tier count are approximate; this is not identified as a fountain or wedding
-stage, and no water effects are assumed. Its permanence remains unconfirmed.
+0.9 m total height, adjustable in Ceremony fountain dimensions. The owner
+confirmed on October 4 that this is a fountain. Static water surfaces now fill
+the tier basins in 3D and the shared 2D plan. Position and tier count remain
+approximate. The visible structure label is removed in both views; the plan
+retains an accessible fountain description. No water animation is added.
 
 
 ## Beach-edge stage and waterfront reveal — October 2, 2026
@@ -268,3 +270,107 @@ and the overhead plan. Center flowers leave room for the wider face. Both LED
 options share a camera that frames the entire side assembly in landscape and
 portrait. Opening Adjust dimensions retains the selected LED option, which is
 persisted through Save venue setup.
+
+## Video-informed architecture revision — 4 October 2026
+
+Revision 1.8 adds `venueArchitecture.ts` as the shared footprint source for the
+terrace outline, split coping walls, raised beds, planters and optional schematic
+cocktail fixtures in 3D and SVG. Raised planting frames the plaza/pavilion
+connection while the forecourt and stair opening remain clear. Pavilion roof
+geometry is rounded, with broad pale counter segments over timber panels.
+
+The new default sand-strip estimate is 3 m (previously 10 m); existing saved
+parameters are not overwritten. Adjust dimensions offers a narrower-shoreline
+preview and now updates geometry immediately, with Save venue setup remaining
+the explicit shared-draft write. Horizontal plaza/pavilion positions are unchanged
+pending recognition review rather than inferring a measured gap from footage.
+
+Show cocktail fixtures is session-only, defaults off, and uses schematic volumes
+and labels rather than claiming approved event furnishings. The fixtures live in
+`WEDDING_LAYOUT`, separate from permanent geometry. Both views use the same
+footprints; toggling and rebuilding dimensions retain the current visibility.
+
+The preview explicitly awaits owner venue-recognition review. No guest route or
+guest presentation changes were added. See `video-revision-2026-10-04.md` for
+source timestamps and remaining assumptions. Earlier rectangular-terrace,
+faceted-roof, deferred-fixture and 10 m sand-default descriptions are superseded
+by this section; all dimensions remain unverified.
+
+
+## September 29 walkthrough detail pass — 4 October 2026
+
+Revision 1.9 follows the owner's request to apply the findings from
+`Shangri-la AD - 29-9-26.MOV`. The shared architecture helper now defines the
+bending approach, canal outline, bridge position and planting strips for 3D and
+SVG. The route passes beside the bridge stairs with at least 0.35 m lateral
+separation from the modeled stair foot, across supported approach widths.
+This is a geometric preview check, not a certified accessibility measurement.
+
+Bridge landing lattice, capped posts and decorative lanterns; canal posts and
+sagging chains; stair-side chains; and a cream approach wall improve the arrival
+context. The existing illustrative abra remains within the canal and clear of
+the relocated bridge. Its presence is inherited from the earlier model, not
+asserted by this walkthrough.
+
+Plaza inlays remain circular in world space as plaza width/depth change. The
+pavilion has a smoother domed profile with a flared eave, brown procedural roof
+ribs, timber upper lattice, dark counter sills and lower panel framing. The separate resort massing
+adds an upper arched gallery, cornices and terracotta eaves. The connection tree
+bed has pale coping and low groundcover, with an exposed branching trunk and
+smaller canopy clusters. Date palms have thicker patterned trunks and fuller
+crowns; terrace pots have clustered shrubs. Small wall-light insets follow the
+pavilion-side retaining-wall reference.
+
+Repeated architectural details are merged into material batches; paving, palm
+bark and roof ribs use generated 512 px textures. Rebuild disposal includes the
+cocktail-fixture geometry. This pass changes no seating records or saved layout
+coordinates. Existing dimensions remain the inputs to the upgraded geometry.
+See [the source review](september29-update-2026-10-04.md) for evidence and limits.
+
+
+## Owner proportion correction — 4 October 2026
+
+Revision 1.10 replaces the 12 m approach with a 36 m adjustable default and the
+low symmetric bridge with a near-bank longitudinal flight turning onto the
+raised crossing. Thirteen risers, 0.3 m treads and 2.2 m rise are adjustable
+estimates. The stair opening is left clear of the deck rail, and the pedestrian
+walkway bypasses the stair footprint. Both SVG and 3D use the same bridge data.
+
+The default ceremony area increases from 18 × 20 m to 24 × 26 m. Its width no
+longer depends on 48% of lawn width. Pavilion placement derives from a 6 m
+roof-edge-to-ceremony-edge gap rather than a fixed lawn-width fraction. The
+connection tree bed retains its 4.5 × 2.6 m footprint. The inland terrace is
+notched along the compact connection and cut back behind the pavilion. Canal
+water and banks continue around that outline; bank geometry has a water opening
+so the channel remains visible. Resort context follows the pavilion-side edge.
+Optional cocktail fixture positions remain on the trimmed terrace.
+
+`previewVenueLayout` fills optional estimate fields and enlarges legacy plaza
+estimates only for the local preview. Existing table and landmark coordinates
+are preserved; no data is saved on load. Saving uses the existing explicit
+shared-draft action. New-format customized estimates are preserved on reload.
+An additive optional validation migration bounds new values while accepting
+old immutable revisions. No production migration was applied during this work.
+
+Existing cameras are reframed to contain the longer site. No new camera preset,
+drone control, flight path or animation was created.
+
+The initial 12 m route, seven mirrored bridge risers, lawn-based plaza cap and
+wide full-depth pavilion terrace described earlier are superseded by this pass.
+See [proportion review and screenshots](proportion-update-2026-10-04.md).
+
+## Curved canal terrace and planting — 4 October 2026
+
+The owner's canal-side photograph clarified that the inland terrace edge must
+follow the canal rather than form a square notch. The shared terrace polygon
+now uses the venue-side bank contour, including both curved bends. Matching low
+stone coping and evenly spaced chain posts follow that edge. A planted ribbon
+replaces the straight pavilion-side hedge, with alternating palms and leafy
+shade trees along the pavilion bend. The existing connection tree, compact
+pavilion spacing, larger ceremony paving and canal course are retained.
+Planting placement and dimensions remain visual estimates. Geometry tests cover
+the shared contour and dry-land planting at parameter extremes; all 82 tests
+and the production build pass. Browser review found no console errors.
+
+- [Updated pavilion and canal planting](canal-contour-pavilion.png)
+- [Matching curved terrace in plan](canal-contour-plan.png)
