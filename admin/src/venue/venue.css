@@ -104,3 +104,24 @@
 .layout-landmarks fieldset { border: 1px solid #d8cdb9; padding: 1rem; border-radius: 8px; }
 @media (max-width: 1100px) { .layout-editor-grid { grid-template-columns: 1fr; } .layout-controls { max-width: 520px; } }
 @media (max-width: 720px) { .layout-toolbar { align-items: start; flex-direction: column; } .layout-landmarks { grid-template-columns: 1fr; } }
+
+.venue-inspection { position: relative; }
+.venue-inspection-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .7rem; padding: .75rem 1rem; background: #fdfcf7; color: #56634f; font-size: .75rem; }
+.venue-inspection-controls label { display: flex; align-items: center; gap: .5rem; }
+.venue-inspection-controls select { max-width: 220px; padding: .5rem; border: 1px solid #c7d1c2; border-radius: 5px; background: #fffdf7; color: #354439; font: inherit; }
+.venue-furniture-target { cursor: pointer; outline: none; }
+.venue-furniture-target[aria-pressed="true"] > circle, .venue-furniture-target[aria-pressed="true"] > rect, .venue-furniture-target:focus-visible > circle, .venue-furniture-target:focus-visible > rect { stroke: #d2982f; stroke-width: .12; }
+.venue-seat-tooltip { position: fixed; z-index: 20; width: 260px; padding: .7rem .9rem; border: 1px solid #c7d1c2; border-radius: 8px; background: #fffdf7; color: #354439; box-shadow: 0 4px 20px #20302125; font-size: .8rem; }
+.venue-seat-tooltip strong, .venue-seat-tooltip span { display: block; overflow-wrap: anywhere; }
+.venue-seat-tooltip span { margin-top: .3rem; color: #697264; font-size: .72rem; }
+.venue-seat-details { position: absolute; right: 1rem; bottom: 4rem; z-index: 5; width: min(310px, calc(100% - 2rem)); max-height: 65%; overflow: auto; padding: 1rem; border: 1px solid #c7d1c2; border-radius: 10px; background: #fffdf7; color: #354439; box-shadow: 0 8px 28px #20302130; }
+.venue-seat-details p { margin: 0 2rem .5rem 0; color: #697264; font-size: .75rem; }
+.venue-seat-details h2 { margin: 0 1rem .8rem 0; font-size: 1.1rem; overflow-wrap: anywhere; }
+.venue-seat-details button { min-height: 44px; border: 1px solid #d4d8cd; border-radius: 5px; background: #f8f7ee; color: #354439; padding: .5rem .7rem; font: inherit; font-size: .75rem; }
+.venue-seat-details .venue-seat-close { position: absolute; right: .4rem; top: .4rem; border: none; background: transparent; font-size: 1.3rem; }
+.venue-seat-details ol { list-style: none; margin: 0; padding: 0; }
+.venue-seat-details li + li { margin-top: .3rem; }
+.venue-seat-details li button { width: 100%; display: flex; gap: .8rem; align-items: center; text-align: left; }
+.venue-seat-details li span { flex-shrink: 0; color: #697264; }
+.venue-seat-details li strong { overflow-wrap: anywhere; }
+@media (max-width: 720px) { .venue-seat-details { left: .7rem; right: .7rem; bottom: 4rem; width: auto; max-height: 45%; } }

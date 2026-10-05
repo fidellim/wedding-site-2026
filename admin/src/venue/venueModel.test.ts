@@ -45,6 +45,11 @@ describe("private venue preview parameters", () => {
       expect(v.position[2]).toBeGreaterThan((view.id === "stage" || view.id === "floral") ? defaultParameters.stageHeight : 10);
       expect(v.target[2]).toBeGreaterThanOrEqual(0);
     }
+    const overview = cameraView(defaultParameters, "overview"), reverse = cameraView(defaultParameters, "reverse");
+    expect(reverse.target).toEqual(overview.target);
+    expect(reverse.position[0] - reverse.target[0]).toBeCloseTo(-(overview.position[0] - overview.target[0]));
+    expect(reverse.position[1] - reverse.target[1]).toBeCloseTo(-(overview.position[1] - overview.target[1]));
+    expect(reverse.position[2]).toBe(overview.position[2]);
     expect(cameraView(defaultParameters, "overview", .65).position[2]).toBeGreaterThan(cameraView(defaultParameters, "overview", 1.5).position[2]);
   });
 });
@@ -52,7 +57,7 @@ describe("private venue preview parameters", () => {
 // Project real model positions through the same Z-up camera used by VenueCanvas.
 describe("3D landmark orientation", () => {
   // Event closeups face the décor from the guests' side; site views retain plan orientation.
-  for (const preset of viewPresets.filter(view => view.id !== "stage" && view.id !== "floral" && view.id !== "ceremony")) {
+  for (const preset of viewPresets.filter(view => view.id !== "stage" && view.id !== "floral" && view.id !== "ceremony" && view.id !== "reverse")) {
     it(`keeps pavilion left of ceremony in ${preset.label}`, () => {
       const p = defaultParameters, layout = venueLayout(p);
       const view = cameraView(p, preset.id);

@@ -1,3 +1,4 @@
+import { useVenueInspection, sameTarget, type FurnitureTarget } from "./VenueInspection";
 import { polygonPoints, venueArchitecture } from "./venueArchitecture";
 import type { ReactNode } from "react";
 import type { SeatingSnapshot } from "../domain/types";
@@ -25,6 +26,8 @@ interface Props {
   layout?: VenueLayout;
 }
 export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false }: Props) {
+  const inspection = useVenueInspection();
+  const inspectionRef = useRef(inspection); inspectionRef.current = inspection;
   const host = useRef<HTMLDivElement>(null);
   const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
@@ -40,7 +43,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
-    renderer.domElement.setAttribute("aria-label", "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Use view buttons for keyboard navigation.");
+    renderer.domElement.setAttribute("aria-label", "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Click a seat or table for seating details. Use view buttons and the Inspect table menu for keyboard navigation.");
     renderer.domElement.setAttribute("role", "img");
     container.prepend(renderer.domElement);
     const scene = new THREE.Scene(); scene.background = new THREE.Color("#e7ebe5"); scene.fog = new THREE.Fog("#e7ebe5", 180, 330);
@@ -83,6 +86,45 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       }
     }
     arrange(snapshot, layout);
+    const raycaster = new THREE.Raycaster();
+    const outline = new THREE.BoxHelper(new THREE.Object3D(), "#edb84b"); outline.visible = false; scene.add(outline);
+    let outlined: THREE.Object3D | null = null;
+    function hit(event: PointerEvent): FurnitureTarget | null {
+      if (!furniture) return null;
+      const rect = renderer.domElement.getBoundingClientRect();
+      raycaster.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1), camera);
+      const object = raycaster.intersectObjects(furniture.root.children, true)[0]?.object;
+      return object?.userData.furnitureTarget ?? object?.parent?.userData.furnitureTarget ?? null;
+    }
+    const pointers = new Set<number>();
+    let press: { x: number; y: number; id: number; dragged: boolean } | null = null;
+    function pointerDown(event: PointerEvent) {
+      pointers.add(event.pointerId);
+      if (pointers.size > 1) { if (press) press.dragged = true; return; }
+      press = { x: event.clientX, y: event.clientY, id: event.pointerId, dragged: event.button !== 0 };
+      inspectionRef.current?.peek(null);
+    }
+    function pointerMove(event: PointerEvent) {
+      if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) press.dragged = true;
+      if (pointers.size || event.pointerType === "touch") return;
+      const target = hit(event);
+      renderer.domElement.style.cursor = target ? "pointer" : "grab";
+      inspectionRef.current?.peek(target ? { target, x: event.clientX, y: event.clientY } : null);
+    }
+    function pointerUp(event: PointerEvent) {
+      pointers.delete(event.pointerId);
+      if (press?.id === event.pointerId) {
+        if (!press.dragged && Math.hypot(event.clientX - press.x, event.clientY - press.y) <= 6) inspectionRef.current?.select(hit(event));
+        press = null;
+      }
+    }
+    function pointerCancel(event: PointerEvent) { pointers.delete(event.pointerId); press = null; inspectionRef.current?.peek(null); }
+    function pointerLeave() { inspectionRef.current?.peek(null); }
+    renderer.domElement.addEventListener("pointerdown", pointerDown);
+    renderer.domElement.addEventListener("pointermove", pointerMove);
+    window.addEventListener("pointerup", pointerUp);
+    window.addEventListener("pointercancel", pointerCancel);
+    renderer.domElement.addEventListener("pointerleave", pointerLeave);
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reduced = motion.matches;
     let transition: { start: number; from: THREE.Vector3; to: THREE.Vector3; fromTarget: THREE.Vector3; toTarget: THREE.Vector3 } | null = null;
@@ -141,6 +183,21 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       // Pan remains on the venue's horizontal plane, never below lawn grade.
       controls.target.z = Math.max(0, controls.target.z);
       if (!reduced) venue.waterTexture.offset.x = now * .000003;
+      let nextOutlined: THREE.Object3D | null = null;
+      const active = inspectionRef.current?.active;
+      if (active && furniture) furniture.root.traverse(object => {
+        const target: FurnitureTarget | undefined = object.userData.furnitureTarget;
+        if (target && sameTarget(active, target)) nextOutlined = object;
+      });
+      if (nextOutlined !== outlined) { outlined = nextOutlined; outline.visible = !!outlined; if (outlined) outline.setFromObject(outlined); }
+      if (outlined) outline.update();
+      // Keep names on the table tops readable from either side of the venue.
+      const cameraRight = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+      const textAngle = Math.atan2(cameraRight.y, cameraRight.x);
+      furniture?.root.children.forEach(table => {
+        const marker = table.getObjectByName("TABLE_NAME");
+        if (marker) marker.rotation.z = -textAngle - table.rotation.z;
+      });
       renderer.render(scene, camera);
       for (const landmark of landmarks) {
         const element = labelElements.current.get(landmark.id); if (!element) continue;
@@ -156,6 +213,13 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       resize.disconnect(); observer.disconnect(); motion.removeEventListener("change", onMotion);
       controls.removeEventListener("start", stop); controls.dispose();
       renderer.domElement.removeEventListener("webglcontextlost", onLost);
+      renderer.domElement.removeEventListener("pointerdown", pointerDown);
+      renderer.domElement.removeEventListener("pointermove", pointerMove);
+      renderer.domElement.removeEventListener("pointerleave", pointerLeave);
+      window.removeEventListener("pointerup", pointerUp);
+      window.removeEventListener("pointercancel", pointerCancel);
+      outline.geometry.dispose();
+      if (Array.isArray(outline.material)) outline.material.forEach(material => material.dispose()); else outline.material.dispose();
       furniture?.dispose(); ceremony?.dispose(); venue.dispose(); sun.shadow.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
     };
   }, [onUnavailable]);
@@ -169,7 +233,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   useEffect(() => { api.current?.setCocktailFixtures(cocktailFixtures); }, [cocktailFixtures, parameters, led, onUnavailable]);
 
   useEffect(() => { api.current?.setView(preset); }, [preset, resetKey]);
-  return <div className="venue-canvas" ref={host}>
+  return <div className="venue-canvas" ref={host} onClick={event => event.stopPropagation()}>
     <div className={`venue-labels${labels ? "" : " is-hidden"}`} aria-hidden="true">
       {venueLandmarks(parameters, led).map(item => <span key={item.id} ref={element => { if (element) labelElements.current.set(item.id, element); else labelElements.current.delete(item.id); }} className={`venue-map-label venue-map-label-${item.id}`}><i />{item.label}</span>)}
     </div>

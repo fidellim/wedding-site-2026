@@ -96,10 +96,10 @@ export function ledLayout(p: VenueParameters, mode: LedLayout) {
 
 }
 
-export type ViewPreset = "floral" | "stage" | "ceremony" | "overview" | "entrance" | "pavilion" | "waterfront" | "overhead";
+export type ViewPreset = "floral" | "stage" | "ceremony" | "overview" | "reverse" | "entrance" | "pavilion" | "waterfront" | "overhead";
 export const viewPresets: { id: ViewPreset; label: string }[] = [
   { id: "stage", label: "Stage" }, { id: "floral", label: "Floral detail" },
-  { id: "overview", label: "Overview" }, { id: "entrance", label: "Entrance" },
+  { id: "reverse", label: "Opposite view" }, { id: "overview", label: "Overview" }, { id: "entrance", label: "Entrance" },
   { id: "ceremony", label: "Ceremony" },
   { id: "pavilion", label: "Pavilion" }, { id: "waterfront", label: "Waterfront" },
   { id: "overhead", label: "Overhead" },
@@ -121,6 +121,7 @@ export function cameraView(p: VenueParameters, preset: ViewPreset, aspect = 1.5,
     floral: { position: [stage.centerX - design.width * .43, -stage.backY + 3.2 * scale, floralZ + .65 * scale], target: [stage.centerX - design.width * .43, -stage.backY + .5, floralZ] },
     stage: { position: [stage.centerX - stageDistance * .12, -stage.frontY + stageDistance, p.stageHeight + stageDistance * .32], target: [stage.centerX, -stage.centerY, p.stageHeight + (led === "none" ? p.backdropHeight * .45 : 2.1)] },
     overview,
+    reverse: { position: [-overview.position[0], 2 * overview.target[1] - overview.position[1], overview.position[2]], target: overview.target },
     ceremony: { position: [l.plazaX - 5 * scale, -l.plazaY + p.plazaLength * .9 * scale, p.terraceHeight + p.plazaLength * 1.05 * scale], target: [l.plazaX, -l.plazaY, p.terraceHeight + 1] },
     entrance: { position: [l.plazaX + 20 * scale, -(l.entranceY + l.terraceBack) / 2 - 30 * scale, (p.approachLength * .7 + 24) * scale],
       target: [l.plazaX - 2, -(l.entranceY + l.terraceBack) / 2, p.terraceHeight + 1] },

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { VenueCanvas, VenuePlan } from "./VenueCanvas";
 import { defaultParameters, ledLayout, normalizeParameters, parameterDefinitions, parameterKeys, stageLayout, viewPresets, type ParameterKey, type ViewPreset } from "./venueModel";
 import "./venue.css";
+import { VenueInspection } from "./VenueInspection";
 
 export default function VenuePreview({ workspace, disabled, history }: { workspace: SeatingWorkspace; disabled: boolean; history: ReturnType<typeof useVenueLayout> }) {
   const layout = useMemo(() => previewVenueLayout(workspace.draft.venueLayout ?? defaultVenueLayout()), [workspace.draft.venueLayout]);
@@ -17,7 +18,7 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
   const chairCount = ceremonyChairCount(workspace.draft);
   const ceremony = ceremonyLayout(parameters, chairCount);
   useEffect(() => { setSetup(layout); }, [workspace.draft.venueLayout]);
-  const [preset, setPreset] = useState<ViewPreset>("overview");
+  const [preset, setPreset] = useState<ViewPreset>("reverse");
   const [resetKey, setResetKey] = useState(0);
   const [cocktailFixtures, setCocktailFixtures] = useState(false);
   const [labels, setLabels] = useState(true);
@@ -68,14 +69,15 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
           {viewPresets.map(view => <button key={view.id} aria-pressed={!plan && preset === view.id} disabled={unavailable} onClick={() => setView(view.id)}>{view.label}</button>)}
           <button aria-pressed={plan} onClick={() => setPlan(current => unavailable || !current)}>2D plan</button>
         </div>
-        <div className={`venue-stage${dusk && !plan ? " is-dusk" : ""}`}>
-          {plan ? <VenuePlan cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} landmarks={layout.landmarks} ceremonyChairs={chairCount}><TableFurniture snapshot={workspace.draft} layout={layout} /></VenuePlan> : <VenueCanvas cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} preset={preset} resetKey={resetKey} labels={labels} dusk={dusk} snapshot={workspace.draft} layout={layout} onUnavailable={handleUnavailable} />}
+        <VenueInspection snapshot={workspace.draft}><div className={`venue-stage${dusk && !plan ? " is-dusk" : ""}`}>
+          {plan ? <VenuePlan interactive cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} landmarks={layout.landmarks} ceremonyChairs={chairCount}><TableFurniture snapshot={workspace.draft} layout={layout} /></VenuePlan> : <VenueCanvas cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} preset={preset} resetKey={resetKey} labels={labels} dusk={dusk} snapshot={workspace.draft} layout={layout} onUnavailable={handleUnavailable} />}
           <div className="venue-scene-caption"><span>HANNAH &amp; FIDEL</span><strong>Where it all comes together.</strong></div>
           <div className="venue-approximate">Approximate venue · dimensions unverified</div>
           {!plan && <button className="venue-light-toggle" aria-pressed={dusk} onClick={() => setDusk(current => !current)}>{dusk ? "Dusk · switch to daylight" : "Daylight · preview dusk"}</button>}
           {!plan && <button className="venue-label-toggle" aria-pressed={labels} onClick={() => setLabels(current => !current)}>{labels ? "Hide labels" : "Show labels"}</button>}
         </div>
-        <div className="venue-scene-footer"><span>{plan ? "Overhead orientation · same venue dimensions" : "Drag or swipe to orbit 360° · scroll or pinch to zoom · two fingers to pan"}</span><button onClick={() => { if (unavailable) setPlan(true); else setView("overview"); }}>Reset view ↗</button></div>
+        </VenueInspection>
+        <div className="venue-scene-footer"><span>{plan ? "Overhead orientation · same venue dimensions" : "Drag or swipe to orbit 360° · scroll or pinch to zoom · two fingers to pan"}</span><button onClick={() => { if (unavailable) setPlan(true); else setView("reverse"); }}>Reset view ↗</button></div>
       </div>
       {unavailable && <p className="venue-notice" role="status">3D is unavailable on this device. The overhead plan remains available.</p>}
       <div className="venue-bottom-row">
