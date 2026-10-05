@@ -1,5 +1,5 @@
 import type { SeatingWorkspace } from "../domain/types";
-import { defaultVenueLayout } from "./layout";
+import { defaultVenueLayout, previewVenueLayout } from "./layout";
 import { LayoutEditor } from "./LayoutEditor";
 import { TableFurniture } from "./TableFurniture";
 import { ceremonyChairCount, ceremonyLayout } from "./ceremonyLayout";
@@ -10,15 +10,16 @@ import { defaultParameters, ledLayout, normalizeParameters, parameterDefinitions
 import "./venue.css";
 
 export default function VenuePreview({ workspace, disabled, history }: { workspace: SeatingWorkspace; disabled: boolean; history: ReturnType<typeof useVenueLayout> }) {
-  const layout = useMemo(() => workspace.draft.venueLayout ?? defaultVenueLayout(), [workspace.draft.venueLayout]);
+  const layout = useMemo(() => previewVenueLayout(workspace.draft.venueLayout ?? defaultVenueLayout()), [workspace.draft.venueLayout]);
   const [setup, setSetup] = useState(layout);
   const [editing, setEditing] = useState(false);
-  const parameters = layout.parameters, led = setup.led;
+  const parameters = setup.parameters, led = setup.led;
   const chairCount = ceremonyChairCount(workspace.draft);
   const ceremony = ceremonyLayout(parameters, chairCount);
   useEffect(() => { setSetup(layout); }, [workspace.draft.venueLayout]);
   const [preset, setPreset] = useState<ViewPreset>("overview");
   const [resetKey, setResetKey] = useState(0);
+  const [cocktailFixtures, setCocktailFixtures] = useState(false);
   const [labels, setLabels] = useState(true);
   const [dusk, setDusk] = useState(false);
   const [plan, setPlan] = useState(false);
@@ -57,12 +58,18 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
         <p className="venue-led-note">Ceremony: {chairCount} {chairCount === 1 ? "chair" : "chairs"} · accepted RSVPs, excluding guests needing no separate seat · no assigned seats.</p>
         {!ceremony.fits && <p className="venue-notice" role="status">The {chairCount} ceremony chairs extend beyond the estimated plaza seating space. Adjust the plaza dimensions to review their fit.</p>}
         {!ledLayout(parameters, led).fits && <p className="venue-notice" role="status">This arrangement needs a deeper lawn to keep the stage and dance floor inside its edges. Increase lawn depth before using this layout.</p>}
+        {workspace.draft.venueLayout && workspace.draft.venueLayout.parameters.approachLength === undefined && <p className="venue-led-note">Updated venue proportions are previewed. Save venue setup to keep these estimates.</p>}
+        <p className="venue-led-note">Video-informed venue revision · awaiting venue-recognition review. Dimensions, planting positions and shoreline width remain estimates.</p>
+        <div className="venue-led-options">
+          <button aria-pressed={cocktailFixtures} onClick={() => setCocktailFixtures(value => !value)}>{cocktailFixtures ? "Hide cocktail fixtures" : "Show cocktail fixtures"}</button>
+          <span>{cocktailFixtures ? "Planned fixtures · schematic positions, not venue architecture" : "Cocktail fixtures hidden for architecture review"}</span>
+        </div>
         <div className="venue-viewbar" role="group" aria-label="Venue viewpoints">
           {viewPresets.map(view => <button key={view.id} aria-pressed={!plan && preset === view.id} disabled={unavailable} onClick={() => setView(view.id)}>{view.label}</button>)}
           <button aria-pressed={plan} onClick={() => setPlan(current => unavailable || !current)}>2D plan</button>
         </div>
         <div className={`venue-stage${dusk && !plan ? " is-dusk" : ""}`}>
-          {plan ? <VenuePlan parameters={parameters} led={led} landmarks={layout.landmarks} ceremonyChairs={chairCount}><TableFurniture snapshot={workspace.draft} layout={layout} /></VenuePlan> : <VenueCanvas parameters={parameters} led={led} preset={preset} resetKey={resetKey} labels={labels} dusk={dusk} snapshot={workspace.draft} layout={layout} onUnavailable={handleUnavailable} />}
+          {plan ? <VenuePlan cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} landmarks={layout.landmarks} ceremonyChairs={chairCount}><TableFurniture snapshot={workspace.draft} layout={layout} /></VenuePlan> : <VenueCanvas cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} preset={preset} resetKey={resetKey} labels={labels} dusk={dusk} snapshot={workspace.draft} layout={layout} onUnavailable={handleUnavailable} />}
           <div className="venue-scene-caption"><span>HANNAH &amp; FIDEL</span><strong>Where it all comes together.</strong></div>
           <div className="venue-approximate">Approximate venue · dimensions unverified</div>
           {!plan && <button className="venue-light-toggle" aria-pressed={dusk} onClick={() => setDusk(current => !current)}>{dusk ? "Dusk · switch to daylight" : "Daylight · preview dusk"}</button>}
@@ -91,6 +98,7 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
           {(["stage", "danceFloor", "entrance"] as const).map(key => <fieldset key={key}><legend>{{ stage: "Stage", danceFloor: "Dance floor", entrance: "Entrance marker" }[key]}</legend>{(["x", "y"] as const).map(axis => <label key={axis}>{axis.toUpperCase()} (m)<input aria-label={`${key} ${axis} position`} type="number" min="-200" max="200" step=".1" disabled={disabled} value={setup.landmarks[key][axis]} onChange={e => { const value = e.target.valueAsNumber; if (Number.isFinite(value)) setSetup({ ...setup, landmarks: { ...setup.landmarks, [key]: { ...setup.landmarks[key], [axis]: value } } }); }} /></label>)}</fieldset>)}
           <label>LED arrangement<select aria-label="Saved LED arrangement" value={setup.led} disabled={disabled} onChange={e => setSetup({ ...setup, led: e.target.value === "side" ? "side" : "center" })}><option value="center">Center LED</option><option value="side">Side LED</option></select></label>
         </div>
+        <button className="text-button" disabled={disabled} onClick={() => { updateParameter("waterSetback", 3); }}>Preview narrower sand strip · 3 m estimate from video</button>
         <div className="venue-save-row"><p>Save estimates to the shared draft. Review table boundaries before publishing.</p><button className="primary-button" disabled={disabled} onClick={() => void save()}>Save venue setup</button></div>
       </section>}
       <p className="venue-preview-status" role="status">{status}</p>

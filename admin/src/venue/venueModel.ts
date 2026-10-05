@@ -7,7 +7,7 @@ export const parameterDefinitions = {
   danceFloorSize: { label: "Dance floor side", value: 8, min: 4, max: 9, step: .5, unit: "m", group: "Stage & dance floor" },
   lawnWidth: { label: "Lawn width", value: 44, min: 24, max: 70, step: 1, unit: "m", group: "Lawn & waterfront" },
   lawnLength: { label: "Lawn depth", value: 16, min: 10, max: 36, step: 1, unit: "m", group: "Lawn & waterfront" },
-  waterSetback: { label: "Sand strip to water", value: 10, min: 3, max: 20, step: .5, unit: "m", group: "Lawn & waterfront" },
+  waterSetback: { label: "Estimated sand strip to water", value: 3, min: 3, max: 20, step: .5, unit: "m", group: "Lawn & waterfront" },
   waterfrontEdgeHeight: { label: "Waterfront edging", value: .2, min: .05, max: .5, step: .05, unit: "m", group: "Lawn & waterfront" },
   terraceDepth: { label: "Minimum terrace depth", value: 20, min: 10, max: 22, step: .5, unit: "m", group: "Terrace & steps" },
   terraceHeight: { label: "Terrace elevation", value: 1.2, min: .4, max: 2, step: .1, unit: "m", group: "Terrace & steps" },
@@ -20,14 +20,21 @@ export const parameterDefinitions = {
   pavilionRoofRise: { label: "Roof rise", value: 1.8, min: 1, max: 2.8, step: .1, unit: "m", group: "Pavilion" },
   pavilionFloorOffset: { label: "Floor above terrace", value: .12, min: 0, max: .4, step: .02, unit: "m", group: "Pavilion" },
   pavilionLawnGap: { label: "Pavilion setback on terrace", value: 2, min: 1, max: 5, step: .5, unit: "m", group: "Pavilion" },
-  ceremonyStructureDiameter: { label: "Tiered structure diameter", value: 3, min: 2, max: 4, step: .25, unit: "m", group: "Ceremony structure" },
-  ceremonyStructureHeight: { label: "Tiered structure height", value: .9, min: .5, max: 1.4, step: .1, unit: "m", group: "Ceremony structure" },
-  plazaWidth: { label: "Maximum plaza width", value: 18, min: 12, max: 26, step: 1, unit: "m", group: "Arrival & plaza" },
-  plazaLength: { label: "Plaza depth", value: 20, min: 14, max: 30, step: 1, unit: "m", group: "Arrival & plaza" },
+  ceremonyStructureDiameter: { label: "Fountain diameter", value: 3, min: 2, max: 4, step: .25, unit: "m", group: "Ceremony fountain" },
+  ceremonyStructureHeight: { label: "Fountain height", value: .9, min: .5, max: 1.4, step: .1, unit: "m", group: "Ceremony fountain" },
+  plazaWidth: { label: "Plaza width", value: 24, min: 12, max: 26, step: 1, unit: "m", group: "Arrival & plaza" },
+  plazaLength: { label: "Plaza depth", value: 26, min: 14, max: 30, step: 1, unit: "m", group: "Arrival & plaza" },
   approachWidth: { label: "Approach path width", value: 3, min: 2, max: 5, step: .25, unit: "m", group: "Arrival & plaza" },
+  approachLength: { label: "Approach walkway length", value: 36, min: 24, max: 72, step: 2, unit: "m", group: "Arrival & plaza" },
+  pavilionPlazaGap: { label: "Pavilion roof to ceremony gap", value: 6, min: 5.5, max: 9, step: .5, unit: "m", group: "Pavilion" },
+  bridgeHeight: { label: "Approach bridge rise", value: 2.2, min: 1.6, max: 3, step: .1, unit: "m", group: "Approach stairs" },
+  bridgeStepCount: { label: "Approach stair risers", value: 13, min: 10, max: 18, step: 1, unit: "", group: "Approach stairs" },
+  bridgeTread: { label: "Approach stair tread", value: .3, min: .26, max: .4, step: .02, unit: "m", group: "Approach stairs" },
 } as const;
 export type ParameterKey = keyof typeof parameterDefinitions;
 export type VenueParameters = Record<ParameterKey, number>;
+/** Optional in previously saved layouts; normalized before previewing. */
+export const reconstructionParameterKeys: ParameterKey[] = ["approachLength", "pavilionPlazaGap", "bridgeHeight", "bridgeStepCount", "bridgeTread"];
 export const parameterKeys = Object.keys(parameterDefinitions) as ParameterKey[];
 export const defaultParameters = Object.fromEntries(parameterKeys.map(key => [key, parameterDefinitions[key].value])) as VenueParameters;
 export const VENUE_STORAGE_KEY = "hf-venue-preview-v2";
@@ -43,20 +50,25 @@ export function normalizeParameters(value: unknown): VenueParameters {
   })) as VenueParameters;
 }
 
-export function venueLayout(p: VenueParameters) {
+export function venueLayout(input: VenueParameters) {
+  const p = normalizeParameters(input);
   const lawnBack = -p.lawnLength / 2;
   const terraceFront = lawnBack - p.stairCount * p.stairTread;
   const pavilionY = terraceFront - p.pavilionLawnGap - p.pavilionDiameter / 2;
   // Keep the pavilion on its terrace even while independently changing dimensions.
-  const terraceDepth = Math.max(p.terraceDepth, p.pavilionLawnGap + p.pavilionDiameter + 2, p.plazaLength);
+  const pavilionTerraceBack = pavilionY - p.pavilionDiameter * .585 - 2;
+  const terraceDepth = Math.max(p.terraceDepth, terraceFront - pavilionTerraceBack + 8, p.plazaLength);
   const terraceBack = terraceFront - terraceDepth;
-  const plazaWidth = Math.min(p.plazaWidth, p.lawnWidth * .48);
+  const plazaWidth = p.plazaWidth;
   const plazaX = p.lawnWidth / 2 - plazaWidth / 2;
   const plazaY = terraceFront - p.plazaLength / 2;
-  const entranceY = terraceBack - 12;
-  return { lawnBack, terraceFront, terraceBack, terraceDepth, plazaWidth, stairX: -p.lawnWidth * .035, pavilionX: -p.lawnWidth * .28,
-    pavilionY, plazaX, plazaY, entranceY, waterY: p.lawnLength / 2 + p.waterSetback,
-    span: Math.max(p.lawnWidth + 10, p.lawnLength / 2 + p.waterSetback - entranceY),
+  const entranceY = terraceBack - p.approachLength;
+  const pavilionX = plazaX - plazaWidth / 2 - p.pavilionPlazaGap - p.pavilionDiameter * .585;
+  const terraceLeft = Math.min(-p.lawnWidth / 2, pavilionX - p.pavilionDiameter * .585 - 1);
+  const siteCenterY = (entranceY + p.lawnLength / 2 + p.waterSetback) / 2;
+  return { lawnBack, terraceFront, terraceBack, terraceDepth, plazaWidth, stairX: -p.lawnWidth * .035, pavilionX, terraceLeft, siteCenterY,
+    pavilionY, pavilionTerraceBack, plazaX, plazaY, entranceY, waterY: p.lawnLength / 2 + p.waterSetback,
+    span: Math.max(p.lawnWidth / 2 - terraceLeft + 10, p.lawnLength / 2 + p.waterSetback - entranceY),
   };
 }
 
@@ -98,7 +110,7 @@ export function cameraView(p: VenueParameters, preset: ViewPreset, aspect = 1.5,
   const span = l.span * scale;
   // Rendering coordinates: plan Y is reflected once by the venue roots.
   // Keep beach in front, pavilion left, and ceremony right, just like the 2D plan.
-  const overview = { position: [span * .2, -span * .95, span * .95], target: [0, 10, 0] };
+  const overview = { position: [span * .2, -span * .95, span * .95], target: [0, -l.siteCenterY, 0] };
   const stage = stageLayout(p);
   const stageDistance = led === "none"
     ? Math.max(p.stageWidth * 1.1, 9) * Math.max(1, 1.2 / Math.max(.35, aspect))
@@ -110,17 +122,17 @@ export function cameraView(p: VenueParameters, preset: ViewPreset, aspect = 1.5,
     stage: { position: [stage.centerX - stageDistance * .12, -stage.frontY + stageDistance, p.stageHeight + stageDistance * .32], target: [stage.centerX, -stage.centerY, p.stageHeight + (led === "none" ? p.backdropHeight * .45 : 2.1)] },
     overview,
     ceremony: { position: [l.plazaX - 5 * scale, -l.plazaY + p.plazaLength * .9 * scale, p.terraceHeight + p.plazaLength * 1.05 * scale], target: [l.plazaX, -l.plazaY, p.terraceHeight + 1] },
-    entrance: { position: [l.plazaX + 4 * scale, -l.entranceY - 20 * scale, 28 * scale], target: [l.plazaX, -l.entranceY - 4, 0] },
+    entrance: { position: [l.plazaX + 20 * scale, -(l.entranceY + l.terraceBack) / 2 - 30 * scale, (p.approachLength * .7 + 24) * scale],
+      target: [l.plazaX - 2, -(l.entranceY + l.terraceBack) / 2, p.terraceHeight + 1] },
     pavilion: { position: [l.pavilionX + 13 * scale, -l.pavilionY - 19 * scale, 24 * scale], target: [l.pavilionX + 4, -l.pavilionY, p.terraceHeight + 2] },
     waterfront: { position: [-p.lawnWidth * .2, -l.waterY - 20 * scale, 22 * scale], target: [0, -l.waterY, 0] },
-    overhead: { position: [0, 9.99, span * 1.65], target: [0, 10, 0] },
+    overhead: { position: [0, -l.siteCenterY - .01, span * 1.65], target: [0, -l.siteCenterY, 0] },
   };
   return views[preset];
 }
 export function venueLandmarks(p: VenueParameters, led: LedLayout = "none") {
-  const l = venueLayout(p), structure = ceremonyStructure(p);
+  const l = venueLayout(p);
   return [
-    { id: "ceremony-structure", label: "Tiered structure", position: [structure.x, structure.y, structure.z + structure.height + .35] },
     { id: "stage", label: "HF stage", position: [stageLayout(p).centerX, stageLayout(p).centerY, p.stageHeight + ledLayout(p, led).height + .5] },
     { id: "entrance", label: "Ceremony approach", position: [l.plazaX, l.entranceY + 4, p.terraceHeight + 1] },
     { id: "plaza", label: "Ceremony area", position: [l.plazaX, l.plazaY, p.terraceHeight + .6] },

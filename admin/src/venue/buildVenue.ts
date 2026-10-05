@@ -1,20 +1,22 @@
+import { venueArchitecture } from "./venueArchitecture";
 import { buildStage } from "./buildStage";
 import { planToSceneScale } from "./venueCoordinates";
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { ceremonyStructure, ceremonyPalms, stageLayout, venueLayout, type LedLayout, type VenueParameters } from "./venueModel";
+import { ceremonyStructure, ceremonyPalms, stageLayout, venueLayout, type LedLayout, type VenueParameters, normalizeParameters } from "./venueModel";
 
 /** Z-up, origin at the reception lawn. Every number is a documented visual placeholder. */
-export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
+export function buildVenue(input: VenueParameters, led: LedLayout = "none") {
+  const p = normalizeParameters(input);
   const root = new THREE.Group(); root.name = "VENUE_ROOT"; root.scale.fromArray(planToSceneScale);
-  const l = venueLayout(p);
+  const l = venueLayout(p), architecture = venueArchitecture(p);
   const materials: THREE.Material[] = [];
   const textures: THREE.Texture[] = [];
   const material = (color: string, roughness = .9) => {
     const m = new THREE.MeshStandardMaterial({ color, roughness }); materials.push(m); return m;
   };
   const stone = material("#d2bda1"), paleStone = material("#e3d1b6"), edge = material("#baa58a");
-  const timber = material("#543529"), woodLight = material("#79503b"), roofMat = material("#50362c");
+  const timber = material("#543529"), woodLight = material("#79503b"), roofMat = material("#ffffff");
   const plaster = material("#e7d6b7"), recess = material("#8f816b");
   const leaf = material("#59774b"), leafLight = material("#738950"), bark = material("#88735a");
   recess.side = THREE.DoubleSide;
@@ -22,6 +24,10 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
   const group = (name: string, parent = root) => { const g = new THREE.Group(); g.name = name; parent.add(g); return g; };
   const site = group("SITE"), pavilion = group("PAVILION_ROOT"), landscape = group("LANDSCAPING"), resort = group("RESORT_BACKGROUND"), arrival = group("ARRIVAL_CONTEXT"), waterfront = group("WATERFRONT");
   arrival.position.z = p.terraceHeight;
+  // Small architectural details are merged by material before rendering.
+  const details = group("VENUE_ARCHITECTURAL_DETAILS");
+  const iron = material("#39332c", .75), brass = material("#b69654", .6);
+  const lanternGlass = material("#e6dfc5", .45);
   const box = (parent: THREE.Group, name: string, x: number, y: number, z: number, w: number, d: number, h: number, mat: THREE.Material) => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), mat);
     mesh.position.set(x, y, z); mesh.name = name; mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); return mesh;
@@ -34,8 +40,37 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
     const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, a.distanceTo(b), 6), mat);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); mesh.position.copy(a).add(b).multiplyScalar(.5); mesh.name = name; mesh.castShadow = true; parent.add(mesh);
   };
+  function chain(a: THREE.Vector3, b: THREE.Vector3, sag = .16) {
+    const points = Array.from({ length: 9 }, (_, i) => {
+      const t = i / 8;
+      return a.clone().lerp(b, t).add(new THREE.Vector3(0, 0, -4 * sag * t * (1 - t)));
+    });
+    const mesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 12, .018, 4, false), iron);
+    mesh.name = "SAGGING_CHAIN"; details.add(mesh);
+  }
+  function lantern(x: number, y: number, base: number) {
+    cylinder(details, "LANTERN_BASE", x, y, base + .12, .12, .22, .24, brass, 12);
+    cylinder(details, "LANTERN_SHAFT", x, y, base + .85, .035, .06, 1.4, iron, 8);
+    cylinder(details, "LANTERN_GOLD_COLLAR", x, y, base + 1.42, .08, .1, .18, brass, 10);
+    cylinder(details, "LANTERN_GLASS", x, y, base + 1.72, .11, .09, .4, lanternGlass, 6);
+    for (let i = 0; i < 6; i++) {
+      const angle = i * Math.PI / 3;
+      beam(details, "LANTERN_FRAME", new THREE.Vector3(x + .09 * Math.cos(angle), y + .09 * Math.sin(angle), base + 1.52),
+        new THREE.Vector3(x + .11 * Math.cos(angle), y + .11 * Math.sin(angle), base + 1.92), .013, iron);
+    }
+    cylinder(details, "LANTERN_CAP", x, y, base + 1.96, .04, .17, .16, iron, 8);
+    cylinder(details, "LANTERN_FINIAL", x, y, base + 2.08, 0, .04, .12, iron, 8);
+  }
+  function polygonSurface(parent: THREE.Group, name: string, points: { x: number; y: number }[], z: number, mat: THREE.Material) {
+    const shape = new THREE.Shape(points.map(point => new THREE.Vector2(point.x, point.y)));
+    const geometry = new THREE.ShapeGeometry(shape);
+    const uv = geometry.getAttribute("uv");
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 12, uv.getY(i) / 12);
+    const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.z = z; mesh.receiveShadow = true;
+    parent.add(mesh); return mesh;
+  }
   // Small deterministic procedural textures avoid large downloads and individual tile geometry.
-  function surfaceTexture(kind: "grass" | "stone" | "plaza" | "water" | "sand" | "wall") {
+  function surfaceTexture(kind: "grass" | "stone" | "plaza" | "water" | "sand" | "wall" | "roof" | "bark") {
     const canvas = document.createElement("canvas"); canvas.width = canvas.height = 512;
     const ctx = canvas.getContext("2d")!;
     let seed = 91;
@@ -52,9 +87,21 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
         ctx.strokeStyle = "rgba(109,92,72,.22)"; ctx.lineWidth = 1; ctx.strokeRect(x + offset, y, 128, 64);
       }
     }
+    if (kind === "roof" || kind === "bark") {
+      ctx.fillStyle = kind === "roof" ? "#78604b" : "#796148"; ctx.fillRect(0, 0, 512, 512);
+      if (kind === "roof") for (let x = 0; x < 512; x += 8) {
+        ctx.fillStyle = "#9a7c63"; ctx.fillRect(x, 0, 1, 512);
+        ctx.fillStyle = "#584538"; ctx.fillRect(x + 6, 0, 2, 512);
+      }
+      else for (let y = 0; y < 512; y += 32) for (let x = -32; x < 512; x += 64) {
+        const offset = (y / 32) % 2 ? 32 : 0;
+        ctx.beginPath(); ctx.moveTo(x + offset, y); ctx.lineTo(x + offset + 32, y + 28); ctx.lineTo(x + offset + 64, y);
+        ctx.strokeStyle = "#b49a77"; ctx.lineWidth = 4; ctx.stroke();
+      }
+    }
     if (kind === "plaza") {
       // Video 00:48–01:00: broad bands around a circular medallion and starburst.
-      for (const [radius, width, color] of [[235, 22, "#a88b7d"], [210, 12, "#e8d8b8"], [190, 7, "#89847a"]] as const) {
+      for (const [radius, width, color] of [[235, 18, "#a58e80"], [210, 16, "#dacdb6"], [190, 9, "#88877b"]] as const) {
         ctx.beginPath(); ctx.arc(256, 256, radius, 0, Math.PI * 2);
         ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
       }
@@ -98,11 +145,33 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
   retainingStone.map = wallTexture; retainingStone.bumpMap = wallTexture; retainingStone.bumpScale = .035;
   const sandMat = material("#e9dfc9"); sandMat.map = surfaceTexture("sand");
   const plazaMat = material("#ffffff"); plazaMat.map = surfaceTexture("plaza");
+  // Preserve circular inlays in world space on a rectangular plaza.
+  plazaMat.map.repeat.set(1, p.plazaLength / l.plazaWidth);
+  plazaMat.map.offset.y = (1 - p.plazaLength / l.plazaWidth) / 2;
+  roofMat.map = surfaceTexture("roof"); roofMat.bumpMap = roofMat.map; roofMat.bumpScale = .018;
+  bark.map = surfaceTexture("bark"); bark.bumpMap = bark.map; bark.bumpScale = .05;
   box(site, "VENUE_LAWN_BASE", 0, 0, -.4, p.lawnWidth, p.lawnLength, .8, edge);
   box(site, "VENUE_LAWN", 0, 0, -.02, p.lawnWidth, p.lawnLength, .08, grass);
   box(site, "TERRACE_LAWN_TRANSITION", 0, (l.lawnBack + l.terraceFront) / 2, -.25, p.lawnWidth, l.lawnBack - l.terraceFront, .5, stone);
-  box(site, "TERRACE_MAIN", 0, (l.terraceFront + l.terraceBack) / 2, (p.terraceHeight - .8) / 2, p.lawnWidth, l.terraceDepth, p.terraceHeight + .8, retainingStone);
-  box(site, "TERRACE_PAVING", 0, (l.terraceFront + l.terraceBack) / 2, p.terraceHeight + .025, p.lawnWidth, l.terraceDepth, .05, paving);
+  const terraceShape = new THREE.Shape(architecture.terrace.map(point => new THREE.Vector2(point.x, point.y)));
+  const terraceBase = new THREE.Mesh(new THREE.ExtrudeGeometry(terraceShape, { depth: p.terraceHeight + .8, bevelEnabled: false }), retainingStone);
+  terraceBase.position.z = -.8; terraceBase.name = "TERRACE_MAIN"; terraceBase.receiveShadow = true; site.add(terraceBase);
+  const terracePaving = new THREE.Mesh(new THREE.ShapeGeometry(terraceShape), paving);
+  const terraceUvs = terracePaving.geometry.getAttribute("uv");
+  for (let i = 0; i < terraceUvs.count; i++) terraceUvs.setXY(i, (terraceUvs.getX(i) + p.lawnWidth / 2) / p.lawnWidth, (terraceUvs.getY(i) - l.terraceBack) / l.terraceDepth);
+  terracePaving.position.z = p.terraceHeight + .03; terracePaving.name = "TERRACE_PAVING"; terracePaving.receiveShadow = true; site.add(terracePaving);
+  // Low coping walls enclose the raised forecourt, with a clear stair opening.
+  for (const points of architecture.retainingEdges) for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1], b = points[i], length = Math.hypot(b.x - a.x, b.y - a.y);
+    const wall = box(site, "TERRACE_PARAPET", (a.x + b.x) / 2, (a.y + b.y) / 2, p.terraceHeight + .35, length, .28, .7, retainingStone);
+    wall.rotation.z = Math.atan2(b.y - a.y, b.x - a.x);
+    const cap = box(site, "TERRACE_COPING", (a.x + b.x) / 2, (a.y + b.y) / 2, p.terraceHeight + .72, length, .38, .09, paleStone);
+    cap.rotation.z = wall.rotation.z;
+    if (i % 5 === 1) {
+      const inset = box(details, "TERRACE_WALL_LIGHT", (a.x + b.x) / 2, (a.y + b.y) / 2 + .15, p.terraceHeight + .3,
+        .22, .04, .09, iron); inset.rotation.z = wall.rotation.z;
+    }
+  }
   // Stairs rise from the lawn toward the terrace without shifting the lawn origin.
   for (let i = 0; i < p.stairCount; i++) {
     const h = (i + 1) * p.terraceHeight / p.stairCount;
@@ -114,54 +183,112 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
     cylinder(site, "STAIR_RAIL_POST", railX, l.lawnBack - i * p.stairTread, z + .5, .09, .09, 1, timber, 8);
   }
   beam(site, "STAIR_HANDRAIL", new THREE.Vector3(railX, l.lawnBack, 1), new THREE.Vector3(railX, l.terraceFront, p.terraceHeight + 1), .07, timber);
+  for (let i = 0; i < p.stairCount; i += 2) {
+    const next = Math.min(i + 2, p.stairCount);
+    for (const height of [.4, .75]) chain(
+      new THREE.Vector3(railX, l.lawnBack - i * p.stairTread, i * p.terraceHeight / p.stairCount + height),
+      new THREE.Vector3(railX, l.lawnBack - next * p.stairTread, next * p.terraceHeight / p.stairCount + height), .09);
+  }
   // Broad lower landing bridges lawn and the paved arrival plaza; no asserted pedestrian route.
   box(site, "PLAZA_PATTERNED", l.plazaX, l.plazaY, p.terraceHeight + .035, l.plazaWidth, p.plazaLength, .07, plazaMat);
   const structure = ceremonyStructure(p), darkStone = material("#252726", .7);
-  const tiered = group("CEREMONY_TIERED_STRUCTURE");
+  const fountain = group("CEREMONY_FOUNTAIN");
+  const fountainWater = material("#79afb3", .25); fountainWater.metalness = .12;
   for (let i = 0; i < structure.tiers; i++) {
     const radius = structure.radius * (1 - i * .105), height = structure.height / structure.tiers;
-    cylinder(tiered, "DARK_CIRCULAR_TIER", structure.x, structure.y, structure.z + height * (i + .5), radius, radius, height, darkStone, 64);
+    cylinder(fountain, "FOUNTAIN_STONE_TIER", structure.x, structure.y, structure.z + height * (i + .5), radius, radius, height, darkStone, 64);
+    cylinder(fountain, "FOUNTAIN_BASIN_WATER", structure.x, structure.y, structure.z + height * (i + 1) + .008, radius - .06, radius - .06, .012, fountainWater, 64);
   }
 
-  box(site, "APPROACH_PATHS", l.plazaX, (l.entranceY + l.terraceBack) / 2, p.terraceHeight - .1, p.approachWidth, l.terraceBack - l.entranceY, .2, paving);
-  box(arrival, "CANAL_BANK", l.plazaX - p.approachWidth / 2 - 2.3, (l.entranceY + l.terraceBack) / 2, -.3, 4, l.terraceBack - l.entranceY, .3, paleStone);
+  polygonSurface(site, "APPROACH_PATHS", architecture.approach, p.terraceHeight + .035, paving);
+  const canalX = architecture.canalX;
+  const approachShape = new THREE.Shape(architecture.apron.map(point => new THREE.Vector2(point.x, point.y)));
+  const approachBase = new THREE.Mesh(new THREE.ExtrudeGeometry(approachShape, { depth: p.terraceHeight + .5, bevelEnabled: false }), retainingStone);
+  approachBase.name = "APPROACH_GROUND_BASE"; approachBase.position.z = -p.terraceHeight - .5; approachBase.receiveShadow = true; arrival.add(approachBase);
+  polygonSurface(arrival, "APPROACH_STONE_APRON", architecture.apron, .025, paving);
+  const bankShape = new THREE.Shape(architecture.canalBank.map(point => new THREE.Vector2(point.x, point.y)));
+  bankShape.holes.push(new THREE.Path(architecture.canal.map(point => new THREE.Vector2(point.x, point.y))));
+  const bank = new THREE.Mesh(new THREE.ExtrudeGeometry(bankShape, { depth: .4, bevelEnabled: false }), retainingStone);
+  bank.name = "CONTINUOUS_CANAL_BANK"; bank.position.z = -.4; bank.receiveShadow = true; arrival.add(bank);
   const waterTexture = surfaceTexture("water"); waterTexture.repeat.set(8, 8);
   const waterMaterial = material("#79afb3", .3); waterMaterial.map = waterTexture; waterMaterial.bumpMap = waterTexture; waterMaterial.bumpScale = .1; waterMaterial.metalness = .12;
-  box(arrival, "CANAL", l.plazaX - p.approachWidth / 2 - 2.3, (l.entranceY + l.terraceBack) / 2, -.12, 3.4, l.terraceBack - l.entranceY, .05, waterMaterial);
-  const canalX = l.plazaX - p.approachWidth / 2 - 2.3;
-  box(arrival, "CANAL_OPPOSITE_BANK_PATH", canalX - 3.15, (l.entranceY + l.terraceBack) / 2, -.1, 2.9, l.terraceBack - l.entranceY, .2, paving);
-  const bridge = group("TIMBER_STAIR_BRIDGE", arrival);
-  bridge.position.set(canalX, l.entranceY + 6, 0);
-  // REF-02 and the arrival video show a raised crossing with inclined timber rails.
-  // Heights and tread dimensions remain visual approximations.
-  const bridgeHalfSpan = 2.05, bridgeHeight = 1.05, bridgeSteps = 7, bridgeTread = .3;
-  box(bridge, "BRIDGE_LANDING", 0, 0, bridgeHeight - .1, bridgeHalfSpan * 2, 2.1, .2, timber);
-  for (let i = 0; i < 14; i++) box(bridge, "BRIDGE_DECK_PLANK", -bridgeHalfSpan + (i + .5) * bridgeHalfSpan * 2 / 14, 0, bridgeHeight + .015, .27, 2.1, .03, woodLight);
-  for (const end of [-1, 1]) {
-    for (let i = 0; i < bridgeSteps; i++) {
-      const height = bridgeHeight * (bridgeSteps - i) / bridgeSteps;
-      box(bridge, "BRIDGE_STAIR_TREAD", end * (bridgeHalfSpan + (i + .5) * bridgeTread), 0, height / 2, bridgeTread, 2.1, height, timber);
-      box(bridge, "BRIDGE_STAIR_NOSING", end * (bridgeHalfSpan + (i + .5) * bridgeTread), 0, height + .015, bridgeTread + .025, 2.14, .03, woodLight);
+  polygonSurface(arrival, "CANAL", architecture.canal, -.12, waterMaterial);
+  for (let i = 1; i < architecture.canalTerraceEdge.length; i++) {
+    const a = architecture.canalTerraceEdge[i - 1], b = architecture.canalTerraceEdge[i];
+    const coping = box(details, "CURVED_CANAL_TERRACE_COPING", (a.x + b.x) / 2, (a.y + b.y) / 2,
+      p.terraceHeight + .045, Math.hypot(b.x - a.x, b.y - a.y) + .03, .24, .09, paleStone);
+    coping.rotation.z = Math.atan2(b.y - a.y, b.x - a.x);
+  }
+  for (const [i, point] of architecture.canalCurvePosts.entries()) {
+    cylinder(details, "CURVED_CANAL_CHAIN_POST", point.x, point.y, p.terraceHeight + .5, .065, .09, 1, timber, 10);
+    cylinder(details, "CURVED_CANAL_POST_CAP", point.x, point.y, p.terraceHeight + 1, .085, .085, .1, timber, 10);
+    if (i > 0) {
+      const previous = architecture.canalCurvePosts[i - 1];
+      chain(new THREE.Vector3(previous.x, previous.y, p.terraceHeight + .85), new THREE.Vector3(point.x, point.y, p.terraceHeight + .85));
     }
+  }
+  box(arrival, "CANAL_OPPOSITE_BANK_PATH", canalX - 3.15, (l.entranceY + l.terraceBack - 7) / 2, -.1, 2.9, p.approachLength - 7, .2, paving);
+  const b = architecture.bridge;
+  // Repeat posts along the long canal; interrupt them at the bridge and stair access.
+  const postCount = Math.ceil((p.approachLength - 7) / 2.4) + 1;
+  const canalPosts = Array.from({ length: postCount }, (_, i) =>
+    l.entranceY + i / (postCount - 1) * (p.approachLength - 7));
+  for (let i = 0; i < canalPosts.length; i++) {
+    const y = canalPosts[i];
+    if (y > b.y - b.width / 2 - .5 && y < b.flightBottomY + .5) continue;
+    cylinder(details, "CANAL_CHAIN_POST", canalX + 1.9, y, p.terraceHeight + .5, .065, .09, 1, timber, 10);
+    cylinder(details, "CANAL_POST_CAP", canalX + 1.9, y, p.terraceHeight + 1, .085, .085, .1, timber, 10);
+    if (i > 0 && !(canalPosts[i - 1] > b.y - b.width / 2 - .5 && canalPosts[i - 1] < b.flightBottomY + .5)) {
+      chain(new THREE.Vector3(canalX + 1.9, canalPosts[i - 1], p.terraceHeight + .85),
+        new THREE.Vector3(canalX + 1.9, y, p.terraceHeight + .85));
+    }
+  }
+  const bridge = group("TIMBER_STAIR_BRIDGE", arrival);
+  bridge.position.set(b.x, b.y, 0);
+  const halfSpan = b.deckSpan / 2, halfWidth = b.width / 2, localFlightX = b.flightX - b.x;
+  box(bridge, "BRIDGE_DECK", 0, 0, b.rise - .1, b.deckSpan, b.width, .2, timber);
+  for (let i = 0; i < 24; i++) box(bridge, "BRIDGE_DECK_PLANK", -halfSpan + (i + .5) * b.deckSpan / 24,
+    0, b.rise + .015, b.deckSpan / 24 - .02, b.width, .03, woodLight);
+  // A longitudinal flight reaches the near-bank landing, then turns 90° onto the deck.
+  for (let i = 0; i < b.steps; i++) {
+    const height = b.rise * (b.steps - i) / b.steps;
+    box(bridge, "APPROACH_STAIR_TREAD", localFlightX, halfWidth + (i + .5) * b.tread,
+      height / 2, b.width, b.tread, height, timber);
+    box(bridge, "APPROACH_STAIR_NOSING", localFlightX, halfWidth + (i + .5) * b.tread,
+      height + .015, b.width + .035, b.tread + .02, .03, woodLight);
+  }
+  for (const x of [-halfSpan + halfWidth, halfSpan - halfWidth]) {
+    box(bridge, "BRIDGE_LANDING_SUPPORT", x, 0, b.rise / 2, .3, b.width - .15, b.rise, timber);
   }
   for (const side of [-1, 1]) {
-    const y = side * 1.02;
-    box(bridge, "BRIDGE_HANDRAIL", 0, y, bridgeHeight + 1.05, bridgeHalfSpan * 2, .13, .13, woodLight);
-    for (let i = 0; i <= 12; i++) box(bridge, "BRIDGE_BALUSTER", -bridgeHalfSpan + i * bridgeHalfSpan * 2 / 12, y, bridgeHeight + .5, .07, .07, 1, timber);
-    for (const end of [-1, 1]) {
-      const outerX = end * (bridgeHalfSpan + bridgeSteps * bridgeTread);
-      for (let i = 0; i <= bridgeSteps; i++) {
-        const x = end * (bridgeHalfSpan + i * bridgeTread), z = bridgeHeight * (1 - i / bridgeSteps);
-        box(bridge, i === 0 || i === bridgeSteps ? "BRIDGE_NEWEL" : "BRIDGE_STAIR_BALUSTER", x, y, z + .53, i === 0 || i === bridgeSteps ? .18 : .07, .12, 1.06, timber);
-      }
-      beam(bridge, "BRIDGE_SLOPING_HANDRAIL", new THREE.Vector3(end * bridgeHalfSpan, y, bridgeHeight + 1.05), new THREE.Vector3(outerX, y, 1.05), .075, woodLight);
-      beam(bridge, "BRIDGE_STRINGER", new THREE.Vector3(end * bridgeHalfSpan, y, bridgeHeight - .15), new THREE.Vector3(outerX, y, .02), .12, timber);
+    const y = side * halfWidth;
+    // Keep the stair opening clear at the near-bank landing.
+    const railEnd = side === 1 ? halfSpan - b.width : halfSpan;
+    for (const z of [.3, .65, 1.05]) box(bridge, "BRIDGE_LATTICE_RAIL", (-halfSpan + railEnd) / 2,
+      y, b.rise + z, railEnd + halfSpan, .065, z === 1.05 ? .12 : .055, woodLight);
+    const balusters = Math.ceil((railEnd + halfSpan) / .32);
+    for (let i = 0; i <= balusters; i++) box(bridge, "BRIDGE_BALUSTER", -halfSpan + i / balusters * (railEnd + halfSpan), y,
+      b.rise + .52, .055, .055, 1, timber);
+    for (const x of [-halfSpan, railEnd]) {
+      box(bridge, "BRIDGE_CAPPED_POST", x, y, b.rise + .55, .22, .22, 1.1, timber);
+      box(bridge, "BRIDGE_POST_CAP", x, y, b.rise + 1.14, .32, .32, .12, woodLight);
+      lantern(b.x + x, b.y + y, p.terraceHeight + b.rise + 1.2);
     }
+    const stairX = localFlightX + side * halfWidth;
+    for (let i = 0; i <= b.steps; i++) {
+      const z = b.rise * (1 - i / b.steps);
+      box(bridge, i === 0 || i === b.steps ? "APPROACH_STAIR_NEWEL" : "APPROACH_STAIR_BALUSTER",
+        stairX, halfWidth + i * b.tread, z + .53, i === 0 || i === b.steps ? .18 : .065, .12, 1.06, timber);
+    }
+    beam(bridge, "APPROACH_SLOPING_HANDRAIL", new THREE.Vector3(stairX, halfWidth, b.rise + 1.05),
+      new THREE.Vector3(stairX, halfWidth + b.flightRun, 1.05), .07, woodLight);
+    beam(bridge, "APPROACH_STAIR_STRINGER", new THREE.Vector3(stairX, halfWidth, b.rise - .15),
+      new THREE.Vector3(stairX, halfWidth + b.flightRun, .02), .12, timber);
   }
 
-  // Stationary, unoccupied Shangri-La-style abra before the approach bridge.
+  // Stationary, unoccupied abra alongside the bridge, within the modeled canal.
   const abra = group("ABRA_BOAT", arrival);
-  abra.position.set(canalX, l.entranceY + 2.5, -.095);
+  abra.position.set(canalX, architecture.bridgeY - 4.5, -.095);
   const hullMaterial = material("#34291f", .65), canopyMaterial = material("#762d39", .9), canopyTrim = material("#e7cfa2");
   hullMaterial.side = THREE.DoubleSide;
   const hullVertices: number[] = [], hullIndices: number[] = [], hullSegments = 32;
@@ -204,7 +331,8 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
       motif.position.set(x + Math.sign(x) * .017, -1.17 + i * .21, 1.97); abra.add(motif);
     }
   }
-  box(waterfront, "WATERFRONT_EDGE", 0, p.lawnLength / 2 + .3, p.waterfrontEdgeHeight / 2, p.lawnWidth + 2, .6, p.waterfrontEdgeHeight, paleStone);
+  // 01:28: lawn meets a sandy shoreline; no continuous concrete seawall is asserted.
+  box(waterfront, "LAWN_SAND_EDGE", 0, p.lawnLength / 2, -p.waterfrontEdgeHeight / 2, p.lawnWidth, .12, p.waterfrontEdgeHeight, sandMat);
   box(waterfront, "BEACH_SAND", 0, (p.lawnLength / 2 + l.waterY) / 2, -.12, p.lawnWidth + 2, p.waterSetback, .2, sandMat);
   box(waterfront, "WATER_SURFACE", -10, l.waterY + 75, -.2, 280, 150, .08, waterMaterial);
   // Distant shoreline is deliberately low-detail context.
@@ -251,39 +379,66 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
     // One open bay provides an entrance; all upper sides stay open.
     if (i !== count - 3) {
       const start = new THREE.Vector3(x, y, floor + 1.1);
-      beam(railing, "COUNTER", start, end, .13, woodLight);
+      // September 29 close view: dark timber sill over framed mahogany panels.
+      const counter = box(railing, "TIMBER_COUNTER_SILL", (x + end.x) / 2, (y + end.y) / 2, floor + 1.1, start.distanceTo(end) + .1, .38, .08, woodLight);
+      counter.rotation.z = Math.atan2(end.y - y, end.x - x);
       const panel = box(panels, "LOWER_PANEL", (x + end.x) / 2, (y + end.y) / 2, floor + .5, start.distanceTo(end), .1, .95, timber); panel.rotation.z = Math.atan2(end.y - y, end.x - x);
     }
+    const bayAngle = Math.atan2(end.y - y, end.x - x), bayLength = Math.hypot(end.x - x, end.y - y);
+    const bayCenterX = (x + end.x) / 2, bayCenterY = (y + end.y) / 2;
+    const bayBox = (name: string, along: number, z: number, width: number, height: number) => {
+      const mesh = box(details, name, bayCenterX + along * Math.cos(bayAngle), bayCenterY + along * Math.sin(bayAngle), z, width, .14, height, woodLight);
+      mesh.rotation.z = bayAngle;
+    };
+    if (i !== count - 3) {
+      for (const z of [.12, .9]) bayBox("PAVILION_PANEL_FRAME", 0, floor + z, bayLength - .08, .065);
+      for (const along of [-bayLength / 2 + .14, bayLength / 2 - .14]) bayBox("PAVILION_PANEL_STILE", along, floor + .51, .055, .78);
+    }
+    for (const z of [-.48, -.28, -.08]) bayBox("PAVILION_UPPER_LATTICE", 0, floor + p.pavilionColumnHeight + z, bayLength, .045);
+    const latticeCount = Math.max(2, Math.floor(bayLength / .2));
+    for (let j = 1; j < latticeCount; j++) bayBox("PAVILION_LATTICE_SLAT", (j / latticeCount - .5) * bayLength, floor + p.pavilionColumnHeight - .28, .035, .4);
     beam(posts, "ROOF_BRACE", new THREE.Vector3(x, y, floor + p.pavilionColumnHeight - .6), new THREE.Vector3(l.pavilionX + Math.cos(a) * radius * .62, l.pavilionY + Math.sin(a) * radius * .62, floor + p.pavilionColumnHeight), .065, woodLight);
   }
   const eave = floor + p.pavilionColumnHeight;
-  // Broad faceted roof with deep overhang; resort dome is a separate background object.
-  cylinder(pavilion, "PAVILION_ROOF", l.pavilionX, l.pavilionY, eave + p.pavilionRoofRise / 2, radius * .22, radius * 1.17, p.pavilionRoofRise, roofMat, count);
-  cylinder(pavilion, "ROOF_FASCIA", l.pavilionX, l.pavilionY, eave, radius * 1.17, radius * 1.17, .18, timber, count);
-  cylinder(pavilion, "ROOF_CAP", l.pavilionX, l.pavilionY, eave + p.pavilionRoofRise, radius * .22, radius * .24, .12, woodLight, count);
+  // 02:00: rounded timber pavilion roof, separate from the pale resort dome.
+  const profile = [new THREE.Vector2(radius * 1.17, 0), new THREE.Vector2(radius * 1.1, .10),
+    new THREE.Vector2(radius, p.pavilionRoofRise * .18)];
+  for (let i = 1; i <= 20; i++) {
+    const t = i / 20 * Math.PI / 2;
+    profile.push(new THREE.Vector2(radius * Math.cos(t), p.pavilionRoofRise * (.18 + .82 * Math.sin(t))));
+  }
+  const roofGeometry = new THREE.LatheGeometry(profile, 96); roofGeometry.rotateX(Math.PI / 2);
+  const roof = new THREE.Mesh(roofGeometry, roofMat); roof.name = "PAVILION_ROOF";
+  roof.position.set(l.pavilionX, l.pavilionY, eave); roof.castShadow = true; pavilion.add(roof);
+  cylinder(pavilion, "ROOF_FASCIA", l.pavilionX, l.pavilionY, eave, radius * 1.17, radius * 1.17, .18, timber, 64);
+  cylinder(pavilion, "ROOF_EAVE_TRIM", l.pavilionX, l.pavilionY, eave + .10, radius * 1.18, radius * 1.18, .055, woodLight, 64);
   const interior = group("PAVILION_INTERIOR_SIMPLE", pavilion);
   cylinder(interior, "CENTRAL_COUNTER", l.pavilionX, l.pavilionY, floor + .5, .9, .9, 1, woodLight, count);
   // Warm resort massing, recessed arches, and a separate light dome.
   for (let i = 0; i < 3; i++) {
-    const x = -p.lawnWidth * .24 - i * 6, y = l.terraceBack - 3.5, h = i === 0 ? 8.8 : 6;
+    const x = l.pavilionX - i * 6, y = l.pavilionTerraceBack - 9, h = i === 0 ? 8.8 : 6;
     box(resort, "RESORT_MASS", x, y, p.terraceHeight + h / 2, 5.6, 6, h, plaster);
+    box(resort, "RESORT_CORNICE", x, y + 3.12, p.terraceHeight + h * .62, 5.8, .25, .18, paleStone);
+    box(resort, "RESORT_TERRACOTTA_EAVE", x, y + 3.3, p.terraceHeight + h - .4, 6.2, .8, .18, woodLight);
     box(resort, "RESORT_PARAPET", x, y, p.terraceHeight + h, 6, 6.4, .35, paleStone);
     for (let j = -1; j <= 1; j++) {
       const shape = new THREE.Shape(); shape.moveTo(-.6, 0); shape.lineTo(.6, 0); shape.lineTo(.6, 1.6); shape.absarc(0, 1.6, .6, 0, Math.PI, false); shape.lineTo(-.6, 0);
       const geometry = new THREE.ShapeGeometry(shape); geometry.rotateX(Math.PI / 2);
       const arch = new THREE.Mesh(geometry, recess); arch.position.set(x + j * 2.1, y + 3.01, p.terraceHeight + 1.3); resort.add(arch);
+      const upperArch = new THREE.Mesh(geometry.clone(), recess); upperArch.name = "RESORT_UPPER_ARCH";
+      upperArch.position.set(x + j * 1.7, y + 3.015, p.terraceHeight + h - 3.1); resort.add(upperArch);
     }
   }
   const domeGeometry = new THREE.SphereGeometry(2.4, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2); domeGeometry.rotateX(Math.PI / 2);
-  const dome = new THREE.Mesh(domeGeometry, paleStone); dome.name = "RESORT_DOME"; dome.position.set(-p.lawnWidth * .24, l.terraceBack - 3.5, p.terraceHeight + 9); resort.add(dome);
+  const dome = new THREE.Mesh(domeGeometry, paleStone); dome.name = "RESORT_DOME"; dome.position.set(l.pavilionX, l.pavilionTerraceBack - 9, p.terraceHeight + 9); resort.add(dome);
   // Merge foliage geometry by material after construction to keep draw calls low.
   const foliage: THREE.BufferGeometry[][] = [[], [], []];
-  const datePalmLeaf = material("#718475"); datePalmLeaf.side = THREE.DoubleSide;
+  const datePalmLeaf = material("#65754d"); datePalmLeaf.side = THREE.DoubleSide;
   function palm(x: number, y: number, z: number, height: number, feathered = true) {
-    cylinder(landscape, "PALM_TRUNK", x, y, z + height / 2, .16, .28, height, bark, 7);
-    const frondCount = feathered ? 28 : 11;
+    cylinder(landscape, "PALM_TRUNK", x, y, z + height / 2, .28, .4, height, bark, 12);
+    const frondCount = feathered ? 36 : 11;
     for (let f = 0; f < frondCount; f++) {
-      const a = f * Math.PI * 2 / frondCount, length = 3.1 + (f % 3) * .35;
+      const a = f * Math.PI * 2 / frondCount, length = 3.4 + (f % 3) * .4;
       const vertices: number[] = [], indices: number[] = [];
       for (let s = 0; s <= 9; s++) {
         const t = s / 9, width = Math.sin(t * Math.PI) * (feathered ? .055 : .4);
@@ -310,24 +465,62 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
       const geometry = new THREE.BufferGeometry(); geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3)); geometry.setIndex(indices); geometry.computeVertexNormals(); foliage[feathered ? 2 : f % 2].push(geometry);
     }
   }
-  for (let i = 0; i < 3; i++) palm(-(p.lawnWidth / 2 - 2), l.terraceBack + 2 + i * l.terraceDepth / 3, p.terraceHeight, 6.8 + i * .4);
-  for (let i = 0; i < 3; i++) {
-    const x = l.plazaX + p.approachWidth / 2 + 2.4, y = l.entranceY + 2 + i * 3;
-    palm(x, y, p.terraceHeight, 5.4 + i * .3);
-    cylinder(arrival, "LAMP_POSTS", l.plazaX - p.approachWidth / 2 + .2, y + 2, 1.5, .045, .07, 3, timber, 6);
-    box(arrival, "LAMP_LANTERN", l.plazaX - p.approachWidth / 2 + .2, y + 2, 3.1, .3, .3, .4, paleStone);
+  for (let i = 0; i < 3; i++) palm(l.terraceLeft + 2, l.pavilionTerraceBack + 2 + i * (l.terraceFront - l.pavilionTerraceBack - 4) / 2, p.terraceHeight, 6.8 + i * .4);
+  for (const [i, bed] of architecture.approachBeds.entries()) {
+    box(landscape, "APPROACH_PLANTING_SOIL", bed.x, bed.y, p.terraceHeight + .025, bed.width, bed.depth, .06, bark);
+    for (let j = 0; j < 4; j++) cylinder(details, "APPROACH_LOW_PLANTS", bed.x + (j % 2 ? .2 : -.2), bed.y + (j / 3 - .5) * bed.depth * .8,
+      p.terraceHeight + .25, .12, .25, .45, leafLight, 6);
+    if (i % 2 === 0) palm(bed.x, bed.y, p.terraceHeight, 5.4 + (i % 3) * .6);
   }
+  const approachWallX = Math.max(...architecture.pathRight.map(point => point.x)) + 2;
+  box(arrival, "APPROACH_RESORT_WALL", approachWallX, (l.entranceY + l.terraceBack) / 2, 2.5, .4, p.approachLength, 5, plaster);
   function shadeTree(x: number, y: number, z: number) {
     cylinder(landscape, "SHADE_TREE_TRUNK", x, y, z + 2.2, .18, .34, 4.4, bark, 7);
-    for (let j = 0; j < 7; j++) {
-      const geometry = new THREE.IcosahedronGeometry(1.8 + (j % 2) * .3, 1);
-      geometry.scale(1.3, 1.15, .8); geometry.translate(x + Math.cos(j * 2.4) * 1.7, y + Math.sin(j * 2.4) * 1.5, z + 4.6 + (j % 3) * .4); foliage[j % 2].push(geometry);
+    for (let j = 0; j < 5; j++) {
+      const angle = j * Math.PI * 2 / 5;
+      beam(details, "SHADE_TREE_BRANCH", new THREE.Vector3(x, y, z + 2.7),
+        new THREE.Vector3(x + Math.cos(angle) * 1.8, y + Math.sin(angle) * 1.5, z + 4.7), .09, bark);
+    }
+    for (let j = 0; j < 20; j++) {
+      const angle = j * 2.4, spread = j < 14 ? 2.2 : .9;
+      const geometry = new THREE.IcosahedronGeometry(1.05 + (j % 3) * .14, 2);
+      geometry.scale(1.2, 1, .85); geometry.translate(x + Math.cos(angle) * spread, y + Math.sin(angle) * spread,
+        z + 5 + (j % 4) * .3); foliage[j % 2].push(geometry);
     }
   }
-  for (let i = 0; i < 4; i++) {
-    shadeTree(i < 2 ? p.lawnWidth / 2 + 1.5 : -p.lawnWidth / 2 + 3,
-      l.terraceBack + 3 + (i % 2) * 9, p.terraceHeight);
+  polygonSurface(landscape, "CURVED_CANAL_PLANTING_SOIL", architecture.canalPlanting, p.terraceHeight + .055, bark);
+  for (let i = 1; i < architecture.canalPlantingSpine.length; i++) {
+    const a = architecture.canalPlantingSpine[i - 1], b = architecture.canalPlantingSpine[i];
+    const hedge = box(details, "CURVED_CANAL_HEDGE", (a.x + b.x) / 2, (a.y + b.y) / 2,
+      p.terraceHeight + .4, Math.hypot(b.x - a.x, b.y - a.y) + .06, .75, .7, leaf);
+    hedge.rotation.z = Math.atan2(b.y - a.y, b.x - a.x);
   }
+  for (const tree of architecture.canalTrees) {
+    if (tree.kind === "palm") palm(tree.x, tree.y, p.terraceHeight, 6.4);
+    else shadeTree(tree.x, tree.y, p.terraceHeight);
+  }
+  for (const bed of architecture.beds) {
+    box(landscape, "RAISED_PLANTING_BED", bed.x, bed.y, p.terraceHeight + .22, bed.width, bed.depth, .44, retainingStone);
+    box(landscape, "PLANTING_SOIL", bed.x, bed.y, p.terraceHeight + .45, bed.width - .22, bed.depth - .22, .04, bark);
+    for (const side of [-1, 1]) {
+      box(details, "PLANTER_STONE_COPING", bed.x, bed.y + side * (bed.depth / 2 - .08), p.terraceHeight + .48, bed.width + .08, .22, .08, paleStone);
+      box(details, "PLANTER_STONE_COPING", bed.x + side * (bed.width / 2 - .08), bed.y, p.terraceHeight + .48, .22, bed.depth, .08, paleStone);
+    }
+    if (bed.id === "connection") {
+      shadeTree(bed.x, bed.y, p.terraceHeight + .45);
+      box(landscape, "PLANTER_GROUNDCOVER", bed.x, bed.y, p.terraceHeight + .49, bed.width - .4, bed.depth - .4, .08, leaf);
+    } else box(landscape, "TERRACE_HEDGE", bed.x, bed.y + bed.depth / 2 - .25, p.terraceHeight + .9, bed.width - .3, .5, .9, leaf);
+  }
+  for (const pot of architecture.pots) {
+    cylinder(landscape, "TERRACE_PLANTER", pot.x, pot.y, p.terraceHeight + .3, pot.radius, pot.radius * .65, .6, paleStone, 24);
+    for (let j = 0; j < 5; j++) {
+      const angle = j * Math.PI * 2 / 5;
+      const geometry = new THREE.IcosahedronGeometry(pot.radius * .62, 1);
+      geometry.scale(.8, .8, 1.2); geometry.translate(pot.x + Math.cos(angle) * pot.radius * .4, pot.y + Math.sin(angle) * pot.radius * .4,
+        p.terraceHeight + .95 + (j % 2) * .2); foliage[j % 2].push(geometry);
+    }
+  }
+  for (let i = 0; i < 2; i++) shadeTree(p.lawnWidth / 2 + 1.5, l.terraceBack + 3 + i * 9, p.terraceHeight);
   // Video 00:48–01:04: water-facing plaza margin, outside the stair opening.
   for (const tree of ceremonyPalms(p)) palm(tree.x, tree.y, tree.z, tree.height);
   for (let i = 0; i < foliage.length; i++) {
@@ -337,12 +530,30 @@ export function buildVenue(p: VenueParameters, led: LedLayout = "none") {
     if (merged) { const mesh = new THREE.Mesh(merged, i === 2 ? datePalmLeaf : i ? leafLight : leaf); mesh.name = "LANDSCAPING_FOLIAGE"; mesh.castShadow = true; mesh.receiveShadow = true; landscape.add(mesh); }
   }
   box(landscape, "HEDGE", p.lawnWidth / 2 - .5, (l.terraceFront + l.terraceBack) / 2, p.terraceHeight + .5, 1, l.terraceDepth - 1, 1, leaf);
+  const detailBatches = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  details.updateMatrixWorld(true);
+  for (const object of [...details.children]) {
+    if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) continue;
+    const geometry = object.geometry.clone().applyMatrix4(object.matrix);
+    const batch = detailBatches.get(object.material) ?? []; batch.push(geometry); detailBatches.set(object.material, batch);
+    object.geometry.dispose(); details.remove(object);
+  }
+  for (const [mat, geometries] of detailBatches) {
+    const geometry = mergeGeometries(geometries); geometries.forEach(piece => piece.dispose());
+    if (geometry) { const mesh = new THREE.Mesh(geometry, mat); mesh.castShadow = true; mesh.receiveShadow = true; details.add(mesh); }
+  }
   // Temporary wedding furniture remains separate from the permanent venue.
   const weddingLayout = new THREE.Group(); weddingLayout.name = "WEDDING_LAYOUT"; weddingLayout.scale.fromArray(planToSceneScale);
   const stage = buildStage(p, led); weddingLayout.add(stage.root);
+  const cocktailFixtures = group("COCKTAIL_FIXTURES", weddingLayout); cocktailFixtures.visible = false;
+  for (const fixture of architecture.fixtures) {
+    box(cocktailFixtures, fixture.id, fixture.x, fixture.y, p.terraceHeight + fixture.height / 2, fixture.width, fixture.depth, fixture.height, plaster);
+    box(cocktailFixtures, "FIXTURE_TOP", fixture.x, fixture.y, p.terraceHeight + fixture.height, fixture.width + .08, fixture.depth + .08, .06, timber);
+  }
   return { root, weddingLayout, waterTexture,
     dispose() {
       stage.dispose();
+      cocktailFixtures.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
       root.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
       materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose());
     },

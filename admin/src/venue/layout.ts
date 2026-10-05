@@ -1,6 +1,6 @@
 import { defaultSideCounts, rectangularChairs } from "../domain/tableLayout";
 import type { PublicationValidation, SeatingSnapshot, SeatingTable } from "../domain/types";
-import { defaultParameters, ledLayout, normalizeParameters, stageLayout, venueLayout, type VenueParameters } from "./venueModel";
+import { defaultParameters, reconstructionParameterKeys, ledLayout, normalizeParameters, stageLayout, venueLayout, type VenueParameters } from "./venueModel";
 
 export interface Point { x: number; y: number }
 export interface TablePlacement extends Point {
@@ -21,6 +21,16 @@ export function defaultVenueLayout(): VenueLayout {
     stage: { x: s.centerX, y: s.centerY }, danceFloor: { x: s.danceX, y: s.danceY }, entrance: { x: v.plazaX, y: v.entranceY + 4 },
   } };
 }
+/** Upgrade only the local preview; persistence still requires the existing Save action. */
+export function previewVenueLayout(layout: VenueLayout): VenueLayout {
+  const legacy = layout.parameters.approachLength === undefined;
+  const parameters = normalizeParameters(layout.parameters);
+  if (legacy) {
+    parameters.plazaWidth = Math.max(parameters.plazaWidth, defaultParameters.plazaWidth);
+    parameters.plazaLength = Math.max(parameters.plazaLength, defaultParameters.plazaLength);
+  }
+  return { ...layout, parameters };
+}
 export function estimatedPlacement(table: SeatingTable): TablePlacement {
   return { x: 5, y: 0, rotation: 0, width: table.shape === "round" ? 1.8 : 2.4,
     depth: table.shape === "round" ? 1.8 : 1.2, dimensionsVerified: false };
@@ -31,7 +41,7 @@ export function isVenueLayout(value: unknown): value is VenueLayout {
   if (Array.isArray(value) || Array.isArray(l.parameters) || Array.isArray(l.tables) || Array.isArray(l.landmarks)) return false;
   if (!l.parameters || !l.tables || !l.landmarks || !["center", "side"].includes(l.led)) return false;
   const normalized = normalizeParameters(l.parameters);
-  if (Object.keys(normalized).some(k => normalized[k as keyof VenueParameters] !== l.parameters[k as keyof VenueParameters])) return false;
+  if (Object.keys(normalized).some(k => !(reconstructionParameterKeys.includes(k as keyof VenueParameters) && l.parameters[k as keyof VenueParameters] === undefined) && normalized[k as keyof VenueParameters] !== l.parameters[k as keyof VenueParameters])) return false;
   const point = (p: Point) => p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 200 && Math.abs(p.y) <= 200;
   return ["stage", "danceFloor", "entrance"].every(k => point(l.landmarks[k as keyof VenueLayout["landmarks"]]))
     && Object.values(l.tables).every(t => t && point(t) && Number.isFinite(t.rotation) && t.rotation >= 0 && t.rotation < 360

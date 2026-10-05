@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createDemoWorkspace, createMemorySeatingRepository } from "../data/memoryRepository";
-import { defaultVenueLayout, estimatedPlacement, footprint, isVenueLayout, layoutValidation, physicalChairs } from "./layout";
+import { previewVenueLayout, defaultVenueLayout, estimatedPlacement, footprint, isVenueLayout, layoutValidation, physicalChairs } from "./layout";
 
 const placed = () => {
   const w = createDemoWorkspace();
@@ -68,4 +68,22 @@ describe("physical venue layout", () => {
     expect(isVenueLayout({ ...l, tables: { bad: null } })).toBe(false);
     expect(isVenueLayout({ ...defaultVenueLayout(), tables: [] })).toBe(false);
   });
+});
+
+
+it("upgrades old venue proportions locally without changing saved table or landmark data", () => {
+  const original = defaultVenueLayout();
+  original.parameters.plazaWidth = 18; original.parameters.plazaLength = 20;
+  const parameters = Object.fromEntries(Object.entries(original.parameters).filter(([key]) =>
+    !["approachLength", "pavilionPlazaGap", "bridgeHeight", "bridgeStepCount", "bridgeTread"].includes(key)));
+  const legacy = { ...original, parameters };
+  expect(isVenueLayout(legacy)).toBe(true);
+  if (!isVenueLayout(legacy)) throw new Error("Legacy layout should remain valid");
+  const updated = previewVenueLayout(legacy);
+  expect(updated.parameters).toMatchObject({ plazaWidth: 24, plazaLength: 26, approachLength: 36, pavilionPlazaGap: 6 });
+  expect(legacy.parameters).toEqual(parameters);
+  expect(updated.tables).toBe(legacy.tables); expect(updated.landmarks).toBe(legacy.landmarks);
+  expect(isVenueLayout({ ...updated, parameters: { ...updated.parameters, bridgeHeight: 999 } })).toBe(false);
+  const customized = { ...updated, parameters: { ...updated.parameters, plazaWidth: 16 } };
+  expect(previewVenueLayout(customized).parameters.plazaWidth).toBe(16);
 });

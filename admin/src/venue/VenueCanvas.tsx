@@ -1,3 +1,4 @@
+import { polygonPoints, venueArchitecture } from "./venueArchitecture";
 import type { ReactNode } from "react";
 import type { SeatingSnapshot } from "../domain/types";
 import { buildFurniture } from "./buildFurniture";
@@ -9,7 +10,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildVenue } from "./buildVenue";
-import { ceremonyStructure, cameraView, LED_WIDTH, ledLayout, stageLayout, venueLandmarks, venueLayout, type LedLayout, type VenueParameters, type ViewPreset } from "./venueModel";
+import { ceremonyPalms, ceremonyStructure, cameraView, LED_WIDTH, ledLayout, stageLayout, venueLandmarks, venueLayout, type LedLayout, type VenueParameters, type ViewPreset, normalizeParameters } from "./venueModel";
 
 interface Props {
   parameters: VenueParameters;
@@ -18,13 +19,14 @@ interface Props {
   labels: boolean;
   dusk: boolean;
   led: LedLayout;
+  cocktailFixtures?: boolean;
   onUnavailable: () => void;
   snapshot?: SeatingSnapshot;
   layout?: VenueLayout;
 }
-export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout }: Props) {
+export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false }: Props) {
   const host = useRef<HTMLDivElement>(null);
-  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
+  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
   const initialPreset = useRef(preset); initialPreset.current = preset;
   const [moving, setMoving] = useState(false);
@@ -101,7 +103,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       if (instant || reduced) { stop(); camera.position.copy(to); controls.target.copy(toTarget); controls.update(); }
       else { transition = { start: performance.now(), from: camera.position.clone(), to, fromTarget: controls.target.clone(), toTarget }; setMoving(true); }
     }
-    api.current = { setView, stop, setDusk(value) {
+    api.current = { setView, stop, setCocktailFixtures(visible) { const fixtures = venue.weddingLayout.getObjectByName("COCKTAIL_FIXTURES"); if (fixtures) fixtures.visible = visible; }, setDusk(value) {
       scene.background = new THREE.Color(value ? "#30384e" : "#e7ebe5");
       if (scene.fog instanceof THREE.Fog) scene.fog.color.copy(scene.background);
       hemisphere.intensity = value ? .65 : 2.3;
@@ -164,6 +166,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
 
   useEffect(() => { api.current?.setFurniture(snapshot, layout); }, [snapshot, layout, parameters, led]);
 
+  useEffect(() => { api.current?.setCocktailFixtures(cocktailFixtures); }, [cocktailFixtures, parameters, led, onUnavailable]);
+
   useEffect(() => { api.current?.setView(preset); }, [preset, resetKey]);
   return <div className="venue-canvas" ref={host}>
     <div className={`venue-labels${labels ? "" : " is-hidden"}`} aria-hidden="true">
@@ -174,15 +178,16 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
 }
 
 /** Always available, including on devices without WebGL. Uses the same parametric layout. */
-export function VenuePlan({ parameters: p, led = "none", landmarks, children, receptionOnly = false, interactive = false, ceremonyChairs = 0 }: { parameters: VenueParameters; led?: LedLayout; landmarks?: VenueLayout["landmarks"]; children?: ReactNode; receptionOnly?: boolean; interactive?: boolean; ceremonyChairs?: number }) {
+export function VenuePlan({ parameters: input, led = "none", landmarks, children, receptionOnly = false, interactive = false, ceremonyChairs = 0, cocktailFixtures = false }: { parameters: VenueParameters; led?: LedLayout; landmarks?: VenueLayout["landmarks"]; children?: ReactNode; receptionOnly?: boolean; interactive?: boolean; ceremonyChairs?: number; cocktailFixtures?: boolean }) {
   const titleId = useId(), descriptionId = useId();
-  const l = venueLayout(p), left = -p.lawnWidth / 2 - 6, top = l.entranceY - 5;
+  const p = normalizeParameters(input);
+  const l = venueLayout(p), left = l.terraceLeft - 6, top = l.entranceY - 5;
   const originalStage = stageLayout(p), design = ledLayout(p, led), structure = ceremonyStructure(p);
   const stagePoint = landmarks?.stage ?? { x: originalStage.centerX, y: originalStage.centerY };
   const dancePoint = landmarks?.danceFloor ?? { x: originalStage.danceX, y: originalStage.danceY };
   const entrance = landmarks?.entrance ?? { x: l.plazaX, y: l.entranceY + 4 };
   const width = p.lawnWidth / 2 + 5 - left, height = l.waterY + 15 - top;
-  const ceremony = ceremonyLayout(p, ceremonyChairs);
+  const ceremony = ceremonyLayout(p, ceremonyChairs), architecture = venueArchitecture(p);
   return <svg className="venue-plan" viewBox={receptionOnly ? `${-p.lawnWidth / 2 - 2} ${-p.lawnLength / 2 - 2} ${p.lawnWidth + 4} ${p.lawnLength + 4}` : `${left} ${top} ${width} ${height}`} role={interactive ? "group" : "img"} aria-labelledby={titleId} aria-describedby={descriptionId}>
     <title id={titleId}>Venue overhead plan</title>
     <desc id={descriptionId}>The ceremony approach leads to the ceremony area on the right. The pavilion and cocktail area sit to its left. The reception lawn lies below both, followed by the sand strip and waterfront. The HF stage sits just before the sand, facing the dance floor and ceremony inland. Positions and dimensions are approximate.</desc>
@@ -190,29 +195,45 @@ export function VenuePlan({ parameters: p, led = "none", landmarks, children, re
     <rect x={left} y={l.waterY} width={width} height="15" fill="#a4c5c5" />
     <rect x={-p.lawnWidth / 2} y={p.lawnLength / 2} width={p.lawnWidth} height={p.waterSetback} fill="#e5d5b7" />
     <rect x={-p.lawnWidth / 2} y={l.lawnBack} width={p.lawnWidth} height={p.lawnLength} fill="#b6c69a" />
-    <rect x={-p.lawnWidth / 2} y={l.terraceBack} width={p.lawnWidth} height={l.terraceDepth} fill="#dfceb5" />
+    <polygon data-venue-terrace="" points={polygonPoints(architecture.terrace)} fill="#dfceb5" />
     <rect x={l.plazaX - l.plazaWidth / 2} y={l.terraceFront - p.plazaLength} width={l.plazaWidth} height={p.plazaLength} fill="#d9c3b5" />
-    {[.2, .34, .45].map(r => <circle key={r} cx={l.plazaX} cy={l.plazaY} r={l.plazaWidth * r} fill="none" stroke="#b69e8a" strokeWidth=".35" />)}
-    <g aria-label="Dark circular tiered structure">
-      <title>Dark circular tiered structure · approximate dimensions</title>
-      {Array.from({ length: structure.tiers }, (_, i) => <circle key={i} cx={structure.x} cy={structure.y} r={structure.radius * (1 - i * .105)} fill="#303330" stroke="#777a70" strokeWidth=".05" />)}
-      <text x={structure.x} y={structure.y - structure.radius - .5} textAnchor="middle" fontFamily="sans-serif" fontSize=".85" fill="#334e3d">Tiered structure</text>
+    {[.37, .41, .46].map(r => <circle key={r} cx={l.plazaX} cy={l.plazaY} r={l.plazaWidth * r} fill="none" stroke="#b69e8a" strokeWidth=".35" />)}
+    {Array.from({ length: 12 }, (_, i) => {
+      const angle = i * Math.PI / 6, r = l.plazaWidth;
+      return <polygon key={`inlay-${i}`} points={polygonPoints([
+        { x: l.plazaX + r * .16 * Math.cos(angle - Math.PI / 15), y: l.plazaY + r * .16 * Math.sin(angle - Math.PI / 15) },
+        { x: l.plazaX + r * .37 * Math.cos(angle), y: l.plazaY + r * .37 * Math.sin(angle) },
+        { x: l.plazaX + r * .16 * Math.cos(angle + Math.PI / 15), y: l.plazaY + r * .16 * Math.sin(angle + Math.PI / 15) },
+      ])} fill={i % 2 ? "#a18e80" : "#949389"} />;
+    })}
+    <g aria-label="Ceremony fountain">
+      <title>Ceremony fountain · approximate dimensions</title>
+      {Array.from({ length: structure.tiers }, (_, i) => <circle key={i} cx={structure.x} cy={structure.y} r={structure.radius * (1 - i * .105) - .03} fill="#79afb3" stroke="#303330" strokeWidth=".06" />)}
     </g>
-    <rect x={l.plazaX - p.approachWidth / 2} y={l.entranceY} width={p.approachWidth} height={l.terraceBack - l.entranceY} fill="#d9c3b5" />
-    <g transform={`translate(${l.plazaX - p.approachWidth / 2 - 2.3},${l.entranceY})`}>
-      <rect x="-4.6" y="0" width="2.9" height="12" fill="#d9c3b5" />
-      <rect x="-2" y="0" width="4" height="12" fill="#e3d1b6" />
-      <rect x="-1.7" y="0" width="3.4" height="12" fill="#79afb3" />
-      <g aria-label="Stationary abra boat before the bridge" transform="translate(0,2.5)">
+    <polygon points={polygonPoints(architecture.apron)} fill="#dfceb5" />
+    <polygon data-venue-approach="" points={polygonPoints(architecture.approach)} fill="#d9c3b5" />
+    <polygon data-canal-bank="" points={polygonPoints(architecture.canalBank)} fill="#e3d1b6" />
+    <rect x={architecture.canalX - 4.6} y={l.entranceY} width="2.9" height={p.approachLength - 7} fill="#d9c3b5" />
+    <polygon data-venue-canal="" points={polygonPoints(architecture.canal)} fill="#79afb3" stroke="#e3d1b6" strokeWidth=".3" />
+    {architecture.approachBeds.map((bed, i) => <rect key={i} x={bed.x - bed.width / 2} y={bed.y - bed.depth / 2} width={bed.width} height={bed.depth} fill="#718354" />)}
+    <polyline points={polygonPoints(architecture.pathRight)} fill="none" stroke="#c8b699" strokeWidth=".1" />
+    <g transform={`translate(${architecture.canalX},${architecture.bridgeY})`}>
+      <g aria-label="Stationary abra boat beside the bridge" transform="translate(0,-4.5)">
         <title>Empty abra boat with a burgundy canopy</title>
         <ellipse rx=".82" ry="2.2" fill="#34291f" stroke="#79503b" strokeWidth=".1" />
         <rect x="-.87" y="-1.28" width="1.74" height="2.56" rx=".12" fill="#762d39" stroke="#e7cfa2" strokeWidth=".07" />
       </g>
-      <g aria-label="Timber bridge with stairs on both banks">
-        <title>Raised timber bridge with stepped approaches</title>
-        <rect x="-2.05" y="4.95" width="4.1" height="2.1" fill="#543529" />
-        {[-1, 1].flatMap(side => Array.from({ length: 7 }, (_, i) => <rect key={`${side}-${i}`} x={side < 0 ? -2.05 - (i + 1) * .3 : 2.05 + i * .3} y="4.95" width=".3" height="2.1" fill="#79503b" stroke="#543529" strokeWidth=".055" />))}
-        {[-1, 1].map(side => <path key={side} d={`M -4.15 ${6 + side * 1.02} H 4.15`} stroke="#543529" strokeWidth=".12" />)}
+      <g aria-label="Timber bridge with turning approach stairs">
+        <title>Long stair flight beside the canal turns onto a raised bridge landing</title>
+        <rect x={-architecture.bridge.deckSpan / 2} y={-architecture.bridge.width / 2}
+          width={architecture.bridge.deckSpan} height={architecture.bridge.width} fill="#543529" />
+        {Array.from({ length: architecture.bridge.steps }, (_, i) => <rect key={i}
+          x={architecture.bridge.flightX - architecture.bridge.x - architecture.bridge.width / 2}
+          y={architecture.bridge.width / 2 + i * architecture.bridge.tread} width={architecture.bridge.width}
+          height={architecture.bridge.tread} fill="#79503b" stroke="#543529" strokeWidth=".055" />)}
+        {[-1, 1].map(side => <path key={side}
+          d={`M ${architecture.bridge.flightX - architecture.bridge.x + side * architecture.bridge.width / 2} ${architecture.bridge.width / 2} v ${architecture.bridge.flightRun}`}
+          stroke="#543529" strokeWidth=".12" />)}
       </g>
     </g>
     {!receptionOnly && <g aria-label={`Ceremony with ${ceremonyChairs} unassigned chairs`}>
@@ -226,7 +247,28 @@ export function VenuePlan({ parameters: p, led = "none", landmarks, children, re
         <path d="M -.23 -.2 H .23" strokeWidth=".08" />
       </g>)}
     </g>}
-    <circle cx={l.pavilionX} cy={l.pavilionY} r={p.pavilionDiameter * .57} fill="#795842" />
+    <g aria-label="Terrace walls and landscaping">
+      <polyline data-canal-terrace-edge="" points={polygonPoints(architecture.canalTerraceEdge)} fill="none" stroke="#c8b699" strokeWidth=".24" />
+      <polygon data-canal-planting="" points={polygonPoints(architecture.canalPlanting)} fill="#59774b" stroke="#c8b699" strokeWidth=".1" />
+      {architecture.canalCurvePosts.map((point, i) => <circle key={`canal-post-${i}`} cx={point.x} cy={point.y} r=".09" fill="#543529" />)}
+      {architecture.canalTrees.map((tree, i) => <circle key={`canal-tree-${i}`} cx={tree.x} cy={tree.y} r={tree.kind === "palm" ? 1.5 : 2.5} fill="#718354" fillOpacity=".7" />)}
+      {architecture.retainingEdges.map((points, i) => <polyline key={i} points={polygonPoints(points)} fill="none" stroke="#a9967c" strokeWidth=".38" />)}
+      {architecture.beds.map(bed => <g key={bed.id} data-planting-bed={bed.id}>
+        <rect x={bed.x - bed.width / 2} y={bed.y - bed.depth / 2} width={bed.width} height={bed.depth} fill="#718354" stroke="#c8b699" strokeWidth=".2" />
+        {bed.id === "connection" && <circle cx={bed.x} cy={bed.y} r="2.5" fill="#718354" fillOpacity=".6" />}
+      </g>)}
+      {ceremonyPalms(p).map((tree, i) => <circle key={`palm-${i}`} cx={tree.x} cy={tree.y} r="1.5" fill="#718475" fillOpacity=".7" />)}
+      {[0, 1].map(i => <circle key={`shade-${i}`} cx={p.lawnWidth / 2 + 1.5} cy={l.terraceBack + 3 + i * 9} r="2.5" fill="#718354" fillOpacity=".6" />)}
+      <rect x={p.lawnWidth / 2 - 1} y={l.terraceBack + .5} width="1" height={l.terraceDepth - 1} fill="#59774b" />
+      {architecture.pots.map((pot, i) => <circle key={i} cx={pot.x} cy={pot.y} r={pot.radius} fill="#718354" stroke="#c8b699" strokeWidth=".15" />)}
+    </g>
+    {cocktailFixtures && <g aria-label="Planned cocktail fixtures · schematic positions">
+      {architecture.fixtures.map(fixture => <g key={fixture.id} data-cocktail-fixture={fixture.id}>
+        <rect x={fixture.x - fixture.width / 2} y={fixture.y - fixture.depth / 2} width={fixture.width} height={fixture.depth} fill="#f6ead4" stroke="#795842" strokeWidth=".08" />
+        <text x={fixture.x} y={fixture.y + fixture.depth / 2 + .8} textAnchor="middle" fontFamily="sans-serif" fontSize=".65" fill="#334e3d">{fixture.label}</text>
+      </g>)}
+    </g>}
+    <circle cx={l.pavilionX} cy={l.pavilionY} r={p.pavilionDiameter * .585} fill="#795842" />
     {Array.from({ length: p.stairCount }, (_, i) => <rect key={i} x={l.stairX - p.stairWidth / 2} y={l.lawnBack - (i + 1) * p.stairTread} width={p.stairWidth} height={p.stairTread} fill="#e9ddc9" stroke="#c1b29a" strokeWidth=".08" />)}
     <g transform={`translate(${stagePoint.x},${stagePoint.y}) rotate(180)`} fill="#f4ead7" stroke="#b89c67" strokeWidth=".08">
       <rect x={-design.width / 2} y={-p.stageDepth / 2} width={design.width} height={p.stageDepth} />
