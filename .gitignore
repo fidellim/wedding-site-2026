@@ -15,3 +15,19 @@ vite.config.d.ts
 supabase/.temp/
 supabase/.branches/
 backups/
+
+# Keep video files local; do not include them in commits.
+*.[mM][pP]4
+*.[mM][oO][vV]
+*.[mM]4[vV]
+*.[wW][eE][bB][mM]
+*.[aA][vV][iI]
+*.[mM][kK][vV]
+*.[mM][pP][eE][gG]
+*.[mM][pP][gG]
+*.[wW][mM][vV]
+*.[fF][lL][vV]
+*.[3][gG][pP]
+*.[3][gG]2
+*.[mM][tT][sS]
+*.[mM]2[tT][sS]
