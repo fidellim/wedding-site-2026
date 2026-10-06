@@ -2,8 +2,17 @@
   command = "npm run build"
   publish = "dist"
 
+[[headers]]
+  for = "/next-chapter/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/next-chapter"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
 [[redirects]]
   from = "/admin/*"
   to = "/admin/index.html"
   status = 200
-

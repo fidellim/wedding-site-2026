@@ -12,6 +12,7 @@ export default defineConfig({
       input: {
         invitation: resolve(rootDirectory, "index.html"),
         admin: resolve(rootDirectory, "admin/index.html"),
+        nextChapter: resolve(rootDirectory, "next-chapter/index.html"),
       },
     },
   },

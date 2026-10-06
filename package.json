@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "vite --config vite.config.ts",
+    "build": "tsc -b && vite build --config vite.config.ts",
     "seating:check-sql-safety": "node scripts/check-seating-sql-safety.mjs",
     "seating:prepare-install": "npm run seating:check-sql-safety && node scripts/prepare-seating-install.mjs",
     "seating:prepare-validation": "npm run seating:check-sql-safety && node scripts/prepare-seating-validation.mjs",
