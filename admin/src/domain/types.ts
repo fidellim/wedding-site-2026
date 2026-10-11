@@ -97,6 +97,7 @@ export interface SeatingWorkspace {
   revisions: PublishedRevision[];
   auditLog: AuditEntry[];
   guestLookupEnabled: boolean;
+  guideRelease?: { revisionId: Id | null; chairsApproved: boolean };
 }
 
 export type PublicationErrorCode =

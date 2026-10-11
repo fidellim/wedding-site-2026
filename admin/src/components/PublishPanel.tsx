@@ -77,7 +77,7 @@ export function PublishPanel({
         <section className="surface-card">
           <p className="eyebrow">Guest access</p>
           <h3>{workspace.guestLookupEnabled ? "Lookup enabled" : "Lookup disabled"}</h3>
-          <p className="helper-text">The section remains hidden until a revision exists. This switch can later protect the Wedding Archive.</p>
+          <p className="helper-text">The Seating Guide also requires a reviewed release in Guest guide preview. This switch can hide all guest seating lookups.</p>
           <button className="secondary-button" disabled={disabled} onClick={() => void execute({ type: "set_guest_lookup", enabled: !workspace.guestLookupEnabled })}>
             {workspace.guestLookupEnabled ? "Disable lookup" : "Enable lookup"}
           </button>

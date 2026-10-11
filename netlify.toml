@@ -16,3 +16,10 @@
   from = "/admin/*"
   to = "/admin/index.html"
   status = 200
+
+[[headers]]
+  for = "/seating/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"

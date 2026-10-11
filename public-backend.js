@@ -1,0 +1,1 @@
+export const publicBackend = {"url": "https://loycmpzimwgusjyaqxcn.supabase.co", "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxveWNtcHppbXdndXNqeWFxeGNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NjM3MzMsImV4cCI6MjA4ODAzOTczM30.qzAaiJqnArxet7J9Mmwh1FMj7FpOCtNy8Aw2rkfE8Ko"};

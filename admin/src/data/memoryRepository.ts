@@ -71,6 +71,7 @@ export function createDemoWorkspace(): SeatingWorkspace {
     revisions: [],
     auditLog: [],
     guestLookupEnabled: true,
+    guideRelease: { revisionId: null, chairsApproved: false },
   };
 }
 
@@ -301,6 +302,12 @@ export function createMemorySeatingRepository(
         return update(workspace);
       }
 
+      if (command.type === "release_guide") {
+        if (command.revisionId !== null && (command.revisionId !== workspace.published?.id || !isVenueLayout(workspace.published.venueLayout))) {
+          throw new SeatingRepositoryError("Review the current published venue layout before releasing.", "stale_version");
+        }
+        return update({ ...workspace, guideRelease: { revisionId: command.revisionId, chairsApproved: command.revisionId !== null && command.chairsApproved } });
+      }
       workspace = appendAudit({ ...workspace, guestLookupEnabled: command.enabled }, {
         id: id(),
         kind: "guest_lookup_changed",

@@ -1,17 +1,17 @@
+import { placeLandmarkLabels, type LabelObstacle } from "./landmarkLabels";
+import { flightViews, seatDestination } from "../guest/flight";
 import { useVenueInspection, sameTarget, type FurnitureTarget } from "./VenueInspection";
-import { polygonPoints, venueArchitecture } from "./venueArchitecture";
-import type { ReactNode } from "react";
 import type { SeatingSnapshot } from "../domain/types";
 import { buildFurniture } from "./buildFurniture";
 import { buildCeremony } from "./buildCeremony";
 import { ceremonyChairCount, ceremonyLayout } from "./ceremonyLayout";
 import type { VenueLayout } from "./layout";
 import { toScenePosition } from "./venueCoordinates";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildVenue } from "./buildVenue";
-import { ceremonyPalms, ceremonyStructure, cameraView, LED_WIDTH, ledLayout, stageLayout, venueLandmarks, venueLayout, type LedLayout, type VenueParameters, type ViewPreset, normalizeParameters } from "./venueModel";
+import { cameraView, stageLayout, venueLandmarks, type LedLayout, type VenueParameters, type ViewPreset } from "./venueModel";
 
 interface Props {
   parameters: VenueParameters;
@@ -21,15 +21,27 @@ interface Props {
   dusk: boolean;
   led: LedLayout;
   cocktailFixtures?: boolean;
+  ceremonyChairs?: number;
+  labelExclusions?: readonly LabelObstacle[];
+  cameraLift?: number;
+  highlightTarget?: FurnitureTarget | null;
+  focusRequest?: { target: FurnitureTarget; tour: boolean; key: number } | null;
+  onTourLabel?: (label: string) => void;
   onUnavailable: () => void;
   snapshot?: SeatingSnapshot;
   layout?: VenueLayout;
 }
-export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false }: Props) {
+export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false, ceremonyChairs, labelExclusions = [], cameraLift = 0, highlightTarget, focusRequest, onTourLabel }: Props) {
+  const exclusionRef = useRef(labelExclusions); exclusionRef.current = labelExclusions;
+  const liftRef = useRef(cameraLift); liftRef.current = cameraLift;
+  const ceremonyCountRef = useRef(ceremonyChairs); ceremonyCountRef.current = ceremonyChairs;
+  const guestTarget = useRef(highlightTarget); guestTarget.current = highlightTarget;
+  const tourLabel = useRef(onTourLabel); tourLabel.current = onTourLabel;
   const inspection = useVenueInspection();
   const inspectionRef = useRef(inspection); inspectionRef.current = inspection;
   const host = useRef<HTMLDivElement>(null);
-  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
+  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
+  const leaderElements = useRef(new Map<string, SVGGElement>());
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
   const initialPreset = useRef(preset); initialPreset.current = preset;
   const [moving, setMoving] = useState(false);
@@ -43,7 +55,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
-    renderer.domElement.setAttribute("aria-label", "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Click a seat or table for seating details. Use view buttons and the Inspect table menu for keyboard navigation.");
+    renderer.domElement.setAttribute("aria-label", highlightTarget !== undefined ? "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Choose your name in the seating panel to highlight your place." : "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Click a seat or table for seating details. Use view buttons and the Inspect table menu for keyboard navigation.");
     renderer.domElement.setAttribute("role", "img");
     container.prepend(renderer.domElement);
     const scene = new THREE.Scene(); scene.background = new THREE.Color("#e7ebe5"); scene.fog = new THREE.Fog("#e7ebe5", 180, 330);
@@ -62,15 +74,16 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     let currentLed = led;
     let venue = buildVenue(currentParameters, currentLed); scene.add(venue.root, venue.weddingLayout);
     let currentLayout = layout;
+    let currentSnapshot = snapshot;
     let furniture: ReturnType<typeof buildFurniture> | null = null;
     let ceremony: ReturnType<typeof buildCeremony> | null = null;
     let landmarks = venueLandmarks(currentParameters, currentLed);
     function arrange(nextSnapshot?: SeatingSnapshot, nextLayout?: VenueLayout) {
       if (furniture) { scene.remove(furniture.root); furniture.dispose(); furniture = null; }
       if (ceremony) { ceremony.root.removeFromParent(); ceremony.dispose(); }
-      ceremony = buildCeremony(currentParameters, nextSnapshot ? ceremonyChairCount(nextSnapshot) : 0);
+      ceremony = buildCeremony(currentParameters, ceremonyCountRef.current ?? (nextSnapshot ? ceremonyChairCount(nextSnapshot) : 0));
       venue.weddingLayout.add(ceremony.root);
-      currentLayout = nextLayout;
+      currentLayout = nextLayout; currentSnapshot = nextSnapshot;
       landmarks = venueLandmarks(currentParameters, currentLed).map(l => {
         const point = l.id === "stage" ? nextLayout?.landmarks.stage : l.id === "entrance" ? nextLayout?.landmarks.entrance : undefined;
         return point ? { ...l, position: [point.x, point.y, l.position[2]] } : l;
@@ -87,7 +100,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     }
     arrange(snapshot, layout);
     const raycaster = new THREE.Raycaster();
-    const outline = new THREE.BoxHelper(new THREE.Object3D(), "#edb84b"); outline.visible = false; scene.add(outline);
+    const outline = new THREE.BoxHelper(new THREE.Object3D(), highlightTarget !== undefined ? "#ad6433" : "#edb84b");
+    if (highlightTarget !== undefined && !Array.isArray(outline.material)) outline.material.depthTest = false; outline.visible = false; scene.add(outline);
     let outlined: THREE.Object3D | null = null;
     function hit(event: PointerEvent): FurnitureTarget | null {
       if (!furniture) return null;
@@ -129,8 +143,27 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     let reduced = motion.matches;
     let transition: { start: number; from: THREE.Vector3; to: THREE.Vector3; fromTarget: THREE.Vector3; toTarget: THREE.Vector3 } | null = null;
     let frame = 0, last = 0, visible = true, disposed = false;
-    function stop() { transition = null; setMoving(false); }
+    let journey: { start: number; positions: THREE.CatmullRomCurve3; targets: THREE.CatmullRomCurve3 } | null = null;
+    function stop() { transition = null; journey = null; controls.enabled = true; setMoving(false); tourLabel.current?.(""); }
+    function skip() {
+      if (journey) { camera.position.copy(journey.positions.getPoint(1)); controls.target.copy(journey.targets.getPoint(1)); }
+      else if (transition) { camera.position.copy(transition.to); controls.target.copy(transition.toTarget); }
+      stop(); controls.update();
+    }
+    function focus(target: FurnitureTarget, tour: boolean) {
+      if (!currentSnapshot || !currentLayout) return;
+      const end = seatDestination(currentSnapshot, currentLayout, target, camera.aspect);
+      if (!end) return;
+      stop(); controls.enableRotate = true; controls.minDistance = 3; controls.maxTargetRadius = Infinity;
+      if (!tour || reduced) { camera.position.fromArray(end.position); controls.target.fromArray(end.target); controls.update(); return; }
+      const views = flightViews(currentSnapshot, currentLayout, target, camera.aspect);
+      if (!views) return;
+      journey = { start: performance.now(), positions: new THREE.CatmullRomCurve3(views.map(v => new THREE.Vector3(...v.position))), targets: new THREE.CatmullRomCurve3(views.map(v => new THREE.Vector3(...v.target))) };
+      camera.position.copy(journey.positions.getPoint(0)); controls.target.copy(journey.targets.getPoint(0));
+      controls.enabled = false; setMoving(true); tourLabel.current?.("Ceremony approach");
+    }
     function setView(view: ViewPreset, instant = false) {
+      stop();
       const v = cameraView(currentParameters, view, camera.aspect, currentLed);
       const to = new THREE.Vector3(...v.position), toTarget = new THREE.Vector3(...v.target);
       if (currentLayout && (view === "stage" || view === "floral")) {
@@ -145,7 +178,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       if (instant || reduced) { stop(); camera.position.copy(to); controls.target.copy(toTarget); controls.update(); }
       else { transition = { start: performance.now(), from: camera.position.clone(), to, fromTarget: controls.target.clone(), toTarget }; setMoving(true); }
     }
-    api.current = { setView, stop, setCocktailFixtures(visible) { const fixtures = venue.weddingLayout.getObjectByName("COCKTAIL_FIXTURES"); if (fixtures) fixtures.visible = visible; }, setDusk(value) {
+    api.current = { setView, stop, focus, skip, setCocktailFixtures(visible) { const fixtures = venue.weddingLayout.getObjectByName("COCKTAIL_FIXTURES"); if (fixtures) fixtures.visible = visible; }, setDusk(value) {
       scene.background = new THREE.Color(value ? "#30384e" : "#e7ebe5");
       if (scene.fog instanceof THREE.Fog) scene.fog.color.copy(scene.background);
       hemisphere.intensity = value ? .65 : 2.3;
@@ -158,22 +191,34 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       currentParameters = next; currentLed = nextLed; venue = buildVenue(next, nextLed); landmarks = venueLandmarks(next, nextLed);
       scene.add(venue.root, venue.weddingLayout); setView(initialPreset.current, true);
     }, setFurniture: arrange };
-    function onMotion() { reduced = motion.matches; if (reduced && transition) { camera.position.copy(transition.to); controls.target.copy(transition.toTarget); stop(); } }
+    function onMotion() { reduced = motion.matches; if (reduced && (transition || journey)) skip(); }
     motion.addEventListener("change", onMotion);
     controls.addEventListener("start", stop);
+    const labelSizes = new Map<string, { width: number; height: number }>();
+    void document.fonts?.ready.then(() => labelSizes.clear());
     const size = () => {
+      labelSizes.clear();
       const width = container.clientWidth, height = container.clientHeight;
       if (!width || !height) return;
-      camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.setViewOffset(width, height, 0, liftRef.current, width, height); camera.updateProjectionMatrix(); renderer.setSize(width, height);
     };
     const resize = new ResizeObserver(size); resize.observe(container); size(); setView(initialPreset.current, true);
     const observer = new IntersectionObserver(entries => { visible = entries[0]?.isIntersecting ?? true; }); observer.observe(container);
     const onLost = (event: Event) => { event.preventDefault(); onUnavailable(); }; renderer.domElement.addEventListener("webglcontextlost", onLost);
+    let previousLift = liftRef.current;
     function draw(now: number) {
       if (disposed) return;
       frame = requestAnimationFrame(draw);
       if (!visible || document.hidden || now - last < 1000 / 30) return;
       last = now;
+      if (previousLift !== liftRef.current) { previousLift = liftRef.current; size(); }
+      if (journey) {
+        const t = Math.min(1, (now - journey.start) / 10000);
+        camera.position.copy(journey.positions.getPoint(t)); controls.target.copy(journey.targets.getPoint(t));
+        tourLabel.current?.(t < .30 ? "Ceremony approach" : t < .63 ? "Ceremony area" : t < .90 ? "Reception" : "Your place");
+        if (t === 1) stop();
+      }
       if (transition) {
         const t = Math.min(1, (now - transition.start) / 1050), ease = t * t * (3 - 2 * t);
         camera.position.lerpVectors(transition.from, transition.to, ease); controls.target.lerpVectors(transition.fromTarget, transition.toTarget, ease);
@@ -184,7 +229,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       controls.target.z = Math.max(0, controls.target.z);
       if (!reduced) venue.waterTexture.offset.x = now * .000003;
       let nextOutlined: THREE.Object3D | null = null;
-      const active = inspectionRef.current?.active;
+      const active = guestTarget.current ?? inspectionRef.current?.active;
       if (active && furniture) furniture.root.traverse(object => {
         const target: FurnitureTarget | undefined = object.userData.furnitureTarget;
         if (target && sameTarget(active, target)) nextOutlined = object;
@@ -199,12 +244,34 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
         if (marker) marker.rotation.z = -textAngle - table.rotation.z;
       });
       renderer.render(scene, camera);
+      const anchors: { id: string; x: number; y: number; width: number; height: number }[] = [];
+      const width = container.clientWidth, height = container.clientHeight;
       for (const landmark of landmarks) {
         const element = labelElements.current.get(landmark.id); if (!element) continue;
         const projected = new THREE.Vector3(...toScenePosition(landmark.position)).project(camera);
-        element.style.visibility = projected.z > 1 || projected.z < -1 || Math.abs(projected.x) > .94 || Math.abs(projected.y) > .9 ? "hidden" : "visible";
-        element.style.left = `${(projected.x * .5 + .5) * container.clientWidth}px`;
-        element.style.top = `${(-projected.y * .5 + .5) * container.clientHeight}px`;
+        const x = (projected.x * .5 + .5) * width, y = (-projected.y * .5 + .5) * height;
+        const clipped = projected.z > 1 || projected.z < -1 || Math.abs(projected.x) > .94 || Math.abs(projected.y) > .9;
+        element.style.visibility = "hidden";
+        const leader = leaderElements.current.get(landmark.id); if (leader) leader.style.visibility = "hidden";
+        if (clipped) continue;
+        let dimensions = labelSizes.get(landmark.id);
+        if (!dimensions) {
+          dimensions = { width: element.offsetWidth, height: element.offsetHeight };
+          if (dimensions.width) labelSizes.set(landmark.id, dimensions);
+        }
+        if (dimensions.width) anchors.push({ id: landmark.id, x, y, ...dimensions });
+      }
+      for (const callout of placeLandmarkLabels(anchors, width, height, exclusionRef.current)) {
+        const element = labelElements.current.get(callout.id)!;
+        element.style.visibility = "visible"; element.style.left = `${callout.left}px`; element.style.top = `${callout.top}px`;
+        const leader = leaderElements.current.get(callout.id);
+        const line = leader?.querySelector("line"), dot = leader?.querySelector("circle");
+        if (leader && line && dot) {
+          leader.style.visibility = "visible";
+          line.setAttribute("x1", String(callout.x)); line.setAttribute("y1", String(callout.y));
+          line.setAttribute("x2", String(callout.lineX)); line.setAttribute("y2", String(callout.lineY));
+          dot.setAttribute("cx", String(callout.x)); dot.setAttribute("cy", String(callout.y));
+        }
       }
     }
     frame = requestAnimationFrame(draw);
@@ -228,133 +295,21 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
 
   useEffect(() => { api.current?.setParameters(parameters, led); }, [parameters, led]);
 
-  useEffect(() => { api.current?.setFurniture(snapshot, layout); }, [snapshot, layout, parameters, led]);
+  useEffect(() => { api.current?.setFurniture(snapshot, layout); }, [snapshot, layout, parameters, led, ceremonyChairs]);
 
   useEffect(() => { api.current?.setCocktailFixtures(cocktailFixtures); }, [cocktailFixtures, parameters, led, onUnavailable]);
 
   useEffect(() => { api.current?.setView(preset); }, [preset, resetKey]);
+  useEffect(() => { if (focusRequest) api.current?.focus(focusRequest.target, focusRequest.tour); else if (focusRequest === null) api.current?.stop(); }, [focusRequest, onUnavailable]);
   return <div className="venue-canvas" ref={host} onClick={event => event.stopPropagation()}>
-    <div className={`venue-labels${labels ? "" : " is-hidden"}`} aria-hidden="true">
+    <div className={`venue-labels venue-labels--callouts${labels ? "" : " is-hidden"}`} aria-hidden="true">
+      <svg className="venue-label-leaders" width="100%" height="100%">
+        {venueLandmarks(parameters, led).map(item => <g key={item.id} ref={element => { if (element) leaderElements.current.set(item.id, element); else leaderElements.current.delete(item.id); }} style={{ visibility: "hidden" }}><line /><circle r="3" /></g>)}
+      </svg>
       {venueLandmarks(parameters, led).map(item => <span key={item.id} ref={element => { if (element) labelElements.current.set(item.id, element); else labelElements.current.delete(item.id); }} className={`venue-map-label venue-map-label-${item.id}`}><i />{item.label}</span>)}
     </div>
-    {moving && <button className="venue-skip" onClick={() => api.current?.setView(preset, true)}>Skip movement</button>}
+    {moving && <button className="venue-skip" onClick={() => api.current?.skip()}>{focusRequest ? "Skip to my seat" : "Skip movement"}</button>}
   </div>;
 }
 
-/** Always available, including on devices without WebGL. Uses the same parametric layout. */
-export function VenuePlan({ parameters: input, led = "none", landmarks, children, receptionOnly = false, interactive = false, ceremonyChairs = 0, cocktailFixtures = false }: { parameters: VenueParameters; led?: LedLayout; landmarks?: VenueLayout["landmarks"]; children?: ReactNode; receptionOnly?: boolean; interactive?: boolean; ceremonyChairs?: number; cocktailFixtures?: boolean }) {
-  const titleId = useId(), descriptionId = useId();
-  const p = normalizeParameters(input);
-  const l = venueLayout(p), left = l.terraceLeft - 6, top = l.entranceY - 5;
-  const originalStage = stageLayout(p), design = ledLayout(p, led), structure = ceremonyStructure(p);
-  const stagePoint = landmarks?.stage ?? { x: originalStage.centerX, y: originalStage.centerY };
-  const dancePoint = landmarks?.danceFloor ?? { x: originalStage.danceX, y: originalStage.danceY };
-  const entrance = landmarks?.entrance ?? { x: l.plazaX, y: l.entranceY + 4 };
-  const width = p.lawnWidth / 2 + 5 - left, height = l.waterY + 15 - top;
-  const ceremony = ceremonyLayout(p, ceremonyChairs), architecture = venueArchitecture(p);
-  return <svg className="venue-plan" viewBox={receptionOnly ? `${-p.lawnWidth / 2 - 2} ${-p.lawnLength / 2 - 2} ${p.lawnWidth + 4} ${p.lawnLength + 4}` : `${left} ${top} ${width} ${height}`} role={interactive ? "group" : "img"} aria-labelledby={titleId} aria-describedby={descriptionId}>
-    <title id={titleId}>Venue overhead plan</title>
-    <desc id={descriptionId}>The ceremony approach leads to the ceremony area on the right. The pavilion and cocktail area sit to its left. The reception lawn lies below both, followed by the sand strip and waterfront. The HF stage sits just before the sand, facing the dance floor and ceremony inland. Positions and dimensions are approximate.</desc>
-    <rect x={left} y={top} width={width} height={height} fill="#f2eee4" />
-    <rect x={left} y={l.waterY} width={width} height="15" fill="#a4c5c5" />
-    <rect x={-p.lawnWidth / 2} y={p.lawnLength / 2} width={p.lawnWidth} height={p.waterSetback} fill="#e5d5b7" />
-    <rect x={-p.lawnWidth / 2} y={l.lawnBack} width={p.lawnWidth} height={p.lawnLength} fill="#b6c69a" />
-    <polygon data-venue-terrace="" points={polygonPoints(architecture.terrace)} fill="#dfceb5" />
-    <rect x={l.plazaX - l.plazaWidth / 2} y={l.terraceFront - p.plazaLength} width={l.plazaWidth} height={p.plazaLength} fill="#d9c3b5" />
-    {[.37, .41, .46].map(r => <circle key={r} cx={l.plazaX} cy={l.plazaY} r={l.plazaWidth * r} fill="none" stroke="#b69e8a" strokeWidth=".35" />)}
-    {Array.from({ length: 12 }, (_, i) => {
-      const angle = i * Math.PI / 6, r = l.plazaWidth;
-      return <polygon key={`inlay-${i}`} points={polygonPoints([
-        { x: l.plazaX + r * .16 * Math.cos(angle - Math.PI / 15), y: l.plazaY + r * .16 * Math.sin(angle - Math.PI / 15) },
-        { x: l.plazaX + r * .37 * Math.cos(angle), y: l.plazaY + r * .37 * Math.sin(angle) },
-        { x: l.plazaX + r * .16 * Math.cos(angle + Math.PI / 15), y: l.plazaY + r * .16 * Math.sin(angle + Math.PI / 15) },
-      ])} fill={i % 2 ? "#a18e80" : "#949389"} />;
-    })}
-    <g aria-label="Ceremony fountain">
-      <title>Ceremony fountain · approximate dimensions</title>
-      {Array.from({ length: structure.tiers }, (_, i) => <circle key={i} cx={structure.x} cy={structure.y} r={structure.radius * (1 - i * .105) - .03} fill="#79afb3" stroke="#303330" strokeWidth=".06" />)}
-    </g>
-    <polygon points={polygonPoints(architecture.apron)} fill="#dfceb5" />
-    <polygon data-venue-approach="" points={polygonPoints(architecture.approach)} fill="#d9c3b5" />
-    <polygon data-canal-bank="" points={polygonPoints(architecture.canalBank)} fill="#e3d1b6" />
-    <rect x={architecture.canalX - 4.6} y={l.entranceY} width="2.9" height={p.approachLength - 7} fill="#d9c3b5" />
-    <polygon data-venue-canal="" points={polygonPoints(architecture.canal)} fill="#79afb3" stroke="#e3d1b6" strokeWidth=".3" />
-    {architecture.approachBeds.map((bed, i) => <rect key={i} x={bed.x - bed.width / 2} y={bed.y - bed.depth / 2} width={bed.width} height={bed.depth} fill="#718354" />)}
-    <polyline points={polygonPoints(architecture.pathRight)} fill="none" stroke="#c8b699" strokeWidth=".1" />
-    <g transform={`translate(${architecture.canalX},${architecture.bridgeY})`}>
-      <g aria-label="Stationary abra boat beside the bridge" transform="translate(0,-4.5)">
-        <title>Empty abra boat with a burgundy canopy</title>
-        <ellipse rx=".82" ry="2.2" fill="#34291f" stroke="#79503b" strokeWidth=".1" />
-        <rect x="-.87" y="-1.28" width="1.74" height="2.56" rx=".12" fill="#762d39" stroke="#e7cfa2" strokeWidth=".07" />
-      </g>
-      <g aria-label="Timber bridge with turning approach stairs">
-        <title>Long stair flight beside the canal turns onto a raised bridge landing</title>
-        <rect x={-architecture.bridge.deckSpan / 2} y={-architecture.bridge.width / 2}
-          width={architecture.bridge.deckSpan} height={architecture.bridge.width} fill="#543529" />
-        {Array.from({ length: architecture.bridge.steps }, (_, i) => <rect key={i}
-          x={architecture.bridge.flightX - architecture.bridge.x - architecture.bridge.width / 2}
-          y={architecture.bridge.width / 2 + i * architecture.bridge.tread} width={architecture.bridge.width}
-          height={architecture.bridge.tread} fill="#79503b" stroke="#543529" strokeWidth=".055" />)}
-        {[-1, 1].map(side => <path key={side}
-          d={`M ${architecture.bridge.flightX - architecture.bridge.x + side * architecture.bridge.width / 2} ${architecture.bridge.width / 2} v ${architecture.bridge.flightRun}`}
-          stroke="#543529" strokeWidth=".12" />)}
-      </g>
-    </g>
-    {!receptionOnly && <g aria-label={`Ceremony with ${ceremonyChairs} unassigned chairs`}>
-      <title>Straight white aisle, circular platform and white floral arch · {ceremonyChairs} chairs without assignments</title>
-      <rect x={ceremony.platformX - ceremony.aisleWidth / 2} y={ceremony.aisleStart} width={ceremony.aisleWidth} height={ceremony.aisleEnd - ceremony.aisleStart} fill="#fffdf6" stroke="#d4cebd" strokeWidth=".06" />
-      <circle cx={ceremony.platformX} cy={ceremony.platformY} r={ceremony.platformRadius} fill="#fffdf6" stroke="#d4cebd" strokeWidth=".08" />
-      <path d={`M ${ceremony.platformX - ceremony.archRadius} ${ceremony.archY} H ${ceremony.platformX + ceremony.archRadius}`} stroke="#f8f5e5" strokeWidth=".5" />
-      {ceremony.flowers.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r=".28" fill="#fffef1" stroke="#809261" strokeWidth=".07" />)}
-      {ceremony.chairs.map((chair, index) => <g key={index} data-ceremony-chair="" transform={`translate(${chair.x},${chair.y}) rotate(${chair.rotation * 180 / Math.PI})`} fill="#fffdf9" stroke="#c5beac" strokeWidth=".055">
-        <rect x="-.25" y="-.25" width=".5" height=".5" rx=".05" />
-        <path d="M -.23 -.2 H .23" strokeWidth=".08" />
-      </g>)}
-    </g>}
-    <g aria-label="Terrace walls and landscaping">
-      <polyline data-canal-terrace-edge="" points={polygonPoints(architecture.canalTerraceEdge)} fill="none" stroke="#c8b699" strokeWidth=".24" />
-      <polygon data-canal-planting="" points={polygonPoints(architecture.canalPlanting)} fill="#59774b" stroke="#c8b699" strokeWidth=".1" />
-      {architecture.canalCurvePosts.map((point, i) => <circle key={`canal-post-${i}`} cx={point.x} cy={point.y} r=".09" fill="#543529" />)}
-      {architecture.canalTrees.map((tree, i) => <circle key={`canal-tree-${i}`} cx={tree.x} cy={tree.y} r={tree.kind === "palm" ? 1.5 : 2.5} fill="#718354" fillOpacity=".7" />)}
-      {architecture.retainingEdges.map((points, i) => <polyline key={i} points={polygonPoints(points)} fill="none" stroke="#a9967c" strokeWidth=".38" />)}
-      {architecture.beds.map(bed => <g key={bed.id} data-planting-bed={bed.id}>
-        <rect x={bed.x - bed.width / 2} y={bed.y - bed.depth / 2} width={bed.width} height={bed.depth} fill="#718354" stroke="#c8b699" strokeWidth=".2" />
-        {bed.id === "connection" && <circle cx={bed.x} cy={bed.y} r="2.5" fill="#718354" fillOpacity=".6" />}
-      </g>)}
-      {ceremonyPalms(p).map((tree, i) => <circle key={`palm-${i}`} cx={tree.x} cy={tree.y} r="1.5" fill="#718475" fillOpacity=".7" />)}
-      {[0, 1].map(i => <circle key={`shade-${i}`} cx={p.lawnWidth / 2 + 1.5} cy={l.terraceBack + 3 + i * 9} r="2.5" fill="#718354" fillOpacity=".6" />)}
-      <rect x={p.lawnWidth / 2 - 1} y={l.terraceBack + .5} width="1" height={l.terraceDepth - 1} fill="#59774b" />
-      {architecture.pots.map((pot, i) => <circle key={i} cx={pot.x} cy={pot.y} r={pot.radius} fill="#718354" stroke="#c8b699" strokeWidth=".15" />)}
-    </g>
-    {cocktailFixtures && <g aria-label="Planned cocktail fixtures · schematic positions">
-      {architecture.fixtures.map(fixture => <g key={fixture.id} data-cocktail-fixture={fixture.id}>
-        <rect x={fixture.x - fixture.width / 2} y={fixture.y - fixture.depth / 2} width={fixture.width} height={fixture.depth} fill="#f6ead4" stroke="#795842" strokeWidth=".08" />
-        <text x={fixture.x} y={fixture.y + fixture.depth / 2 + .8} textAnchor="middle" fontFamily="sans-serif" fontSize=".65" fill="#334e3d">{fixture.label}</text>
-      </g>)}
-    </g>}
-    <circle cx={l.pavilionX} cy={l.pavilionY} r={p.pavilionDiameter * .585} fill="#795842" />
-    {Array.from({ length: p.stairCount }, (_, i) => <rect key={i} x={l.stairX - p.stairWidth / 2} y={l.lawnBack - (i + 1) * p.stairTread} width={p.stairWidth} height={p.stairTread} fill="#e9ddc9" stroke="#c1b29a" strokeWidth=".08" />)}
-    <g transform={`translate(${stagePoint.x},${stagePoint.y}) rotate(180)`} fill="#f4ead7" stroke="#b89c67" strokeWidth=".08">
-      <rect x={-design.width / 2} y={-p.stageDepth / 2} width={design.width} height={p.stageDepth} />
-      <rect x={-originalStage.stepWidth / 2} y={p.stageDepth / 2} width={originalStage.stepWidth} height={originalStage.stepDepth} />
-      <path d={`M ${-design.width / 2} ${-p.stageDepth / 2 + .18} H ${design.width / 2}`} stroke="#b89650" strokeWidth=".2" />
-      {led !== "none" && <g transform={`translate(${design.screenX},${-p.stageDepth / 2 + .18 + design.screenForward}) rotate(${design.screenAngle * 180 / Math.PI})`}>
-        <rect x={-(LED_WIDTH + .2) / 2} y={led === "side" ? -1 : -.26} width={LED_WIDTH + .2} height={led === "side" ? 1.2 : .24} fill="#421221"><title>5 × 3 m LED screen and support</title></rect>
-      </g>}
-    </g>
-    <rect x={dancePoint.x - p.danceFloorSize / 2} y={dancePoint.y - p.danceFloorSize / 2} width={p.danceFloorSize} height={p.danceFloorSize} fill="#f4ead7" stroke="#b89c67" strokeWidth=".08" />
-    <g fill="#675437" textAnchor="middle" fontFamily="sans-serif" fontSize=".85">
-      <text x={stagePoint.x} y={stagePoint.y}>HF stage</text>
-      <text x={dancePoint.x} y={dancePoint.y}>Dance floor</text>
-    </g>
-    <g fill="#334e3d" textAnchor="middle" fontFamily="sans-serif" fontSize="1.6">
-      <text x={p.lawnWidth * .23} y={-p.lawnLength / 2 + 1.5}>Reception lawn</text><text x="0" y={l.waterY + 7}>Waterfront</text>
-      <text x={l.plazaX} y={l.plazaY}>Ceremony</text>
-      <text x="0" y={p.lawnLength / 2 + p.waterSetback / 2}>Beach / sand</text>
-      <text x={l.pavilionX} y={l.pavilionY + p.pavilionDiameter * .75}>Pavilion</text>
-      <text x={entrance.x + 3} y={entrance.y - 1} textAnchor="end">Ceremony approach</text>
-      <text x={-p.lawnWidth * .22} y={l.terraceBack + 4}>Cocktail terrace</text>
-    </g>
-    {children}
-  </svg>;
-}
+export { VenuePlan } from "./VenuePlan";

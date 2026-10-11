@@ -62,6 +62,8 @@ function rpcForCommand(command: RepositoryCommand): [string, Record<string, unkn
         p_expected_version: command.expectedVersion,
         p_revision_id: command.revisionId,
       }];
+    case "release_guide":
+      return ["admin_release_seating_guide", { p_revision_id: command.revisionId, p_chairs_approved: command.chairsApproved }];
     case "set_guest_lookup":
       return ["admin_set_guest_lookup_enabled", { p_enabled: command.enabled }];
   }

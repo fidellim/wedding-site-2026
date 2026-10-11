@@ -3,7 +3,7 @@ import { useVenueInspection, sameTarget, seatGuest, type FurnitureTarget } from 
 import type { SeatingSnapshot } from "../domain/types";
 import { physicalChairs, type VenueLayout } from "./layout";
 
-export function TableFurniture({ snapshot, layout }: { snapshot: SeatingSnapshot; layout: VenueLayout }) {
+export function TableFurniture({ snapshot, layout, showSeatNumbers = true, guestView = false }: { snapshot: SeatingSnapshot; layout: VenueLayout; showSeatNumbers?: boolean; guestView?: boolean }) {
   const inspection = useVenueInspection();
   function interaction(target: FurnitureTarget, label: string) {
     if (!inspection) return {};
@@ -31,11 +31,11 @@ export function TableFurniture({ snapshot, layout }: { snapshot: SeatingSnapshot
         const name = snapshot.invitees.find(i => i.id === assignment?.inviteeId)?.fullName;
         return <g key={chair.number} {...interaction({ tableId: t.id, seatNumber: chair.number }, `${tableLabel(t.name)} · Seat ${chair.number} · ${seatGuest(snapshot, t.id, chair.number)}`)} transform={`translate(${chair.x},${chair.y})`}>
           <circle r=".22" fill={assignment ? "#753248" : "#e4d2ad"} stroke="#725c46" strokeWidth=".04" />
-          <text transform={`rotate(${-p.rotation})`} textAnchor="middle" dominantBaseline="central" fontSize=".21" fill={assignment ? "white" : "#342b25"}>{chair.number}</text>
-          {!inspection && <title>{tableLabel(t.name)} · Seat {chair.number}{name ? ` · ${name}` : " · Empty"}</title>}
+          {showSeatNumbers && <text transform={`rotate(${-p.rotation})`} textAnchor="middle" dominantBaseline="central" fontSize=".21" fill={assignment ? "white" : "#342b25"}>{chair.number}</text>}
+          {!inspection && <title>{tableLabel(t.name)}{showSeatNumbers ? ` · Seat ${chair.number}` : " · Chair"}{name ? ` · ${name}` : guestView ? "" : " · Empty"}</title>}
         </g>;
       })}
-      <text pointerEvents="none" transform={`rotate(${-p.rotation})`} textAnchor="middle" dominantBaseline="central" fontSize={Math.min(.72, p.width * .95 / Math.max(1, tableTopLabel(t.name).length * .57))} fontWeight="700" fill="#273b29" stroke="#fffdf7" strokeWidth=".09" paintOrder="stroke">{tableTopLabel(t.name)}</text>
+      <text pointerEvents="none" transform={`rotate(${-p.rotation})`} textAnchor="middle" dominantBaseline="central" fontSize={guestView ? 1.4 : Math.min(.72, p.width * .95 / Math.max(1, tableTopLabel(t.name).length * .57))} fontWeight="700" fill="#273b29" stroke="#fffdf7" strokeWidth=".09" paintOrder="stroke">{tableTopLabel(t.name)}</text>
       {!inspection && <title>Table {t.number}: {t.name}{p.dimensionsVerified ? "" : " · Estimated dimensions"}</title>}
     </g>;
   })}</g>;

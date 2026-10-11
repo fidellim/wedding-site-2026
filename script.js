@@ -1,3 +1,4 @@
+import { publicBackend } from "./public-backend.js";
 const weddingConfig = {
   coupleNames: "Hannah & Fidel",
   // weddingDateISO: "2026-04-07T21:48:00+04:00",
@@ -15,8 +16,8 @@ const weddingConfig = {
   },
   backend: {
     provider: "supabase",
-    supabaseUrl: "https://loycmpzimwgusjyaqxcn.supabase.co",
-    supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxveWNtcHppbXdndXNqeWFxeGNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NjM3MzMsImV4cCI6MjA4ODAzOTczM30.qzAaiJqnArxet7J9Mmwh1FMj7FpOCtNy8Aw2rkfE8Ko",
+    supabaseUrl: publicBackend.url,
+    supabaseAnonKey: publicBackend.key,
     tableName: "invites",
     requestTimeoutMs: 4500,
     requireValidCode: true,
@@ -353,7 +354,28 @@ function initVenueMapEmbed() {
   venueMapEmbed.addEventListener("load", scheduleLoaded, { once: true });
 }
 
+let guideLookupSequence = 0;
+async function updateSeatingGuideLink(guest) {
+  const sequence = ++guideLookupSequence;
+  const link = q("seatingGuideLink");
+  if (!link) return;
+  link.hidden = true;
+  if (!guest.isValidCode || !guest.code || !isBackendConfigured()) return;
+  try {
+    const response = await fetchWithTimeout(`${weddingConfig.backend.supabaseUrl}/rest/v1/rpc/get_seating_guide_for_invite`, {
+      method: "POST", headers: getSupabaseHeaders(), body: JSON.stringify({ p_code: guest.code }),
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (sequence !== guideLookupSequence || !data || !Array.isArray(data.invitees) || !data.invitees.length) return;
+    const url = new URL("/seating/", window.location.origin);
+    url.searchParams.set("code", guest.code);
+    link.href = url.toString(); link.hidden = false;
+  } catch { /* The invitation remains usable while the seating guide is unavailable. */ }
+}
+
 function applyGuestToUi(guest) {
+  void updateSeatingGuideLink(guest);
   if (gateGuestName) {
     const safeGuestName = String(guest.name || "our beloved guest").trim();
     gateGuestName.textContent = `For ${safeGuestName}`;

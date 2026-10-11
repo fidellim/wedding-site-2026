@@ -125,3 +125,18 @@
 .venue-seat-details li span { flex-shrink: 0; color: #697264; }
 .venue-seat-details li strong { overflow-wrap: anywhere; }
 @media (max-width: 720px) { .venue-seat-details { left: .7rem; right: .7rem; bottom: 4rem; width: auto; max-height: 45%; } }
+
+/* Shared landmark callouts across all venue views. */
+.venue-label-leaders { position: absolute; inset: 0; overflow: visible; }
+.venue-label-leaders line { stroke: #694534; stroke-width: 1; opacity: .75; }
+.venue-label-leaders circle { fill: #630000; stroke: #fffefc; stroke-width: 1.5; }
+.venue-labels--callouts .venue-map-label {
+  visibility: hidden; transform: none; gap: 7px; min-height: 30px; padding: 7px 10px;
+  border: 0; border-radius: 5px; background: #fffefc; color: #13273f;
+  font: 400 12px/1.25 "Questrial", sans-serif; box-shadow: 0 3px 10px rgba(19, 39, 63, .14);
+}
+.venue-labels--callouts .venue-map-label i { width: 4px; height: 4px; background: #694534; flex-shrink: 0; }
+.venue-labels--callouts .venue-map-label-lawn,
+.venue-labels--callouts .venue-map-label-stage { background: #630000; color: #eee9df; }
+.venue-labels--callouts .venue-map-label-lawn i,
+.venue-labels--callouts .venue-map-label-stage i { background: #e9d4c3; }

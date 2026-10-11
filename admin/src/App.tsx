@@ -8,9 +8,10 @@ import { TablesPanel } from "./components/TablesPanel";
 import { PlannerPanel } from "./components/PlannerPanel";
 import { PublishPanel } from "./components/PublishPanel";
 
+const GuidePreview = lazy(() => import("./guest/GuidePreview"));
 const VenuePreview = lazy(() => import("./venue/VenuePreview"));
 
-type Section = "venue" | "overview" | "invitees" | "tables" | "planner" | "publish";
+type Section = "guide" | "venue" | "overview" | "invitees" | "tables" | "planner" | "publish";
 
 const navigation: { id: Section; label: string; short: string }[] = [
   { id: "overview", label: "Overview", short: "01" },
@@ -18,6 +19,7 @@ const navigation: { id: Section; label: string; short: string }[] = [
   { id: "tables", label: "Tables", short: "03" },
   { id: "planner", label: "Seat planner", short: "04" },
   { id: "publish", label: "Publish", short: "05" },
+  { id: "guide", label: "Guest guide preview", short: "07" },
   { id: "venue", label: "Venue preview", short: "06" },
 ];
 
@@ -32,7 +34,7 @@ export function App({
   demo?: boolean;
   onSignOut?: () => Promise<void>;
 }) {
-  const [section, setSection] = useState<Section>(() => window.location.hash === "#venue" ? "venue" : "overview");
+  const [section, setSection] = useState<Section>(() => window.location.hash === "#guide" ? "guide" : window.location.hash === "#venue" ? "venue" : "overview");
   const [mobileReadOnly, setMobileReadOnly] = useState(
     () => window.matchMedia("(max-width: 720px)").matches,
   );
@@ -118,6 +120,7 @@ export function App({
             </div>
           </section>
         )}
+        {section === "guide" && <Suspense fallback={<p role="status">Preparing the guest preview…</p>}><GuidePreview workspace={workspace} disabled={disabled} execute={execute} /></Suspense>}
         {section === "venue" && <Suspense fallback={<div className="surface-card" role="status">Preparing the venue…</div>}><VenuePreview workspace={workspace} disabled={disabled || layoutReadOnly} history={venueHistory} /></Suspense>}
         {section === "invitees" && <InviteesPanel workspace={workspace} disabled={disabled} execute={execute} />}
         {section === "tables" && <TablesPanel workspace={workspace} disabled={disabled} execute={execute} />}

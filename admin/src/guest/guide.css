@@ -1,0 +1,133 @@
+@import "../../../wedding-theme.css";
+
+.seating-guide { color: var(--wedding-ink); font-family: var(--wedding-body); background: var(--wedding-cream); }
+.seating-guide *, .seating-guide *::before, .seating-guide *::after { box-sizing: border-box; }
+.seating-guide::selection, .seating-guide ::selection { color: var(--wedding-cream); background: var(--wedding-burgundy); }
+.seating-guide button { cursor: pointer; font: inherit; min-height: 44px; border-radius: 7px; }
+.seating-guide button:disabled { cursor: default; opacity: .5; }
+.seating-guide button:focus-visible, .guide-admin select:focus-visible, .guide-back:focus-visible { outline: 3px solid #816a00; outline-offset: 3px; }
+.seating-guide--canvas { position: relative; isolation: isolate; height: 100dvh; min-height: 0; overflow: hidden; }
+.guide-layout, .guide-experience, .guide-scene-card { position: absolute; inset: 0; pointer-events: none; }
+.guide-scene-card { overflow: hidden; background: #e7ebe5; }
+.seating-guide--canvas .venue-stage { position: absolute; inset: 0; height: 100%; width: 100%; overflow: hidden; pointer-events: auto; }
+.guide-heading { position: absolute; top: max(24px, env(safe-area-inset-top)); left: max(24px, env(safe-area-inset-left)); z-index: 3; max-width: 320px; padding: 18px 22px; border-radius: 14px; background: var(--wedding-paper); box-shadow: 0 8px 30px rgba(19,39,63,.1); pointer-events: auto; }
+.guide-heading .guide-brand { margin: 0 0 8px; font: 400 1.9rem/1 var(--wedding-script); color: var(--wedding-burgundy); }
+.guide-heading h1 { margin: 0; font: 400 1.85rem/1.1 var(--wedding-heading); color: var(--wedding-ink); text-wrap: balance; }
+.guide-heading p { margin: 8px 0 0; font-size: .78rem; line-height: 1.4; color: var(--wedding-muted); overflow-wrap: anywhere; }
+.guide-heading .guide-date { font-size: .68rem; }
+.guide-seats { position: absolute; bottom: 28px; left: 24px; z-index: 4; width: 320px; max-height: calc(100% - 260px); padding: 8px 18px 18px; overflow: auto; overscroll-behavior: contain; background: var(--wedding-paper); border-radius: 14px; box-shadow: 0 12px 38px rgba(19,39,63,.14); pointer-events: auto; scrollbar-color: var(--wedding-beige) var(--wedding-paper); scrollbar-width: thin; }
+.guide-panel-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px 0; border: 0; background: transparent; color: var(--wedding-burgundy); font-size: .86rem !important; }
+.guide-party { display: grid; gap: 0; max-height: 180px; margin: 0 0 14px; overflow: auto; overscroll-behavior: contain; scrollbar-color: var(--wedding-beige) var(--wedding-paper); scrollbar-width: thin; }
+.guide-party[hidden] { display: none; }
+.guide-party button { padding: 12px; border: 0; border-bottom: 1px solid var(--wedding-line); border-radius: 0; background: transparent; color: var(--wedding-ink); text-align: left; overflow-wrap: anywhere; transition: background-color 160ms ease; }
+.guide-party button[aria-pressed="true"] { background: var(--wedding-beige); color: var(--wedding-burgundy); }
+.guide-party button:hover { background: var(--wedding-cream); }
+.guide-party strong, .guide-party span { display: block; }
+.guide-party strong { font-weight: 400; font-size: 1rem; }
+.guide-party button[aria-pressed="true"] strong { font-weight: 600; }
+.guide-party span { margin-top: 4px; color: var(--wedding-muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.guide-destination { display: grid; gap: 14px; }
+.guide-destination p { margin: 0; line-height: 1.5; font-size: .85rem; }
+.guide-destination strong { display: block; margin-bottom: 4px; color: var(--wedding-muted); font-size: .8rem; font-weight: 400; overflow-wrap: anywhere; }
+.guide-destination span { display: block; font: 600 2rem/1.1 var(--wedding-heading); text-wrap: balance; }
+.guide-destination i { font-style: normal; color: var(--wedding-muted); padding: 0 3px; }
+.guide-destination button { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; padding: 12px 16px; border: 0; background: var(--wedding-burgundy); color: var(--wedding-cream); text-align: left; transition: background-color 160ms ease; }
+.guide-destination button:hover:not(:disabled), .seating-guide .venue-skip:hover { background: #3f0000; }
+.guide-destination button svg { flex-shrink: 0; }
+.guide-footnote { margin: 12px 0 0; color: var(--wedding-muted); font-size: .74rem; line-height: 1.5; }
+.guide-viewbar { position: absolute; z-index: 4; top: max(24px, env(safe-area-inset-top)); right: max(24px, env(safe-area-inset-right)); display: flex; flex-wrap: wrap; gap: 4px; max-width: calc(100% - 390px); padding: 6px; border-radius: 12px; background: var(--wedding-paper); box-shadow: 0 6px 24px rgba(19,39,63,.1); pointer-events: auto; }
+.guide-viewbar button { border: 0; background: transparent; color: var(--wedding-ink); padding: 8px 12px; font-size: .82rem; }
+.guide-viewbar button[aria-pressed="true"] { color: var(--wedding-cream); background: var(--wedding-burgundy); }
+.guide-viewbar button:hover:not(:disabled):not([aria-pressed="true"]):not(.guide-lighting-toggle) { background: var(--wedding-beige); }
+.guide-viewbar .guide-landmark-toggle[aria-pressed="true"] { background: var(--wedding-beige); color: var(--wedding-burgundy); }
+.seating-guide .venue-skip { top: 92px; right: 24px; z-index: 5; min-height: 44px; padding: 10px 16px; border: 0; border-radius: 8px; background: var(--wedding-burgundy); color: var(--wedding-cream); pointer-events: auto; }
+.guide-tour-label { position: absolute; top: 96px; right: 200px; z-index: 3; margin: 0; padding: 10px 16px; background: var(--wedding-paper); border-radius: 8px; font-size: .85rem; pointer-events: none; }
+.guide-scene-note { position: absolute; bottom: 24px; right: 24px; z-index: 3; display: grid; gap: 5px; max-width: calc(100% - 410px); margin: 0; padding: 10px 14px; background: var(--wedding-paper); border-radius: 10px; font-size: .72rem; line-height: 1.5; pointer-events: none; }
+.guide-scene-note span { color: var(--wedding-muted); }
+.guide-welcome { position: absolute; right: 24px; bottom: 108px; z-index: 2; max-width: 240px; text-align: right; color: var(--wedding-muted); font-size: .74rem; line-height: 1.5; pointer-events: none; }
+.guide-loading, .guide-empty { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); padding: 18px 24px; background: var(--wedding-paper); border-radius: 12px; color: var(--wedding-ink); font-size: .9rem; }
+.guide-admin { display: grid; gap: 16px; }
+.guide-admin label { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.guide-admin select { padding: 10px; border: 1px solid #cbd4c4; border-radius: 7px; }
+.guide-admin .seating-guide--canvas { width: 100%; height: clamp(540px, 75vh, 780px); border-radius: 14px; }
+.guest-guide-page { margin: 0; background: var(--wedding-cream); font-family: var(--wedding-body); }
+.guest-guide-page main { position: relative; }
+.guide-back { position: absolute; top: 20px; left: 24px; z-index: 6; padding: 8px 14px; border-radius: 8px; background: var(--wedding-paper); color: var(--wedding-burgundy); font: .8rem var(--wedding-body); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.guest-guide-page main:has(> .guide-back) .guide-heading { top: 72px; }
+.guide-preview-notice { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 6; margin: 0; padding: 4px 8px; white-space: nowrap; background: var(--wedding-paper); color: var(--wedding-muted); font-size: .65rem; pointer-events: none; }
+.seating-guide:not(.seating-guide--canvas) { min-height: 100dvh; padding: 80px 24px 32px; }
+.seating-guide:not(.seating-guide--canvas) .guide-heading { position: static; max-width: 520px; margin: 0 auto 24px; }
+.seating-guide:not(.seating-guide--canvas) > p { max-width: 520px; margin: 24px auto; }
+.seating-guide:not(.seating-guide--canvas) > button { display: block; margin: auto; padding: 12px 24px; border: 0; color: var(--wedding-cream); background: var(--wedding-burgundy); }
+@media (max-width: 680px) {
+  .guide-heading { top: max(18px, env(safe-area-inset-top)); left: 16px; max-width: calc(100% - 32px); padding: 14px 18px; }
+  .guide-heading .guide-brand { font-size: 1.65rem; margin-bottom: 5px; }
+  .guide-heading h1 { font-size: 1.55rem; }
+  .guide-heading p { font-size: .7rem; margin-top: 5px; }
+  .guide-heading .guide-date { display: none; }
+  .guide-heading p:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+  .guide-viewbar { top: 144px; right: 16px; left: 16px; max-width: none; justify-content: center; padding: 4px; }
+  .guest-guide-page main:has(> .guide-back) .guide-viewbar { top: 192px; }
+  .guide-viewbar button { flex: 1; padding: 8px; font-size: .76rem; }
+  .guide-seats { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); width: auto; max-height: 42%; padding: 4px 14px 14px; }
+  .guide-party { display: flex; flex-direction: column; max-height: 112px; margin-bottom: 12px; }
+  .guide-party button { flex-shrink: 0; padding: 10px 12px; }
+  .guide-destination { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+  .guide-destination span { font-size: 1.7rem; }
+  .guide-destination button { padding: 12px; font-size: .78rem; gap: 8px; }
+  .guide-destination button svg { width: 16px; height: 16px; }
+  .guide-footnote { font-size: .7rem; margin-top: 10px; }
+  .guide-scene-note { bottom: auto; top: 208px; left: 20px; right: 20px; max-width: none; padding: 0; background: transparent; font-size: .66rem; }
+  .guest-guide-page main:has(> .guide-back) .guide-scene-note { top: 256px; }
+  .guide-scene-note span { display: block; }
+  .guide-welcome { display: none; }
+  .seating-guide .venue-skip { top: 272px; right: 16px; }
+  .guest-guide-page main:has(> .guide-back) .venue-skip { top: 320px; }
+  .guide-tour-label { top: 272px; left: 16px; right: auto; font-size: .78rem; padding: 10px; }
+  .guest-guide-page main:has(> .guide-back) .guide-tour-label { top: 320px; }
+  .guide-back { top: 20px; left: 16px; }
+  .guide-preview-notice { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: .6rem; }
+}
+@media (max-height: 560px) and (min-width: 681px) {
+  .guide-heading { top: 16px; padding: 12px 16px; }
+  .guide-heading .guide-brand, .guide-heading .guide-date, .guide-heading p:last-child { display: none; }
+  .guest-guide-page main:has(> .guide-back) .guide-heading { top: 64px; }
+  .guide-heading h1 { font-size: 1.4rem; }
+  .guide-seats { bottom: 16px; max-height: calc(100% - 144px); }
+  .guide-party { max-height: 64px; }
+  .guide-seats .guide-footnote { display: none; }
+  .guide-welcome { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .seating-guide button { transition: none; } }
+
+.seating-guide--evening .guide-welcome { color: var(--wedding-cream); }
+.seating-guide--evening .venue-label-leaders line { stroke: var(--wedding-beige); opacity: .85; }
+.guide-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.guide-heading--logo { padding: 6px; background: transparent; box-shadow: none; }
+.guide-heading--logo img { display: block; width: 90px; height: auto; object-fit: contain; }
+.guide-controls { position: absolute; top: max(24px, env(safe-area-inset-top)); right: max(24px, env(safe-area-inset-right)); z-index: 5; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.guide-controls .guide-viewbar { position: static; max-width: none; flex-wrap: nowrap; }
+.guide-menu-toggle { display: none; }
+.guide-lighting-toggle { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; min-width: 132px; border: 0; color: var(--wedding-ink); background: var(--wedding-paper); box-shadow: 0 6px 24px rgba(19,39,63,.1); font-size: .78rem !important; }
+.guide-lighting-track { display: block; width: 48px; height: 28px; padding: 3px; border-radius: 20px; background: var(--wedding-beige); transition: background-color 180ms ease; }
+.guide-lighting-thumb { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--wedding-paper); color: var(--wedding-burgundy); transition: transform 180ms ease; }
+.guide-lighting-toggle[aria-checked="true"] .guide-lighting-track { background: var(--wedding-burgundy); }
+.guide-lighting-toggle[aria-checked="true"] .guide-lighting-thumb { transform: translateX(20px); }
+.guide-lighting-toggle:hover { color: var(--wedding-burgundy); }
+@media (max-width: 680px) {
+  .guide-heading--logo { top: max(18px, env(safe-area-inset-top)); left: 16px; padding: 4px; }
+  .guide-heading--logo img { width: 72px; height: auto; }
+  .guide-controls { top: max(24px, env(safe-area-inset-top)); right: 16px; gap: 8px; }
+  .guide-menu-toggle { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 0; color: var(--wedding-ink); background: var(--wedding-paper); box-shadow: 0 6px 24px rgba(19,39,63,.1); font-size: .78rem !important; }
+  .guide-controls .guide-viewbar { display: none; position: absolute; top: 56px; left: auto; right: 0; width: 210px; flex-direction: column; align-items: stretch; padding: 6px; }
+  .guide-controls .guide-viewbar[data-open="true"] { display: flex; }
+  .guide-scene-card:has(.guide-viewbar[data-open="true"]) .guide-scene-note { visibility: hidden; }
+  .guide-controls .guide-viewbar button { flex: auto; padding: 12px; text-align: left; }
+  .guide-controls .guide-lighting-toggle { min-width: 0; justify-content: space-between; flex-direction: row-reverse; margin-top: 4px; padding: 12px; border-top: 1px solid var(--wedding-line); border-radius: 0; box-shadow: none; }
+  .guide-scene-card .guide-scene-note { top: 110px; left: 16px; right: auto; max-width: calc(100% - 32px); padding: 8px 10px; background: var(--wedding-paper); border-radius: 8px; }
+  .guest-guide-page main:has(> .guide-back) .guide-scene-card .guide-scene-note { top: 158px; }
+  .seating-guide .venue-skip, .guide-scene-card .guide-tour-label { top: 172px; }
+  .guest-guide-page main:has(> .guide-back) .venue-skip, .guest-guide-page main:has(> .guide-back) .guide-tour-label { top: 220px; }
+  .guest-guide-page main:has(> .guide-back) .guide-controls { top: 72px; }
+}
+@media (prefers-reduced-motion: reduce) { .guide-lighting-track, .guide-lighting-thumb { transition: none; } }

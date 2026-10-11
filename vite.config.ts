@@ -11,6 +11,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         invitation: resolve(rootDirectory, "index.html"),
+        seating: resolve(rootDirectory, "seating/index.html"),
         admin: resolve(rootDirectory, "admin/index.html"),
         nextChapter: resolve(rootDirectory, "next-chapter/index.html"),
       },

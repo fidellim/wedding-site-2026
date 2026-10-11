@@ -1,6 +1,6 @@
 # Immersive Seating Guide
 
-Status: first venue-preview milestone approved and implemented locally. Guest integration and editable wedding furniture remain follow-up work.
+Status: venue preview, shared wedding furniture, and guest Seating Guide implemented locally. Production deployment and owner-reviewed guest release remain pending. See [guest guide review and release](runbooks/guest-seating-guide.md).
 
 ## Source authority
 
@@ -38,11 +38,26 @@ to the master specification before implementation uses them.
 - Limit name search and filtering to the current Invitation Party. Other tables
   may show their numbers, but not other parties' names.
 
-## Immediate focus
+## Guest experience confirmed on 9 October 2026
 
-Prioritize creation of the 3D wedding venue view. Invitation access integration
-is explicitly deferred, including the choice of retaining existing invitation
-links or issuing links with seating tokens. This does not widen guest access.
+- Preserve existing invitation links and enter a dedicated Seating Guide from a
+  button on the invitation. Resolve access using the invitation's existing code.
+- Show each party's assignments immediately; select single-person invitations
+  automatically and let other parties choose a person.
+- On **Show my seat**, run one continuous, roughly ten-second aerial tour through
+  the ceremony approach, ceremony area, reception and assigned table, with short
+  location labels and **Skip to my seat**.
+- Highlight the table and show the seat number in text until physical chair
+  positions are approved. Only then highlight and label the individual chair.
+- Treat the flight as a venue introduction. Walking directions await verification
+  of the entrance, stairs and accessible route.
+- Review single-person and split-table parties privately before deliberate guest
+  release. Release the immutable layout and assignments together. Subsequent
+  drafts and publications leave the released guide unchanged until reviewed.
+
+## Earlier venue milestone
+
+Prioritize creation of the 3D wedding venue view. Invitation integration was deferred during this earlier milestone; it is now implemented locally using existing invitation links and a separate reviewed release gate.
 
 The approved first review milestone is a private, approximate venue preview:
 ceremony approach, reception lawn, terrace, stairs, pavilion, waterfront,
@@ -53,8 +68,7 @@ named parameters. The preview is implemented in the admin studio; see [implement
 ## Existing foundation
 
 The repository contains a private published-seating lookup and administrative
-table/seat diagrams. The guest-facing seating screen is not implemented.
-The current table model lacks venue positions and physical dimensions. The
+table/seat diagrams. The guest-facing seating screen now shares the admin venue renderer, and the table model includes saved venue positions and physical dimensions. The
 supplied master specification and labeled stills establish venue character and
 spatial relationships, but measured dimensions and the actual wedding furniture
 arrangement remain unconfirmed. Existing guest access is
@@ -64,7 +78,8 @@ scoped to an Invitation Party and excludes other parties' names.
 
 - Confirm physical dimensions, furniture positions, and entrance placement
   before treating the preview as an approved event layout.
-- Resolve secure invitation-to-guide access when guest integration resumes.
+- Install the guest guide migration, deploy, review the actual published layout
+  and deliberately release it when ready.
 
 ## Coordinate convention
 

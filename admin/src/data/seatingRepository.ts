@@ -10,6 +10,7 @@ export type RepositoryCommand =
   | { type: "save_venue_layout"; expectedVersion: number; layout: import("../venue/layout").VenueLayout }
   | { type: "publish"; expectedVersion: number; acknowledgeLayoutWarnings?: boolean }
   | { type: "restore_revision"; expectedVersion: number; revisionId: Id }
+  | { type: "release_guide"; revisionId: Id | null; chairsApproved: boolean }
   | { type: "set_guest_lookup"; enabled: boolean };
 
 export interface SeatingRepository {

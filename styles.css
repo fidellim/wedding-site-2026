@@ -1,16 +1,18 @@
+@import "./wedding-theme.css";
+
 :root {
-  --font-heading: "Cormorant Garamond", serif;
-  --font-body: "Questrial", sans-serif;
+  --font-heading: var(--wedding-heading);
+  --font-body: var(--wedding-body);
   /* --font-body: "Commons Pro", "Outfit", "Segoe UI", sans-serif; */
   --h3-size: 3.5rem;
   --section-wrap: min(1400px, 100%);
-  --bg: #13273f;
-  --panel: #c3d9f8;
-  --ink: #13273f;
-  --accent: #630000;
-  --accent-soft: #e9d4c3;
-  --muted: #694534;
-  --line: rgba(19, 39, 63, 0.2);
+  --bg: var(--wedding-ink);
+  --panel: var(--wedding-blue);
+  --ink: var(--wedding-ink);
+  --accent: var(--wedding-burgundy);
+  --accent-soft: var(--wedding-beige);
+  --muted: var(--wedding-muted);
+  --line: var(--wedding-line);
   --shadow: 0 20px 45px rgba(6, 15, 26, 0.24);
   --env-burgundy: #630000;
   --env-burgundy-dark: #3f0000;
@@ -3469,3 +3471,6 @@ body.scroll-animate .reveal-unit.is-visible {
     transition: none;
   }
 }
+
+.seating-guide-link { display: block; margin-top: 1rem; }
+.seating-guide-link[hidden] { display: none; }

@@ -1,0 +1,15 @@
+/* Shared invitation and Seating Guide palette and typography. */
+:root,
+.seating-guide {
+  --wedding-heading: "Cormorant Garamond", Georgia, serif;
+  --wedding-body: "Questrial", sans-serif;
+  --wedding-script: "Pinyon Script", cursive;
+  --wedding-burgundy: #630000;
+  --wedding-cream: #eee9df;
+  --wedding-ink: #13273f;
+  --wedding-muted: #694534;
+  --wedding-blue: #c3d9f8;
+  --wedding-beige: #e9d4c3;
+  --wedding-paper: #fffefc;
+  --wedding-line: rgba(19, 39, 63, 0.2);
+}
