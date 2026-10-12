@@ -1,4 +1,8 @@
 import { publicBackend } from "./public-backend.js";
+import { legacyGuideDestination } from "./admin/src/guest/guideLink.ts";
+
+const directGuide = legacyGuideDestination(new URL(window.location.href));
+if (directGuide) window.location.replace(directGuide.toString());
 const weddingConfig = {
   coupleNames: "Hannah & Fidel",
   // weddingDateISO: "2026-04-07T21:48:00+04:00",
@@ -2027,4 +2031,4 @@ async function init() {
   document.addEventListener("keydown", handleRegistryModalKeydown);
 }
 
-init();
+if (!directGuide) init();

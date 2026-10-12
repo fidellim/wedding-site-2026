@@ -2,6 +2,7 @@ import { inspectWorkspace } from "../domain/seating";
 import type { SeatingWorkspace } from "../domain/types";
 import type { RepositoryCommand } from "../data/seatingRepository";
 import { useRef, useState } from "react";
+import { guestGuideLink } from "../guest/guideLink";
 
 export function PublishPanel({
   workspace,
@@ -30,9 +31,7 @@ export function PublishPanel({
     setLinkMessage("");
     const token = await provisionGuestAccess(invitationPartyId);
     if (!token) return;
-    const link = new URL("/", window.location.origin);
-    link.searchParams.set("code", invitationPartyId);
-    link.searchParams.set("seating", token);
+    const link = guestGuideLink(window.location.origin, invitationPartyId, token);
     try {
       await navigator.clipboard.writeText(link.toString());
       setLinkMessage("A new secure seating link was copied. Creating another link for this party replaces it.");
