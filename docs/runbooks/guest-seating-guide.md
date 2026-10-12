@@ -51,8 +51,8 @@ guide share the invitation's existing public Supabase connection configuration.
 2. In **Guest guide preview**, select that published revision and review a
    single-person invitation and a party seated across multiple tables.
 3. Approve physical chairs only if their actual arrangement is confirmed.
-4. Acknowledge the review, choose **Release reviewed guide**, then confirm the
-   displayed revision. Enable guest lookup in **Publish** when ready.
+4. Acknowledge the review once for all Invitation Parties, choose **Release guide**,
+   then confirm the displayed revision. Enable guest lookup in **Publish** when ready.
 5. Open an existing invitation link and verify **View your Seating Guide** appears
    under the venue information and leads to the correct party's assignments.
 

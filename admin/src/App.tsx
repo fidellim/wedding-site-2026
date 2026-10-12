@@ -120,7 +120,7 @@ export function App({
             </div>
           </section>
         )}
-        {section === "guide" && <Suspense fallback={<p role="status">Preparing the guest preview…</p>}><GuidePreview workspace={workspace} disabled={disabled} execute={execute} /></Suspense>}
+        {section === "guide" && <Suspense fallback={<p role="status">Preparing the guest preview…</p>}><GuidePreview workspace={workspace} disabled={disabled} execute={execute} onOpenPublish={() => setSection("publish")} /></Suspense>}
         {section === "venue" && <Suspense fallback={<div className="surface-card" role="status">Preparing the venue…</div>}><VenuePreview workspace={workspace} disabled={disabled || layoutReadOnly} history={venueHistory} /></Suspense>}
         {section === "invitees" && <InviteesPanel workspace={workspace} disabled={disabled} execute={execute} />}
         {section === "tables" && <TablesPanel workspace={workspace} disabled={disabled} execute={execute} />}

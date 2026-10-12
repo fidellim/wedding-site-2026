@@ -71,7 +71,7 @@ it("requires review of the current published revision and resets review when cha
   const workspace: SeatingWorkspace = { draft: { ...snapshot, id: "draft", version: 1, baseRevisionNumber: 1 },
     published: revision, revisions: [revision], auditLog: [], guestLookupEnabled: true, guideRelease: { revisionId: null, chairsApproved: false } };
   render(<GuidePreview workspace={workspace} disabled={false} execute={vi.fn()} />);
-  const release = screen.getByRole("button", { name: "Release reviewed guide" });
+  const release = screen.getByRole("button", { name: "Release guide" });
   expect(release).toBeDisabled();
   fireEvent.change(screen.getByLabelText("Plan"), { target: { value: "published" } });
   expect(release).toBeDisabled();
