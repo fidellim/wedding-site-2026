@@ -1,4 +1,5 @@
 import { placeLandmarkLabels, type LabelObstacle } from "./landmarkLabels";
+import { placeSeatMarker } from "./seatMarker";
 import { flightViews, seatDestination } from "../guest/flight";
 import { useVenueInspection, sameTarget, type FurnitureTarget } from "./VenueInspection";
 import type { SeatingSnapshot } from "../domain/types";
@@ -43,6 +44,9 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
   const leaderElements = useRef(new Map<string, SVGGElement>());
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
+  const seatLabel = useRef<HTMLSpanElement>(null);
+  const seatLeader = useRef<SVGGElement>(null);
+  const seatArrow = useRef<SVGSVGElement>(null);
   const initialPreset = useRef(preset); initialPreset.current = preset;
   const [moving, setMoving] = useState(false);
 
@@ -103,6 +107,14 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     const outline = new THREE.BoxHelper(new THREE.Object3D(), highlightTarget !== undefined ? "#ad6433" : "#edb84b");
     if (highlightTarget !== undefined && !Array.isArray(outline.material)) outline.material.depthTest = false; outline.visible = false; scene.add(outline);
     let outlined: THREE.Object3D | null = null;
+    function highlightedObject(target: FurnitureTarget): THREE.Object3D | null {
+      let found: THREE.Object3D | null = null;
+      furniture?.root.traverse(object => {
+        const candidate: FurnitureTarget | undefined = object.userData.furnitureTarget;
+        if (candidate && sameTarget(target, candidate)) found = object;
+      });
+      return found;
+    }
     function hit(event: PointerEvent): FurnitureTarget | null {
       if (!furniture) return null;
       const rect = renderer.domElement.getBoundingClientRect();
@@ -228,12 +240,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       // Pan remains on the venue's horizontal plane, never below lawn grade.
       controls.target.z = Math.max(0, controls.target.z);
       if (!reduced) venue.waterTexture.offset.x = now * .000003;
-      let nextOutlined: THREE.Object3D | null = null;
       const active = guestTarget.current ?? inspectionRef.current?.active;
-      if (active && furniture) furniture.root.traverse(object => {
-        const target: FurnitureTarget | undefined = object.userData.furnitureTarget;
-        if (target && sameTarget(active, target)) nextOutlined = object;
-      });
+      const nextOutlined = active ? highlightedObject(active) : null;
       if (nextOutlined !== outlined) { outlined = nextOutlined; outline.visible = !!outlined; if (outlined) outline.setFromObject(outlined); }
       if (outlined) outline.update();
       // Keep names on the table tops readable from either side of the venue.
@@ -246,6 +254,34 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       renderer.render(scene, camera);
       const anchors: { id: string; x: number; y: number; width: number; height: number }[] = [];
       const width = container.clientWidth, height = container.clientHeight;
+      const label = seatLabel.current, leader = seatLeader.current, arrow = seatArrow.current;
+      let seatObstacle: LabelObstacle | null = null;
+      if (label) label.style.visibility = "hidden";
+      if (leader) leader.style.visibility = "hidden";
+      if (label && leader && arrow && outlined && guestTarget.current?.seatNumber !== undefined) {
+        // Anchor the leader to the cushion, using the chair's complete world transform.
+        const point = outlined.localToWorld(new THREE.Vector3(0, 0, .52));
+        const clip = new THREE.Vector4(point.x, point.y, point.z, 1).applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+        // Divide by |w| so a seat behind the camera still gives the correct arrow direction.
+        const divisor = Math.max(Math.abs(clip.w), .0001);
+        const x = (clip.x / divisor * .5 + .5) * width, y = (-clip.y / divisor * .5 + .5) * height;
+        const marker = placeSeatMarker({ x, y, visible: clip.w > 0 && Math.abs(clip.z) <= clip.w
+          && x >= 0 && x <= width && y >= 0 && y <= height },
+        { width: label.offsetWidth, height: label.offsetHeight }, width, height, exclusionRef.current);
+        if (marker) {
+          label.style.visibility = "visible"; label.style.left = `${marker.left}px`; label.style.top = `${marker.top}px`;
+          label.dataset.edge = String(marker.edge);
+          arrow.style.transform = `rotate(${marker.angle}rad)`;
+          seatObstacle = marker;
+          if (!marker.edge) {
+            leader.style.visibility = "visible";
+            const line = leader.querySelector("line")!, dot = leader.querySelector("circle")!;
+            line.setAttribute("x1", String(marker.x)); line.setAttribute("y1", String(marker.y));
+            line.setAttribute("x2", String(marker.lineX)); line.setAttribute("y2", String(marker.lineY));
+            dot.setAttribute("cx", String(marker.x)); dot.setAttribute("cy", String(marker.y));
+          }
+        }
+      }
       for (const landmark of landmarks) {
         const element = labelElements.current.get(landmark.id); if (!element) continue;
         const projected = new THREE.Vector3(...toScenePosition(landmark.position)).project(camera);
@@ -261,7 +297,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
         }
         if (dimensions.width) anchors.push({ id: landmark.id, x, y, ...dimensions });
       }
-      for (const callout of placeLandmarkLabels(anchors, width, height, exclusionRef.current)) {
+      for (const callout of placeLandmarkLabels(anchors, width, height, seatObstacle ? [...exclusionRef.current, seatObstacle] : exclusionRef.current)) {
         const element = labelElements.current.get(callout.id)!;
         element.style.visibility = "visible"; element.style.left = `${callout.left}px`; element.style.top = `${callout.top}px`;
         const leader = leaderElements.current.get(callout.id);
@@ -302,6 +338,15 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   useEffect(() => { api.current?.setView(preset); }, [preset, resetKey]);
   useEffect(() => { if (focusRequest) api.current?.focus(focusRequest.target, focusRequest.tour); else if (focusRequest === null) api.current?.stop(); }, [focusRequest, onUnavailable]);
   return <div className="venue-canvas" ref={host} onClick={event => event.stopPropagation()}>
+    <div className="venue-seat-marker">
+      <svg className="venue-seat-leader" width="100%" height="100%" aria-hidden="true">
+        <g ref={seatLeader} style={{ visibility: "hidden" }}><line /><circle r="4" /></g>
+      </svg>
+      <span className="venue-seat-label" ref={seatLabel} style={{ visibility: "hidden" }}>
+        <svg ref={seatArrow} className="venue-seat-arrow" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
+        You are here
+      </span>
+    </div>
     <div className={`venue-labels venue-labels--callouts${labels ? "" : " is-hidden"}`} aria-hidden="true">
       <svg className="venue-label-leaders" width="100%" height="100%">
         {venueLandmarks(parameters, led).map(item => <g key={item.id} ref={element => { if (element) leaderElements.current.set(item.id, element); else leaderElements.current.delete(item.id); }} style={{ visibility: "hidden" }}><line /><circle r="3" /></g>)}

@@ -130,6 +130,13 @@
 .venue-label-leaders { position: absolute; inset: 0; overflow: visible; }
 .venue-label-leaders line { stroke: #694534; stroke-width: 1; opacity: .75; }
 .venue-label-leaders circle { fill: #630000; stroke: #fffefc; stroke-width: 1.5; }
+.venue-seat-marker { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+.venue-seat-leader { position: absolute; inset: 0; }
+.venue-seat-leader line { stroke: #630000; stroke-width: 2; paint-order: stroke; }
+.venue-seat-leader circle { fill: #630000; stroke: #fffefc; stroke-width: 2; }
+.venue-seat-label { position: absolute; display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 124px; box-sizing: border-box; padding: 9px 10px; border-radius: 5px; background: #630000; color: #fffefc; white-space: nowrap; font: 400 13px/1.25 "Questrial", sans-serif; box-shadow: 0 3px 10px rgba(19, 39, 63, .18); }
+.venue-seat-arrow { display: none; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.venue-seat-label[data-edge="true"] .venue-seat-arrow { display: block; }
 .venue-labels--callouts .venue-map-label {
   visibility: hidden; transform: none; gap: 7px; min-height: 30px; padding: 7px 10px;
   border: 0; border-radius: 5px; background: #fffefc; color: #13273f;
