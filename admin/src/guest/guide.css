@@ -34,6 +34,10 @@
 .guide-destination button { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; padding: 12px 16px; border: 0; background: var(--wedding-burgundy); color: var(--wedding-cream); text-align: left; transition: background-color 160ms ease; }
 .guide-destination button:hover:not(:disabled), .seating-guide .venue-skip:hover { background: #3f0000; }
 .guide-destination button svg { flex-shrink: 0; }
+.guide-seat-view { display: flex; gap: 4px; margin-top: 12px; padding: 4px; background: var(--wedding-beige); border-radius: 8px; }
+.guide-seat-view button { flex: 1; min-height: 44px; padding: 8px 12px; border: 0; background: transparent; color: var(--wedding-burgundy); font-size: .82rem; }
+.guide-seat-view button[aria-pressed="true"] { background: var(--wedding-burgundy); color: var(--wedding-cream); }
+.guide-seat-view button:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--wedding-paper); }
 .guide-footnote { margin: 12px 0 0; color: var(--wedding-muted); font-size: .74rem; line-height: 1.5; }
 .guide-viewbar { position: absolute; z-index: 4; top: max(24px, env(safe-area-inset-top)); right: max(24px, env(safe-area-inset-right)); display: flex; flex-wrap: wrap; gap: 4px; max-width: calc(100% - 390px); padding: 6px; border-radius: 12px; background: var(--wedding-paper); box-shadow: 0 6px 24px rgba(19,39,63,.1); pointer-events: auto; }
 .guide-viewbar button { border: 0; background: transparent; color: var(--wedding-ink); padding: 8px 12px; font-size: .82rem; }

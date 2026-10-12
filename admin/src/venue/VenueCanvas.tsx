@@ -1,6 +1,6 @@
 import { placeLandmarkLabels, type LabelObstacle } from "./landmarkLabels";
 import { placeSeatMarker } from "./seatMarker";
-import { flightViews, seatDestination } from "../guest/flight";
+import { flightProgress, flightViews, seatDestination, type SeatCameraView } from "../guest/flight";
 import { useVenueInspection, sameTarget, type FurnitureTarget } from "./VenueInspection";
 import type { SeatingSnapshot } from "../domain/types";
 import { buildFurniture } from "./buildFurniture";
@@ -26,7 +26,7 @@ interface Props {
   labelExclusions?: readonly LabelObstacle[];
   cameraLift?: number;
   highlightTarget?: FurnitureTarget | null;
-  focusRequest?: { target: FurnitureTarget; tour: boolean; key: number } | null;
+  focusRequest?: { target: FurnitureTarget; tour: boolean; view?: SeatCameraView; key: number } | null;
   onTourLabel?: (label: string) => void;
   onUnavailable: () => void;
   snapshot?: SeatingSnapshot;
@@ -41,7 +41,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   const inspection = useVenueInspection();
   const inspectionRef = useRef(inspection); inspectionRef.current = inspection;
   const host = useRef<HTMLDivElement>(null);
-  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
+  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean, view?: SeatCameraView) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
   const leaderElements = useRef(new Map<string, SVGGElement>());
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
   const seatLabel = useRef<HTMLSpanElement>(null);
@@ -162,13 +162,13 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       else if (transition) { camera.position.copy(transition.to); controls.target.copy(transition.toTarget); }
       stop(); controls.update();
     }
-    function focus(target: FurnitureTarget, tour: boolean) {
+    function focus(target: FurnitureTarget, tour: boolean, view: SeatCameraView = "close-up") {
       if (!currentSnapshot || !currentLayout) return;
-      const end = seatDestination(currentSnapshot, currentLayout, target, camera.aspect);
+      const end = seatDestination(currentSnapshot, currentLayout, target, camera.aspect, view);
       if (!end) return;
       stop(); controls.enableRotate = true; controls.minDistance = 3; controls.maxTargetRadius = Infinity;
       if (!tour || reduced) { camera.position.fromArray(end.position); controls.target.fromArray(end.target); controls.update(); return; }
-      const views = flightViews(currentSnapshot, currentLayout, target, camera.aspect);
+      const views = flightViews(currentSnapshot, currentLayout, target, camera.aspect, view);
       if (!views) return;
       journey = { start: performance.now(), positions: new THREE.CatmullRomCurve3(views.map(v => new THREE.Vector3(...v.position))), targets: new THREE.CatmullRomCurve3(views.map(v => new THREE.Vector3(...v.target))) };
       camera.position.copy(journey.positions.getPoint(0)); controls.target.copy(journey.targets.getPoint(0));
@@ -226,13 +226,13 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       last = now;
       if (previousLift !== liftRef.current) { previousLift = liftRef.current; size(); }
       if (journey) {
-        const t = Math.min(1, (now - journey.start) / 10000);
+        const t = flightProgress(now, journey.start);
         camera.position.copy(journey.positions.getPoint(t)); controls.target.copy(journey.targets.getPoint(t));
         tourLabel.current?.(t < .30 ? "Ceremony approach" : t < .63 ? "Ceremony area" : t < .90 ? "Reception" : "Your place");
         if (t === 1) stop();
       }
       if (transition) {
-        const t = Math.min(1, (now - transition.start) / 1050), ease = t * t * (3 - 2 * t);
+        const t = Math.max(0, Math.min(1, (now - transition.start) / 1050)), ease = t * t * (3 - 2 * t);
         camera.position.lerpVectors(transition.from, transition.to, ease); controls.target.lerpVectors(transition.fromTarget, transition.toTarget, ease);
         if (t === 1) stop();
       }
@@ -336,7 +336,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   useEffect(() => { api.current?.setCocktailFixtures(cocktailFixtures); }, [cocktailFixtures, parameters, led, onUnavailable]);
 
   useEffect(() => { api.current?.setView(preset); }, [preset, resetKey]);
-  useEffect(() => { if (focusRequest) api.current?.focus(focusRequest.target, focusRequest.tour); else if (focusRequest === null) api.current?.stop(); }, [focusRequest, onUnavailable]);
+  useEffect(() => { if (focusRequest) api.current?.focus(focusRequest.target, focusRequest.tour, focusRequest.view); else if (focusRequest === null) api.current?.stop(); }, [focusRequest, onUnavailable]);
   return <div className="venue-canvas" ref={host} onClick={event => event.stopPropagation()}>
     <div className="venue-seat-marker">
       <svg className="venue-seat-leader" width="100%" height="100%" aria-hidden="true">

@@ -5,6 +5,7 @@ import { physicalChairs, previewVenueLayout } from "../venue/layout";
 import type { FurnitureTarget } from "../venue/VenueInspection";
 import type { LabelObstacle } from "../venue/landmarkLabels";
 import type { GuideData } from "./guideData";
+import type { SeatCameraView } from "./flight";
 import "../venue/venue.css";
 import "./guide.css";
 import logoUrl from "../../../images/hf-logo-burgundy.webp";
@@ -28,24 +29,32 @@ export function SeatingGuide({ data }: { data: GuideData }) {
   const [dusk, setDusk] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
   const [tourLabel, setTourLabel] = useState("");
-  const [request, setRequest] = useState<{ target: FurnitureTarget; tour: boolean; key: number } | null>(null);
+  const [seatView, setSeatView] = useState<SeatCameraView>("aerial");
   const onUnavailable = useCallback(() => { setUnavailable(true); setView("plan"); setTourLabel(""); }, []);
   const layout = useMemo(() => snapshot.venueLayout ? previewVenueLayout(snapshot.venueLayout) : null, [snapshot.venueLayout]);
   const assignment = snapshot.assignments.find(a => a.inviteeId === personId);
   const seat = snapshot.seats.find(s => s.id === assignment?.seatId);
   const table = snapshot.tables.find(t => t.id === seat?.tableId);
   const target: FurnitureTarget | null = seat ? { tableId: seat.tableId, ...(chairsApproved ? { seatNumber: seat.number } : {}) } : null;
+  const [request, setRequest] = useState<{ target: FurnitureTarget; tour: boolean; view: SeatCameraView; key: number } | null>(() =>
+    target && layout?.tables[target.tableId] ? { target, tour: true, view: "aerial", key: 1 } : null);
   const person = snapshot.invitees.find(i => i.id === personId);
   // Avoid suggesting physical chair positions before the owner approves them.
   const furnitureSnapshot = useMemo(() => chairsApproved ? snapshot : { ...snapshot, assignments: [] }, [chairsApproved, snapshot]);
   function selectPerson(id: string) {
     setPersonId(id); setTourLabel("");
+    if (!unavailable) setView("3d");
     const selected = snapshot.seats.find(s => s.id === snapshot.assignments.find(a => a.inviteeId === id)?.seatId);
-    setRequest(selected ? { target: { tableId: selected.tableId, ...(chairsApproved ? { seatNumber: selected.number } : {}) }, tour: false, key: (request?.key ?? 0) + 1 } : null);
+    setRequest(selected ? { target: { tableId: selected.tableId, ...(chairsApproved ? { seatNumber: selected.number } : {}) }, tour: seatView === "aerial", view: seatView, key: (request?.key ?? 0) + 1 } : null);
   }
   function showSeat() {
     if (!target) return;
-    setView("3d"); setRequest({ target, tour: true, key: (request?.key ?? 0) + 1 });
+    setView("3d"); setRequest({ target, tour: seatView === "aerial", view: seatView, key: (request?.key ?? 0) + 1 });
+  }
+  function changeSeatView(next: SeatCameraView) {
+    setSeatView(next); setTourLabel("");
+    if (!target || unavailable) return;
+    setView("3d"); setRequest({ target, tour: next === "aerial", view: next, key: (request?.key ?? 0) + 1 });
   }
   useEffect(() => {
     const container = root.current;
@@ -101,6 +110,10 @@ export function SeatingGuide({ data }: { data: GuideData }) {
     <div className="guide-destination" aria-live="polite">
       {person && table && seat ? <p><strong>{person.fullName}</strong><span>Table {table.number} <i>·</i> Seat {seat.number}</span></p> : <p>{person ? "Your seating details will be shared soon." : "Choose your name to find your place."}</p>}
       <button disabled={!target || !placement || unavailable} onClick={showSeat}>Show my seat <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 19 19 5M5 5h14v14" /></svg></button>
+    </div>
+    <div className="guide-seat-view" role="group" aria-label="Seat camera view">
+      <button aria-pressed={seatView === "aerial"} disabled={!target || !placement || unavailable} onClick={() => changeSeatView("aerial")}>Aerial</button>
+      <button aria-pressed={seatView === "close-up"} disabled={!target || !placement || unavailable} onClick={() => changeSeatView("close-up")}>Close-up</button>
     </div>
     {!chairsApproved && target && <p className="guide-footnote">Your table is highlighted. We’ll show your individual chair once its position is confirmed.</p>}
     </aside>
