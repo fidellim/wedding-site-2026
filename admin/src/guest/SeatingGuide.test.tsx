@@ -14,7 +14,7 @@ vi.mock("three", async importOriginal => {
 afterEach(cleanup);
 
 it("shows assignments immediately, switches between split tables, and preserves an overhead fallback", async () => {
-  const data = previewFixture("split");
+  const data = previewFixture("split", false);
   const { container } = render(<SeatingGuide data={data} />);
   expect(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ })).toBeVisible();
   expect(screen.getByRole("button", { name: /Jamie\s*Table 2 · Seat 6/ })).toBeVisible();
@@ -28,7 +28,7 @@ it("shows assignments immediately, switches between split tables, and preserves 
 });
 
 it("automatically selects a single person, and only outlines a chair after explicit approval", async () => {
-  const data = previewFixture("single");
+  const data = previewFixture("single", false);
   const { container, rerender } = render(<SeatingGuide data={data} />);
   expect(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ })).toHaveAttribute("aria-pressed", "true");
   await screen.findByRole("img", { name: "Venue overhead plan" });

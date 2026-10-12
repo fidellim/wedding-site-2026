@@ -3,7 +3,7 @@ import { defaultVenueLayout } from "../venue/layout";
 import { partyGuide } from "./guideData";
 
 /** Synthetic review cases, never real guest data; only mounted in Vite development. */
-export function previewFixture(kind: "single" | "split") {
+export function previewFixture(kind: "single" | "split", chairsApproved = true) {
   const layout = defaultVenueLayout();
   layout.tables = {
     "sample-round": { x: -5, y: -4, rotation: 0, width: 1.8, depth: 1.8, dimensionsVerified: false },
@@ -19,5 +19,5 @@ export function previewFixture(kind: "single" | "split") {
     seats: ["sample-round", "sample-long"].flatMap(tableId => Array.from({ length: 8 }, (_, i) => ({ id: `${tableId}-${i + 1}`, tableId, number: i + 1 }))),
     assignments: [{ inviteeId: "Alex", seatId: "sample-round-3" }, ...(kind === "split" ? [{ inviteeId: "Jamie", seatId: "sample-long-6" }] : [])],
   };
-  return partyGuide(snapshot, party.id)!;
+  return partyGuide(snapshot, party.id, chairsApproved)!;
 }
