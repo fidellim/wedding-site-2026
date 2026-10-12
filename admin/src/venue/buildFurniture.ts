@@ -3,14 +3,18 @@ import * as THREE from "three";
 import type { SeatingSnapshot } from "../domain/types";
 import { planToSceneScale } from "./venueCoordinates";
 import { physicalChairs, type VenueLayout } from "./layout";
+import { banquetChairGeometry } from "./banquetChair";
 
 export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
   const root = new THREE.Group(); root.name = "TABLE_FURNITURE"; root.scale.fromArray(planToSceneScale);
   const cloth = new THREE.MeshStandardMaterial({ color: "#f8f0df", roughness: .9 });
   const chair = new THREE.MeshStandardMaterial({ color: "#c9aa76", roughness: .8 });
   const occupied = new THREE.MeshStandardMaterial({ color: "#753248", roughness: .8 });
-  const materials: THREE.Material[] = [cloth, chair, occupied];
-  const add = (parent: THREE.Group, geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
+  const frame = new THREE.MeshStandardMaterial({ color: "#a88a52", metalness: .72, roughness: .32 });
+  const chairGeometry = banquetChairGeometry();
+  const emptyChairMaterials = [chair, frame], occupiedChairMaterials = [occupied, frame];
+  const materials: THREE.Material[] = [cloth, chair, occupied, frame];
+  const add = (parent: THREE.Group, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[], x: number, y: number, z: number) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); return mesh;
   };
   snapshot.tables.forEach(table => {
@@ -23,7 +27,9 @@ export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
     physicalChairs(table, p).forEach(c => {
       const seat = snapshot.seats.find(s => s.tableId === table.id && s.number === c.number);
       const assigned = snapshot.assignments.some(a => a.seatId === seat?.id);
-      const mesh = add(group, new THREE.BoxGeometry(.4, .4, .48), assigned ? occupied : chair, c.x, c.y, .25);
+      const mesh = add(group, chairGeometry, assigned ? occupiedChairMaterials : emptyChairMaterials, c.x, c.y, 0);
+      mesh.rotation.z = table.shape === "round" ? Math.atan2(c.x, -c.y)
+        : Math.abs(c.x) > p.width / 2 ? Math.sign(c.x) * Math.PI / 2 : c.y > 0 ? Math.PI : 0;
       mesh.userData.furnitureTarget = { tableId: table.id, seatNumber: c.number };
       mesh.name = `SEAT_${seat?.id ?? c.number}`;
     });
@@ -44,7 +50,9 @@ export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
     }
   });
   return { root, dispose() {
-    root.traverse(o => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
+    const geometries = new Set<THREE.BufferGeometry>([chairGeometry]);
+    root.traverse(o => { if (o instanceof THREE.Mesh) geometries.add(o.geometry); });
+    geometries.forEach(geometry => geometry.dispose());
     materials.forEach(m => { if (m instanceof THREE.MeshBasicMaterial) m.map?.dispose(); m.dispose(); });
   } };
 }

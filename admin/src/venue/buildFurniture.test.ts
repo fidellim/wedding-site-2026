@@ -47,3 +47,24 @@ it("identifies seats and table tops when raycast from above after rotation and s
     expect(raycaster.intersectObject(furniture.root, true)[0].object.parent?.userData.furnitureTarget).toEqual({ tableId: table.id });
   } finally { furniture.dispose(); }
 });
+
+it.each(["round", "rectangular"] as const)("faces %s chairs toward their table after rotation and scene reflection", shape => {
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+  const snapshot = createDemoWorkspace().draft;
+  const table = snapshot.tables.find(table => table.shape === shape)!;
+  table.capacity = 12;
+  const placement = { ...estimatedPlacement(table), rotation: 227 };
+  const furniture = buildFurniture(snapshot, { ...defaultVenueLayout(), tables: { [table.id]: placement } });
+  try {
+    furniture.root.updateMatrixWorld(true);
+    const group = furniture.root.getObjectByName(`TABLE_${table.id}`)!;
+    for (const chair of group.children.filter(child => child.userData.furnitureTarget?.seatNumber)) {
+      const target = shape === "round" ? new THREE.Vector3()
+        : Math.abs(chair.position.x) > placement.width / 2
+          ? new THREE.Vector3(0, chair.position.y, 0) : new THREE.Vector3(chair.position.x, 0, 0);
+      const inward = group.localToWorld(target).sub(chair.getWorldPosition(new THREE.Vector3())).normalize();
+      const front = chair.localToWorld(new THREE.Vector3(0, 1, 0)).sub(chair.getWorldPosition(new THREE.Vector3())).normalize();
+      expect(front.dot(inward)).toBeCloseTo(1);
+    }
+  } finally { furniture.dispose(); }
+});
