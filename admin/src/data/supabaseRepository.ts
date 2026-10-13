@@ -95,11 +95,6 @@ function friendlyError(error: { message: string; code?: string }) {
   return new SeatingRepositoryError(message, error.code);
 }
 
-function createSecureToken() {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
 export function createSupabaseSeatingRepository(client: SupabaseClient): SeatingRepository {
   let channel: RealtimeChannel | null = null;
 
@@ -117,16 +112,6 @@ export function createSupabaseSeatingRepository(client: SupabaseClient): Seating
     async execute(command) {
       const [name, args] = rpcForCommand(command);
       return executeRpc(name, args);
-    },
-
-    async provisionGuestAccess(invitationPartyId) {
-      const token = createSecureToken();
-      const { error } = await client.rpc("admin_set_guest_seating_token", {
-        p_invite_code: invitationPartyId,
-        p_plain_token: token,
-      });
-      if (error) throw friendlyError(error);
-      return token;
     },
 
     subscribe(onChange) {

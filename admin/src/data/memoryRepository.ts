@@ -19,10 +19,6 @@ import {
 
 const now = () => new Date().toISOString();
 const id = () => crypto.randomUUID();
-const secureToken = () => {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-};
 
 export function createDemoWorkspace(): SeatingWorkspace {
   return {
@@ -320,10 +316,6 @@ export function createMemorySeatingRepository(
         reversesAuditId: null,
       });
       return update(workspace);
-    },
-
-    async provisionGuestAccess() {
-      return secureToken();
     },
 
     subscribe(onChange) {

@@ -278,9 +278,6 @@ h3 { margin-bottom: .25rem; }
 .revision-row { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .8rem 0; border-bottom: 1px solid #ebe6dd; }
 .revision-row strong, .revision-row small { display: block; }
 .revision-row small { margin-top: .2rem; color: var(--muted); }
-.guest-link-list { display: grid; gap: .55rem; margin-top: 1rem; }
-.guest-link-list > div { display: flex; justify-content: space-between; gap: .75rem; padding-bottom: .5rem; border-bottom: 1px solid #ebe6dd; font-size: .8rem; }
-.link-message { overflow-wrap: anywhere; margin: .9rem 0 0; color: var(--forest); font-size: .75rem; line-height: 1.5; }
 .publish-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 1rem; align-items: start; }
 .publish-sidebar { display: grid; gap: 1rem; }
 .validation-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.4rem 0; }

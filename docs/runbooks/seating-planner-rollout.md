@@ -29,7 +29,7 @@ Review these flows:
 - place, move, unassign, and undo Confirmed Attendees;
 - review blocking Publishing Errors and warning-only preferences;
 - publish a complete revision, restore it to a new draft, and republish; and
-- create a party-only secure seating link.
+- release the reviewed Seating Guide and open it from the existing invitation.
 
 ## 2. Verify the production contract
 
@@ -95,9 +95,16 @@ The versioned files, in order, are:
 - `20260902000100_create_seating_planner.sql`: tables, constraints, RLS, and
   the administrator authorization boundary;
 - `20260902000200_create_seating_planner_functions.sql`: atomic commands,
-  validation, audit history, publication, realtime, and party-only lookup;
+  validation, audit history, publication, realtime, and the legacy lookup
+  (retired by the invitation-code access cleanup);
 - `20260906000100_add_physical_table_layout.sql`: rectangular chair counts and
-  Seat 1 position, including workspace reads and revision restores.
+  Seat 1 position, including workspace reads and revision restores;
+- `20261002000100_add_shared_venue_layout.sql`: shared venue layout;
+- `20261004000100_add_venue_reconstruction_estimates.sql`: venue estimates;
+- `20261009000100_add_guest_seating_guide.sql`: code-based guest guide and its
+  reviewed release gate; and
+- `20261013000100_retire_guest_seating_tokens.sql`: removes the unused token
+  access path after validating invitation codes.
 
 Apply them through the normal Supabase migration workflow only after explicit
 approval. Do not paste fragments selectively into production: the functions
@@ -153,17 +160,17 @@ Deploy the build from `netlify.toml`, then verify:
 - an Auth user outside the allowlist cannot load the workspace;
 - both administrator sessions receive realtime updates;
 - two simultaneous moves to one Seat produce one winner and one refresh;
-- the invitation hides seating before publication or with a wrong token; and
-- a generated party link reveals only that party's names and Seats.
+- the invitation hides seating before guide release or with an invalid code; and
+- the existing invitation code reveals only that party's confirmed names and Seats.
 
 ## 6. Publish safely
 
 Before every publication, review the validation summary and the warning list.
-Generate party links only after the revision exists; generating a new link
-invalidates the previous seating token for that Invitation Party.
+Review and release the published revision in Guest guide preview. Guests use
+their existing personalized invitation links; no separate seating links are issued.
 
 No automatic email or message is sent by publishing. Hannah and Fidel decide
-when and how to share the private links.
+when to release the guide.
 
 
 ## Physical table layout upgrade

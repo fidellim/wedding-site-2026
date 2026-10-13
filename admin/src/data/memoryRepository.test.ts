@@ -26,17 +26,6 @@ describe("in-memory seating repository", () => {
     expect(after.draft.assignments.map((assignment) => assignment.inviteeId)).not.toContain("alice");
     expect(after.auditLog.at(-1)?.kind).toBe("rsvp_amended");
   });
-
-  it("creates a fresh high-entropy guest seating token", async () => {
-    const repository = createMemorySeatingRepository();
-
-    const first = await repository.provisionGuestAccess("demo-santos");
-    const second = await repository.provisionGuestAccess("demo-santos");
-
-    expect(first).toMatch(/^[a-f0-9]{64}$/);
-    expect(second).toMatch(/^[a-f0-9]{64}$/);
-    expect(second).not.toBe(first);
-  });
 });
 
 describe("table geometry persistence", () => {

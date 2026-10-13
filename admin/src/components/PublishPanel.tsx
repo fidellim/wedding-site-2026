@@ -2,42 +2,25 @@ import { inspectWorkspace } from "../domain/seating";
 import type { SeatingWorkspace } from "../domain/types";
 import type { RepositoryCommand } from "../data/seatingRepository";
 import { useRef, useState } from "react";
-import { guestGuideLink } from "../guest/guideLink";
 
 export function PublishPanel({
   workspace,
   disabled,
   execute,
-  provisionGuestAccess,
 }: {
   workspace: SeatingWorkspace;
   disabled: boolean;
   execute: (command: RepositoryCommand) => Promise<boolean>;
-  provisionGuestAccess: (invitationPartyId: string) => Promise<string | null>;
 }) {
   const validation = inspectWorkspace(workspace).validation;
   const [acknowledgedVersion, setAcknowledgedVersion] = useState<number | null>(null);
   const layoutWarnings = validation.warnings.some(w => w.code === "layout_clearance");
   const warningsAcknowledged = !layoutWarnings || acknowledgedVersion === workspace.draft.version;
-  const [linkMessage, setLinkMessage] = useState("");
   const publishModal = useRef<HTMLDialogElement>(null);
   const publish = () => {
     if (disabled || !validation.canPublish || !warningsAcknowledged) return;
     publishModal.current?.close();
     void execute({ type: "publish", expectedVersion: workspace.draft.version, acknowledgeLayoutWarnings: layoutWarnings && warningsAcknowledged });
-  };
-
-  const copyGuestLink = async (invitationPartyId: string) => {
-    setLinkMessage("");
-    const token = await provisionGuestAccess(invitationPartyId);
-    if (!token) return;
-    const link = guestGuideLink(window.location.origin, invitationPartyId, token);
-    try {
-      await navigator.clipboard.writeText(link.toString());
-      setLinkMessage("A new secure seating link was copied. Creating another link for this party replaces it.");
-    } catch {
-      setLinkMessage(`Copy this secure link now: ${link.toString()}`);
-    }
   };
 
   return (
@@ -76,32 +59,10 @@ export function PublishPanel({
         <section className="surface-card">
           <p className="eyebrow">Guest access</p>
           <h3>{workspace.guestLookupEnabled ? "Lookup enabled" : "Lookup disabled"}</h3>
-          <p className="helper-text">The Seating Guide also requires a reviewed release in Guest guide preview. This switch can hide all guest seating lookups.</p>
+          <p className="helper-text">Guests access their party’s Seating Guide through their existing invitation link. Release the reviewed guide in Guest guide preview. This switch can hide all guest seating lookups.</p>
           <button className="secondary-button" disabled={disabled} onClick={() => void execute({ type: "set_guest_lookup", enabled: !workspace.guestLookupEnabled })}>
             {workspace.guestLookupEnabled ? "Disable lookup" : "Enable lookup"}
           </button>
-        </section>
-        <section className="surface-card">
-          <p className="eyebrow">Party-only links</p>
-          <h3>Secure seating access</h3>
-          <p className="helper-text">Each action rotates that party’s private seating token. Share only the copied link with that invitation party.</p>
-          <div className="guest-link-list">
-            {workspace.draft.invitationParties
-              .filter((party) => party.rsvpStatus === "accepted")
-              .map((party) => (
-                <div key={party.id}>
-                  <span>{party.label}</span>
-                  <button
-                    className="text-button"
-                    disabled={disabled || !workspace.published}
-                    onClick={() => void copyGuestLink(party.id)}
-                  >
-                    Copy new link
-                  </button>
-                </div>
-              ))}
-          </div>
-          {linkMessage && <p className="link-message" role="status">{linkMessage}</p>}
         </section>
         <section className="surface-card">
           <p className="eyebrow">Published history</p>

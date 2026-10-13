@@ -47,7 +47,6 @@ export function App({
     execute,
     reload,
     lastMoveAuditId,
-    provisionGuestAccess,
   } = useSeatingWorkspace(repository);
   const venueHistory = useVenueLayout(workspace, execute);
   const [layoutReadOnly, setLayoutReadOnly] = useState(() => window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches);
@@ -137,7 +136,6 @@ export function App({
             workspace={workspace}
             disabled={disabled}
             execute={execute}
-            provisionGuestAccess={provisionGuestAccess}
           />
         )}
       </main>

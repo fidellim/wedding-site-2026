@@ -9,6 +9,7 @@ const migrationPaths = [
   "supabase/migrations/20260906000100_add_physical_table_layout.sql",
   "supabase/migrations/20261002000100_add_shared_venue_layout.sql",
   "supabase/migrations/20261004000100_add_venue_reconstruction_estimates.sql",
+  "supabase/migrations/20261013000100_retire_guest_seating_tokens.sql",
 ];
 
 const forbiddenPatterns = [
@@ -46,7 +47,18 @@ const forbiddenPatterns = [
 let failed = false;
 
 for (const relativePath of migrationPaths) {
-  const sql = await readFile(resolve(projectRoot, relativePath), "utf8");
+  let sql = await readFile(resolve(projectRoot, relativePath), "utf8");
+  // This migration deliberately retires only these three unused objects.
+  // All other destructive statements remain subject to the normal checks.
+  if (relativePath === "supabase/migrations/20261013000100_retire_guest_seating_tokens.sql") {
+    for (const statement of [
+      "drop function if exists public.admin_set_guest_seating_token(text, text);",
+      "drop function if exists public.get_published_seating_for_invite(text, text);",
+      "drop table if exists public.seating_guest_tokens;",
+    ]) {
+      sql = sql.replace(statement, "");
+    }
+  }
 
   for (const { label, pattern } of forbiddenPatterns) {
     const matches = [...sql.matchAll(pattern)];
@@ -64,6 +76,6 @@ if (failed) {
   process.exitCode = 1;
 } else {
   console.log(
-    "Seating SQL safety check passed: no row deletion, truncation, destructive foreign key, or existing production-object alteration found.",
+    "Seating SQL safety check passed: only approved unused-token removals; no row deletion, truncation, destructive foreign key, or existing production-object alteration found.",
   );
 }

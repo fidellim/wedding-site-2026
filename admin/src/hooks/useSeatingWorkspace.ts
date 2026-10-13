@@ -72,23 +72,6 @@ export function useSeatingWorkspace(repository: SeatingRepository) {
     }
   }, [online, reload, repository]);
 
-  const provisionGuestAccess = useCallback(async (invitationPartyId: string) => {
-    if (!online) {
-      setMessage("Guest links cannot be created while this device is offline.");
-      return null;
-    }
-    setBusy(true);
-    setMessage("");
-    try {
-      return await repository.provisionGuestAccess(invitationPartyId);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "The secure guest link could not be created.");
-      return null;
-    } finally {
-      setBusy(false);
-    }
-  }, [online, repository]);
-
   return {
     workspace,
     loading,
@@ -99,6 +82,5 @@ export function useSeatingWorkspace(repository: SeatingRepository) {
     execute,
     reload,
     lastMoveAuditId,
-    provisionGuestAccess,
   };
 }

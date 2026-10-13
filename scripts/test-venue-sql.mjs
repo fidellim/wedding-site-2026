@@ -1,6 +1,7 @@
 // Entirely ephemeral PostgreSQL; no URL, credentials, or production connection.
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 const db = new PGlite({ extensions: { pgcrypto } });
@@ -11,6 +12,9 @@ const workspace = async () => (await db.query("select public.admin_get_seating_w
 const rpc = async (name, args) => (await db.query(`select public.${name}(${args.map((_, i) => `$${i + 1}`).join(",")}) as value`, args)).rows[0].value;
 const rejected = async (name, args, match) => { const before = await workspace(); await assert.rejects(rpc(name, args), match); assert.deepEqual(await workspace(), before); };
 try {
+  for (const args of [[], ["--apply"]]) {
+    execFileSync(process.execPath, [new URL("./prepare-seating-access-upgrade.mjs", import.meta.url).pathname, ...args]);
+  }
   await db.exec(`create role anon; create role authenticated;
     create schema auth; create schema extensions;
     create table auth.users(id uuid primary key);
@@ -112,6 +116,31 @@ try {
   assert.ok(guide.tables.every(t => t.name === `Table ${t.number}`));
   assert.equal((await rpc("get_seating_guide_for_invite", ["OTHER"])).invitees.length, 1);
   for (const code of ["", "invalid", "DECLINED", null]) assert.equal(await rpc("get_seating_guide_for_invite", [code]), null);
+  // Rehearse and apply the cleanup against a populated, released guide.
+  const cleanup = "20261013000100_retire_guest_seating_tokens.sql";
+  await rpc("admin_set_guest_seating_token", ["TEST", "x".repeat(64)]);
+  const tableNames = (await db.query("select tablename from pg_tables where schemaname = 'public' and tablename <> 'seating_guest_tokens' order by tablename")).rows.map(r => r.tablename);
+  const allRows = async () => Promise.all(tableNames.map(name => db.query(`select to_jsonb(t) as value from public."${name}" t order by to_jsonb(t)::text`)));
+  const preservedRows = await allRows();
+  // Both preconditions must fail before removing any token object.
+  for (const badCode of [" test ", " "]) {
+    await db.query("insert into public.invites(code) values($1)", [badCode]);
+    await assert.rejects(execFile(cleanup), /invitation codes must be resolved/);
+    assert.equal((await db.query("select count(*)::integer as n from public.seating_guest_tokens")).rows[0].n, 1);
+    await db.query("delete from public.invites where code = $1", [badCode]);
+  }
+  await db.exec("begin; alter function public.get_seating_guide_for_invite(text) rename to temporarily_missing_guide;");
+  await assert.rejects(execFile(cleanup), /Code-based Seating Guide must be installed first/);
+  await db.exec("rollback;");
+  // Generated rehearsal verifies every public row and rolls back the removals.
+  await db.exec(await readFile(new URL("../supabase/.temp/seating-access-upgrade-validate.sql", import.meta.url), "utf8"));
+  assert.equal((await db.query("select count(*)::integer as n from public.seating_guest_tokens")).rows[0].n, 1);
+  await db.exec(await readFile(new URL("../supabase/.temp/seating-access-upgrade-apply.sql", import.meta.url), "utf8"));
+  assert.deepEqual(await allRows(), preservedRows);
+  assert.deepEqual(await rpc("get_seating_guide_for_invite", [" test "]), guide);
+  const retired = (await db.query("select to_regclass('public.seating_guest_tokens') as tokens, to_regprocedure('public.admin_set_guest_seating_token(text,text)') as issue, to_regprocedure('public.get_published_seating_for_invite(text,text)') as lookup")).rows[0];
+  assert.deepEqual(retired, { tokens: null, issue: null, lookup: null });
+  await execFile(cleanup); // Cleanup is safe to rerun.
   w = await rpc("admin_save_venue_layout", [w.draft.version, overlap]);
   assert.deepEqual(await rpc("get_seating_guide_for_invite", ["TEST"]), guide);
   w = await rpc("admin_publish_seating_plan", [w.draft.version, true]);
@@ -131,5 +160,5 @@ try {
   await assert.rejects(rpc("admin_save_venue_layout", [w.draft.version, layout]), /administrator access required/);
   assert.equal((await db.query("select has_function_privilege('anon', 'public.admin_save_venue_layout(bigint,jsonb)', 'execute') as allowed")).rows[0].allowed, false);
   await assert.rejects(rpc("admin_release_seating_guide", [null, false]), /administrator access required/);
-  console.log("Guest guide SQL checks passed: closed release gate, party privacy, approved chair flag, immutable released layout, stale release, admin access.\nVenue SQL checks passed: row preservation, legacy revisions, atomic saves, stale versions, rotated boundaries, warning acknowledgement, immutable publication, restore, admin access.");
+  console.log("Seating access cleanup checks passed: invalid-code preflight, required guide, rollback rehearsal, row preservation, code-only guide, retired token objects.\nGuest guide SQL checks passed: closed release gate, party privacy, approved chair flag, immutable released layout, stale release, admin access.\nVenue SQL checks passed: row preservation, legacy revisions, atomic saves, stale versions, rotated boundaries, warning acknowledgement, immutable publication, restore, admin access.");
 } finally { await db.close(); }

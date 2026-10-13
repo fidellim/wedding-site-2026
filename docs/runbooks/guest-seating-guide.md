@@ -42,7 +42,8 @@ The additive migration
 existing seating planner, physical table layout, shared venue layout and venue
 reconstruction migrations. Install through the project's normal migration
 workflow. It preserves planning records and creates an initially closed guide
-release gate. It does not change the existing token-protected seating lookup.
+release gate. The later invitation-code access cleanup retires the unused
+token-protected lookup.
 
 Deploy the application build with the `/seating/` entry point. The invitation and
 guide share the invitation's existing public Supabase connection configuration.
@@ -90,3 +91,30 @@ release gates, party isolation, approval state, immutable release, stale review,
 lookup disablement and admin-only release. Component checks cover immediate
 assignments, single-person selection, split-table selection, fallback mapping,
 chair approval and review gating. Browser checks use synthetic data only.
+
+## Retire unused seating tokens
+
+The current guide already uses invitation codes. The approved simplification
+removes the admin token-link panel and retires the old token endpoint and storage;
+no token links were distributed. Anyone holding a party’s invitation code can
+view that party’s confirmed seating after release.
+
+For an existing database, apply only
+`supabase/migrations/20261013000100_retire_guest_seating_tokens.sql`, after the
+code-based guide migration is installed. Do not rerun the full installation.
+Generate and review a rollback-only rehearsal with
+`npm run seating:prepare-access-upgrade`; after it succeeds, generate the
+transactional apply file with `npm run seating:prepare-access-upgrade -- --apply`.
+Deploy the application cleanup before applying the database cleanup.
+
+The migration rejects blank codes and duplicates after case and whitespace
+normalization. It drops only `seating_guest_tokens`,
+`admin_set_guest_seating_token(text,text)`, and
+`get_published_seating_for_invite(text,text)`, without cascading. Token hashes are
+discarded; invitation, RSVP, registry, seating, revision, and audit records are
+preserved. The guide RPC, server-side party filtering, and release/hide controls
+remain in place. New installations include this migration automatically.
+
+Production code generation is outside this repository. Uniqueness does not
+establish guessability; verify code issuance separately. Future invitation codes
+must also remain unique after trimming and ignoring case.

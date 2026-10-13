@@ -94,8 +94,10 @@ shows table and seat numbers without waiting for the later visual Floor Plan.
   read-only rather than queueing offline changes.
 - Either Administrator may publish the complete plan after reviewing its
   validation summary and confirming explicitly.
-- Existing invite codes are reused only when cryptographically random;
-  otherwise a separate high-entropy seating token protects guest lookup.
+- Invitation codes are the shared credential for invitation, RSVP, and party
+  seating access. Anyone holding or receiving a forwarded code can view that
+  party’s seating. Separate seating revocation is not required; the unused
+  token workflow was retired before links were distributed (2026-10-13).
 - Keep-Together Groups may cross Invitation Parties and produce optional,
   warning-only preferences.
 - Guest lookup remains enabled after the wedding but Administrators retain a

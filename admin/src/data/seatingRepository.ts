@@ -16,7 +16,6 @@ export type RepositoryCommand =
 export interface SeatingRepository {
   load(): Promise<SeatingWorkspace>;
   execute(command: RepositoryCommand): Promise<SeatingWorkspace>;
-  provisionGuestAccess(invitationPartyId: Id): Promise<string>;
   subscribe(onChange: () => void): () => void;
 }
 

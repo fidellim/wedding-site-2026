@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b --pretty false",
     "test:venue-sql": "node scripts/test-venue-sql.mjs",
+    "seating:prepare-access-upgrade": "npm run seating:check-sql-safety && node scripts/prepare-seating-access-upgrade.mjs",
     "seating:prepare-venue-upgrade": "npm run seating:check-sql-safety && node scripts/prepare-venue-upgrade.mjs"
   },
   "dependencies": {
