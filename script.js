@@ -35,8 +35,9 @@ const localInviteFallback = {
 const q = (id) => document.getElementById(id);
 const params = new URLSearchParams(window.location.search);
 const guestCacheConfig = {
-  keyPrefix: "invite_guest_cache_v2_",
-  ttlMs: 1000 * 60 * 60 * 12,
+  // Old cache timestamps were also refreshed by RSVP edits, not just validation.
+  keyPrefix: "invite_guest_cache_v3_",
+  ttlMs: 2 * 60 * 60 * 1000,
 };
 const rsvpSubmissionConfirmMessage =
   "We kindly ask that you submit your RSVP only once your attendance has been firmly decided, as your response will help us prepare every detail with care and consideration.";
@@ -126,48 +127,79 @@ function normalizeCode(rawCode) {
   return (rawCode || "").trim().toLowerCase();
 }
 
-function getGuestCacheKey(code) {
-  return `${guestCacheConfig.keyPrefix}${normalizeCode(code)}`;
+function clearGuestCache(code) {
+  try {
+    localStorage.removeItem(`${guestCacheConfig.keyPrefix}${normalizeCode(code)}`);
+  } catch { /* Storage is optional; live validation remains available. */ }
 }
 
 function readGuestCache(code) {
-  if (!code) {
-    return null;
-  }
   try {
-    const raw = localStorage.getItem(getGuestCacheKey(code));
-    if (!raw) {
+    const cached = JSON.parse(localStorage.getItem(`${guestCacheConfig.keyPrefix}${code}`));
+    const guest = cached?.guest;
+    const age = Date.now() - cached?.validatedAt;
+    if (!Number.isFinite(cached?.validatedAt) || age < 0 || age >= guestCacheConfig.ttlMs
+      || guest?.isValidCode !== true || normalizeCode(guest.code) !== code
+      || typeof guest.name !== "string" || !Number.isFinite(guest.seats) || guest.seats <= 0) {
+      clearGuestCache(code);
       return null;
     }
-    const parsed = JSON.parse(raw);
-    if (!parsed || !parsed.savedAt || !parsed.guest) {
-      return null;
-    }
-    const age = Date.now() - Number(parsed.savedAt);
-    if (!Number.isFinite(age) || age > guestCacheConfig.ttlMs) {
-      localStorage.removeItem(getGuestCacheKey(code));
-      return null;
-    }
-    return parsed.guest;
-  } catch (error) {
+    return { guest, expiresAt: cached.validatedAt + guestCacheConfig.ttlMs };
+  } catch {
+    clearGuestCache(code);
     return null;
   }
 }
 
-function writeGuestCache(code, guest) {
-  if (!code || !guest) {
-    return;
-  }
+function cacheValidatedGuest(code, guest) {
   try {
-    localStorage.setItem(
-      getGuestCacheKey(code),
-      JSON.stringify({
-        savedAt: Date.now(),
-        guest,
-      })
-    );
-  } catch (error) {
-    // Ignore storage errors to keep RSVP flow uninterrupted.
+    localStorage.setItem(`${guestCacheConfig.keyPrefix}${code}`, JSON.stringify({
+      validatedAt: Date.now(), guest,
+    }));
+  } catch { /* A verified guest can still enter when storage is unavailable. */ }
+}
+
+function closeGuestAccess(code, reason) {
+  currentGuest = { code, id: code, name: "Invited Guest", seats: 0, isValidCode: false };
+  applyGuestToUi(currentGuest);
+  syncRsvpFormState(false);
+  closeRegistryConfirmModal();
+  closeRegistryListModal();
+  settleRsvpSubmissionConfirmation(false);
+  showPrivateGate(reason);
+}
+
+async function refreshCachedGuest(code, expiresAt) {
+  const verificationMessage = "We could not verify your invitation right now. Please try again shortly.";
+  let expired = false;
+  const expiryTimer = window.setTimeout(() => {
+    expired = true;
+    clearGuestCache(code);
+    closeGuestAccess(code, verificationMessage);
+  }, Math.max(0, expiresAt - Date.now()));
+  try {
+    const freshGuest = await lookupGuestFromBackend(code);
+    window.clearTimeout(expiryTimer);
+    if (!freshGuest) {
+      clearGuestCache(code);
+      closeGuestAccess(code, "This invitation code is invalid. Invited guests only.");
+      return;
+    }
+    currentGuest = freshGuest;
+    cacheValidatedGuest(code, freshGuest);
+    applyGuestToUi(currentGuest);
+    syncRsvpFormState(true);
+    if (expired) {
+      if (invitationOpened && !gate?.innerHTML) {
+        privateEventGate?.classList.add("hidden");
+        document.body.classList.remove("private-only");
+        mainContent?.classList.remove("hidden");
+      } else {
+        showInvitationExperience();
+      }
+    }
+  } catch {
+    // Keep the original deadline: failures never refresh cached validation.
   }
 }
 
@@ -465,7 +497,8 @@ function showInvitationExperience() {
 }
 
 function setRsvpFormEnabled(enabled) {
-  const isEnabled = Boolean(enabled) && !hasSubmittedRsvp();
+  const isEnabled = Boolean(enabled) && !hasSubmittedRsvp()
+    && (!weddingConfig.backend.requireValidCode || currentGuest.isValidCode);
   const fields = [
     emailInput,
     attendanceInput,
@@ -1204,7 +1237,10 @@ async function lookupGuestFromBackend(code) {
   }
 
   const rows = await response.json();
-  if (!Array.isArray(rows) || rows.length === 0) {
+  if (!Array.isArray(rows)) {
+    throw new Error("Unexpected invitation lookup response");
+  }
+  if (rows.length === 0) {
     return null;
   }
 
@@ -1267,22 +1303,6 @@ async function loadRegistryItems() {
   }
 }
 
-function refreshGuestInBackground(code) {
-  lookupGuestFromBackend(code)
-    .then((freshGuest) => {
-      if (!freshGuest || currentGuest.code !== code) {
-        return;
-      }
-      currentGuest = freshGuest;
-      writeGuestCache(code, currentGuest);
-      applyGuestToUi(currentGuest);
-      syncRsvpFormState(true);
-    })
-    .catch(() => {
-      // Ignore refresh failures; cached data already rendered.
-    });
-}
-
 async function loadGuestProfile() {
   const code = normalizeCode(params.get("code"));
   const requireValidCode = Boolean(weddingConfig.backend.requireValidCode);
@@ -1319,18 +1339,12 @@ async function loadGuestProfile() {
     };
   }
 
-  const cachedGuest = readGuestCache(code);
-  if (cachedGuest) {
-    currentGuest = {
-      ...cachedGuest,
-      code,
-      source: "supabase-cache",
-      isValidCode: true,
-    };
+  const cached = readGuestCache(code);
+  if (cached) {
+    currentGuest = { ...cached.guest, source: "supabase-cache" };
     applyGuestToUi(currentGuest);
     syncRsvpFormState(true);
-    refreshGuestInBackground(code);
-    return { allowed: true };
+    return { allowed: true, cacheExpiresAt: cached.expiresAt };
   }
 
   syncRsvpFormState(false);
@@ -1338,6 +1352,7 @@ async function loadGuestProfile() {
   try {
     const guestFromBackend = await lookupGuestFromBackend(code);
     if (!guestFromBackend) {
+      clearGuestCache(code);
       currentGuest = {
         code,
         id: code,
@@ -1355,7 +1370,7 @@ async function loadGuestProfile() {
     }
 
     currentGuest = guestFromBackend;
-    writeGuestCache(code, currentGuest);
+    cacheValidatedGuest(code, currentGuest);
     applyGuestToUi(currentGuest);
     syncRsvpFormState(true);
     return { allowed: true };
@@ -1681,7 +1696,6 @@ async function submitRsvp(event) {
         const freshGuest = await lookupGuestFromBackend(currentGuest.code).catch(() => null);
         if (freshGuest && hasSubmittedRsvp(freshGuest)) {
           currentGuest = freshGuest;
-          writeGuestCache(currentGuest.code, currentGuest);
           applyGuestToUi(currentGuest);
           submitMessage = "";
           return;
@@ -1707,7 +1721,6 @@ async function submitRsvp(event) {
       email,
       rsvpStatus: attendance,
     };
-    writeGuestCache(currentGuest.code, currentGuest);
     submitMessage = "Thank you. Your RSVP has been recorded.";
   } catch (error) {
     submitMessage = "Could not submit RSVP right now. Please retry in a moment.";
@@ -1790,6 +1803,7 @@ async function confirmRegistryReservation() {
 }
 
 function openInvitation() {
+  if (weddingConfig.backend.requireValidCode && !currentGuest.isValidCode) return;
   if (invitationOpened) {
     return;
   }
@@ -1806,6 +1820,7 @@ function openInvitation() {
     gateOpenLabel.style.pointerEvents = "none";
   }
   setTimeout(() => {
+    if (weddingConfig.backend.requireValidCode && !currentGuest.isValidCode) return;
     gate.classList.add("hidden");
     gate.setAttribute("aria-hidden", "true");
     gate.innerHTML = "";
@@ -2026,6 +2041,9 @@ async function init() {
     });
   }
   document.addEventListener("keydown", handleRegistryModalKeydown);
+  if (access.cacheExpiresAt) {
+    void refreshCachedGuest(currentGuest.code, access.cacheExpiresAt);
+  }
 }
 
-if (!directGuide) init();
+init();
