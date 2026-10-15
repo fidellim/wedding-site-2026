@@ -14,8 +14,8 @@
       table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
       table { border-collapse: collapse; }
       a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
-      #copy-email:focus-visible { outline: 3px solid #e9d4c3; outline-offset: 4px; }
-      #copy-email:disabled { opacity: 0.6; cursor: wait; }
+      #email-tools button:focus-visible { outline: 3px solid #e9d4c3; outline-offset: 4px; }
+      #email-tools button:disabled { opacity: 0.6; cursor: wait; }
       @media print { #email-tools { display: none !important; } }
       @media screen and (min-width: 621px) {
         .letter-padding { padding-left: 48px !important; padding-right: 48px !important; }
@@ -42,6 +42,7 @@
     <div id="email-tools" style="max-width: 584px; margin: 0 auto; padding: 24px 20px 0; font-family: Arial, Helvetica, sans-serif; color: #eee9df;">
       <p style="margin: 0 0 14px; font-size: 16px; line-height: 25px;">This is your latest wedding email. Click the button, then paste into a new Gmail message with &#8984;V (Mac) or Ctrl+V (Windows).</p>
       <button id="copy-email" type="button" style="border: 0; padding: 14px 20px; background-color: #eee9df; color: #630000; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;">Copy email for Gmail</button>
+      <button id="copy-subject" type="button" style="border: 0; margin-top: 8px; padding: 14px 20px; background-color: #eee9df; color: #630000; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;">Copy subject</button>
       <p id="copy-status" role="status" aria-live="polite" style="margin: 12px 0 0; font-size: 14px; line-height: 22px;">Only the email below will be copied.</p>
     </div>
     <div style="display: none; font-size: 1px; line-height: 1px; color: #630000; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all;">
@@ -161,6 +162,21 @@
       </tr>
     </table>
     <script>
+      document.getElementById('copy-subject').addEventListener('click', async () => {
+        const button = document.getElementById('copy-subject');
+        const status = document.getElementById('copy-status');
+        button.disabled = true;
+        status.textContent = 'Copying your subject…';
+        try {
+          await navigator.clipboard.writeText('One Month to #FINNAHLIMarried! | Wedding Updates & Reminders');
+          status.textContent = 'Subject copied! Paste into the subject field in Gmail.';
+        } catch (error) {
+          status.textContent = 'Copy was blocked. Open this file in Chrome through your local preview server and try again.';
+        } finally {
+          button.disabled = false;
+        }
+      });
+
       document.getElementById('copy-email').addEventListener('click', async () => {
         const button = document.getElementById('copy-email');
         const status = document.getElementById('copy-status');
