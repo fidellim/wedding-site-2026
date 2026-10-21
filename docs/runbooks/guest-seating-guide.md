@@ -1,5 +1,8 @@
 # Guest Seating Guide
 
+For attendance changes after publication, follow
+[Guest cancellations after publishing seating](guest-cancellations.md).
+
 Implemented locally. The owner reported the guest guide migration installed
 with COMMIT. Production deployment, physical chair approval and guest release
 remain pending.
