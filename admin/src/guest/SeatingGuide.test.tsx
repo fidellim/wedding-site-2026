@@ -93,13 +93,14 @@ it("collapses the party list while keeping the selected seat and primary action 
   expect(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ })).toBeVisible();
 });
 
-
 it("shows saved table names in seating details and the overhead fallback", async () => {
   const data = previewFixture("single");
   data.snapshot.tables[0].name = "2021";
   const { container } = render(<SeatingGuide data={data} />);
-  expect(screen.getByRole("button", { name: /Alex\s*2021 · Seat 3/ })).toBeVisible();
-  expect(container.querySelector(".guide-destination")).toHaveTextContent("2021 · Seat 3");
+  expect(screen.getByRole("button", { name: /Alex\s*Table 2021 · Seat 3/ })).toBeVisible();
+  expect(container.querySelector(".guide-destination")).toHaveTextContent("Table 2021 · Seat 3");
   await screen.findByRole("img", { name: "Venue overhead plan" });
-  expect(screen.getByRole("img", { name: "Venue overhead plan" })).toHaveTextContent("2021");
+  const tableLabels = Array.from(screen.getByRole("img", { name: "Venue overhead plan" }).querySelectorAll("text"));
+  expect(tableLabels.some(label => label.textContent === "2021")).toBe(true);
+  expect(tableLabels.some(label => label.textContent === "Table 2021")).toBe(false);
 });
