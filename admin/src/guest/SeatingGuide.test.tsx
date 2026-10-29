@@ -50,7 +50,10 @@ it("removes other parties, non-attendees, notes, and preferences while preservin
   expect(guide.snapshot.invitees).toHaveLength(2);
   expect(guide.snapshot.assignments).toHaveLength(2);
   expect(guide.snapshot.tables[0].name).toBe("2021");
-  expect(JSON.stringify(guide)).not.toContain("Secret");
+  expect(JSON.stringify(guide.snapshot)).not.toContain("Secret");
+  expect(guide.directory).toContainEqual({ tableId: "sample-round", fullName: "Secret other name" });
+  expect(JSON.stringify(guide.directory)).not.toContain("Secret notes");
+  expect(JSON.stringify(guide.directory)).not.toContain("Secret declined");
   expect(parseGuide(null)).toBeNull();
   expect(() => parseGuide({ party: data.party })).toThrow("Invalid seating response");
 });
@@ -103,4 +106,50 @@ it("shows saved table names in seating details and the overhead fallback", async
   const tableLabels = Array.from(screen.getByRole("img", { name: "Venue overhead plan" }).querySelectorAll("text"));
   expect(tableLabels.some(label => label.textContent === "2021")).toBe(true);
   expect(tableLabels.some(label => label.textContent === "Table 2021")).toBe(false);
+});
+
+
+it("lets guests peek at a chair, dismiss with Escape, and tap through a table's guests", async () => {
+  const data = previewFixture("single");
+  data.directory.push({ tableId: "sample-round", seatNumber: 5, fullName: "Morgan" });
+  render(<SeatingGuide data={data} />);
+  await screen.findByRole("img", { name: "Venue overhead plan" });
+  const chair = screen.getByRole("button", { name: "Table 1 · Seat 5 · Morgan" });
+  fireEvent.mouseEnter(chair, { clientX: 120, clientY: 120 });
+  expect(screen.getByRole("tooltip")).toHaveTextContent("Morgan");
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  fireEvent.click(chair);
+  expect(screen.getByRole("region", { name: "Seating details" })).toHaveTextContent("Morgan");
+  expect(screen.getByRole("region", { name: "Seating details" })).toHaveTextContent("Table 1 · Seat 5");
+  fireEvent.click(screen.getByRole("button", { name: "View all seats at this table" }));
+  expect(screen.getByRole("region", { name: "Seating details" })).toHaveTextContent("Alex");
+  expect(screen.getByRole("region", { name: "Seating details" })).toHaveTextContent("Morgan");
+  fireEvent.click(screen.getByRole("button", { name: "Close seating details" }));
+  expect(screen.queryByRole("region", { name: "Seating details" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Show my seat" })).toBeVisible();
+  expect(document.querySelector(".guide-destination")).toHaveTextContent("Alex");
+});
+
+it("offers table exploration without chair positions before approval", async () => {
+  const data = previewFixture("single", false);
+  data.directory.push({ tableId: "sample-round", fullName: "Morgan" });
+  render(<SeatingGuide data={data} />);
+  await screen.findByRole("img", { name: "Venue overhead plan" });
+  expect(screen.queryByRole("button", { name: /Seat 5/ })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("combobox", { name: "Explore tables" }), { target: { value: "sample-round" } });
+  const details = screen.getByRole("region", { name: "Seating details" });
+  expect(details).toHaveTextContent("Morgan");
+  expect(details).not.toHaveTextContent("Seat");
+});
+
+it("parses a minimal shared directory without adding other guests to the party panel", () => {
+  const data = previewFixture("single");
+  const payload = { ...data.snapshot, party: data.party, chairsApproved: true,
+    directory: [{ tableId: "sample-round", fullName: "Morgan", seatNumber: 5, privateNotes: "Hidden" }] };
+  const guide = parseGuide(payload)!;
+  expect(guide.directory).toEqual([{ tableId: "sample-round", fullName: "Morgan", seatNumber: 5 }]);
+  expect(guide.snapshot.invitees.map(person => person.fullName)).toEqual(["Alex"]);
+  expect(parseGuide({ ...payload, chairsApproved: false })!.directory).toEqual([{ tableId: "sample-round", fullName: "Morgan" }]);
+  expect(() => parseGuide({ ...payload, directory: [{ tableId: "missing", fullName: "Morgan", seatNumber: 5 }] })).toThrow("Invalid seating directory");
 });

@@ -35,8 +35,9 @@ to the master specification before implementation uses them.
 - Keep approximate previews private in admin until the owner approves the event
   layout. Publish table positions and Seat Assignments together; subsequent
   draft edits must not change the guest view.
-- Limit name search and filtering to the current Invitation Party. Other tables
-  may show their numbers, but not other parties' names.
+- Keep the primary seat-finding panel scoped to the current Invitation Party.
+  Guests may separately explore confirmed attendees at other tables through
+  chair tooltips and table guest lists; chair positions require approval.
 
 ## Guest experience confirmed on 9 October 2026
 

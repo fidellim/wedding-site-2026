@@ -6,7 +6,7 @@ import { physicalChairs, type VenueLayout } from "./layout";
 export function TableFurniture({ snapshot, layout, showSeatNumbers = true, guestView = false }: { snapshot: SeatingSnapshot; layout: VenueLayout; showSeatNumbers?: boolean; guestView?: boolean }) {
   const inspection = useVenueInspection();
   function interaction(target: FurnitureTarget, label: string) {
-    if (!inspection) return {};
+    if (!inspection || (target.seatNumber !== undefined && !inspection.chairsEnabled)) return {};
     return {
       role: "button", tabIndex: 0, "aria-label": label, "aria-pressed": sameTarget(inspection.active, target),
       "data-furniture-target": "", className: "venue-furniture-target",
@@ -29,7 +29,7 @@ export function TableFurniture({ snapshot, layout, showSeatNumbers = true, guest
         const seat = snapshot.seats.find(s => s.tableId === t.id && s.number === chair.number);
         const assignment = snapshot.assignments.find(a => a.seatId === seat?.id);
         const name = snapshot.invitees.find(i => i.id === assignment?.inviteeId)?.fullName;
-        return <g key={chair.number} {...interaction({ tableId: t.id, seatNumber: chair.number }, `${tableLabel(t.name)} · Seat ${chair.number} · ${seatGuest(snapshot, t.id, chair.number)}`)} transform={`translate(${chair.x},${chair.y})`}>
+        return <g key={chair.number} {...interaction({ tableId: t.id, seatNumber: chair.number }, `${tableLabel(t.name)} · Seat ${chair.number} · ${inspection?.guestName({ tableId: t.id, seatNumber: chair.number }) ?? seatGuest(snapshot, t.id, chair.number)}`)} transform={`translate(${chair.x},${chair.y})`}>
           <circle r=".22" fill={assignment ? "#753248" : "#e4d2ad"} stroke="#725c46" strokeWidth=".04" />
           {showSeatNumbers && <text transform={`rotate(${-p.rotation})`} textAnchor="middle" dominantBaseline="central" fontSize=".21" fill={assignment ? "white" : "#342b25"}>{chair.number}</text>}
           {!inspection && <title>{tableLabel(t.name)}{showSeatNumbers ? ` · Seat ${chair.number}` : " · Chair"}{name ? ` · ${name}` : guestView ? "" : " · Empty"}</title>}

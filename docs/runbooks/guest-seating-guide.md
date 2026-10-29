@@ -121,3 +121,24 @@ remain in place. New installations include this migration automatically.
 Production code generation is outside this repository. Uniqueness does not
 establish guessability; verify code issuance separately. Future invitation codes
 must also remain unique after trimming and ignoring case.
+
+
+## Exploring other guests' tables
+
+Invited guests can explore the released plan by hovering a chair on desktop or
+selecting a chair or table. The **Explore tables** menu provides a keyboard and
+touch alternative when chairs are small. Selecting a table lists its assigned
+guests; selecting a chair shows the guest name, table name and seat number.
+The guest's own party panel and **Show my seat** action remain separate.
+
+The shared directory contains only confirmed, assigned attendees' names and
+table IDs. Chair numbers are included only when physical chair positions are
+approved; before approval, browsing is limited to table guest lists. Private
+notes, tags, invitation-party membership and non-attendees are excluded. The
+directory uses the same immutable, deliberately released revision as the guide.
+
+For an existing database with the table-name migration installed, apply only
+`supabase/migrations/20261029000200_add_guest_seating_directory.sql` through the
+Supabase SQL Editor in a transaction, then deploy the frontend. This replaces
+the guest lookup function without changing stored data. Until the migration is
+applied, the frontend can show only the current party's available assignments.

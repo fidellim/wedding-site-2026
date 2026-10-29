@@ -3,7 +3,7 @@ import { VenuePlan } from "../venue/VenuePlan";
 import { TableFurniture } from "../venue/TableFurniture";
 import { tableLabel } from "../venue/tableLabel";
 import { physicalChairs, previewVenueLayout } from "../venue/layout";
-import type { FurnitureTarget } from "../venue/VenueInspection";
+import { VenueInspection, type FurnitureTarget } from "../venue/VenueInspection";
 import type { LabelObstacle } from "../venue/landmarkLabels";
 import type { GuideData } from "./guideData";
 import type { SeatCameraView } from "./flight";
@@ -20,6 +20,7 @@ export function SeatingGuide({ data }: { data: GuideData }) {
   const viewMenuId = useId();
   const controls = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const [tableControlsHost, setTableControlsHost] = useState<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [framing, setFraming] = useState<{ exclusions: LabelObstacle[]; lift: number }>({ exclusions: [], lift: 0 });
@@ -123,7 +124,10 @@ export function SeatingGuide({ data }: { data: GuideData }) {
       <div className="guide-controls" ref={controls} data-guide-overlay onKeyDown={event => {
         if (event.key === "Escape" && menuOpen) { setMenuOpen(false); menuButton.current?.focus(); }
       }}>
-        <button className="guide-menu-toggle" ref={menuButton} aria-expanded={menuOpen} aria-controls={viewMenuId} onClick={() => setMenuOpen(!menuOpen)}>
+        <button className="guide-menu-toggle" ref={menuButton} aria-expanded={menuOpen} aria-controls={viewMenuId} onClick={() => {
+          if (!menuOpen) { setRequest(null); setTourLabel(""); }
+          setMenuOpen(!menuOpen);
+        }}>
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={menuOpen ? "m6 6 12 12M6 18 18 6" : "M4 6h16M4 12h16M4 18h16"} /></svg>Views
         </button>
         <div id={viewMenuId} className="guide-viewbar" data-open={menuOpen} aria-label="Venue views" data-guide-overlay>
@@ -136,8 +140,16 @@ export function SeatingGuide({ data }: { data: GuideData }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">{dusk ? <path d="M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z" /> : <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5" /></>}</svg>
           </span></span><span>{dusk ? "Evening" : "Daylight"}</span>
         </button>}
+          <div className="guide-table-controls-slot" ref={setTableControlsHost} />
         </div>
       </div>
+      <VenueInspection snapshot={snapshot} directory={data.directory} chairsApproved={chairsApproved} resetKey={request?.key} controlsHost={tableControlsHost} onInspect={() => {
+        setExpanded(false);
+        if (menuOpen) {
+          setMenuOpen(false);
+          if (window.matchMedia?.("(max-width: 1050px)").matches) menuButton.current?.focus();
+        }
+      }}>
       <div className="venue-stage">
         {view === "3d" && !unavailable ? <Suspense fallback={<p className="guide-loading" role="status">Preparing the venue…</p>}><VenueCanvas
           parameters={layout.parameters} led={layout.led} snapshot={furnitureSnapshot} layout={layout}
@@ -152,7 +164,8 @@ export function SeatingGuide({ data }: { data: GuideData }) {
         </VenuePlan>}
         {tourLabel && <p className="guide-tour-label" role="status" data-guide-overlay>{tourLabel}</p>}
       </div>
-      <p className="guide-scene-note" data-guide-overlay>{unavailable ? "The overhead view is available on this device." : view === "3d" ? "Drag to look around · pinch or scroll to zoom" : "Your selected place is outlined in gold."} <span>Venue preview · positions are approximate.</span></p>
+      </VenueInspection>
+      <p className="guide-scene-note" data-guide-overlay>{unavailable ? "The overhead view is available on this device." : view === "3d" ? "Drag to look around · tap a table to see guests" : "Your selected place is outlined in gold."} <span>Venue preview · positions are approximate.</span></p>
     </div> : <p className="guide-empty" role="status" data-guide-overlay>The venue view will be available once the table layout is ready.</p>}
     <p className="guide-welcome">Enjoy a little tour of the venue before we celebrate together.</p>
     </div>

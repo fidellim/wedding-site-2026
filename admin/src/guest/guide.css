@@ -155,7 +155,7 @@
 .guide-lighting-toggle[aria-checked="true"] .guide-lighting-track { background: var(--wedding-burgundy); }
 .guide-lighting-toggle[aria-checked="true"] .guide-lighting-thumb { transform: translateX(20px); }
 .guide-lighting-toggle:hover { color: var(--wedding-burgundy); }
-@media (max-width: 680px) {
+@media (max-width: 1050px) {
   .guide-heading--logo { top: max(18px, env(safe-area-inset-top)); left: 16px; padding: 4px; }
   .guide-heading--logo img { width: 72px; height: auto; }
   .guide-controls { top: max(24px, env(safe-area-inset-top)); right: 16px; gap: 8px; }
@@ -172,3 +172,25 @@
   .guest-guide-page main:has(> .guide-back) .guide-controls { top: 72px; }
 }
 @media (prefers-reduced-motion: reduce) { .guide-lighting-track, .guide-lighting-thumb { transition: none; } }
+
+/* Exploration stays secondary to the guest's own seat. */
+.guide-inspection { position: absolute; inset: 0; pointer-events: none; }
+.guide-table-controls-slot { display: flex; align-items: center; min-width: 0; }
+.guide-inspection-controls { padding: 0 0 0 8px; border-left: 1px solid var(--wedding-line); background: transparent; color: var(--wedding-ink); font-size: .75rem; pointer-events: auto; }
+.guide-inspection-controls select { min-height: 44px; width: 150px; max-width: 100%; text-overflow: ellipsis; color: var(--wedding-ink); background: var(--wedding-paper); font: inherit; }
+.guide-inspection-controls select:focus-visible { outline: 3px solid #816a00; outline-offset: 3px; }
+.guide-inspection .venue-seat-details { right: 24px; bottom: 28px; max-height: calc(100% - 180px); pointer-events: auto; background: var(--wedding-paper); color: var(--wedding-ink); border: 0; box-shadow: 0 12px 38px rgba(19,39,63,.14); }
+.guide-inspection .venue-seat-tooltip { pointer-events: auto; }
+.guide-table-guest { display: block; padding: 10px 0; border-bottom: 1px solid var(--wedding-line); overflow-wrap: anywhere; }
+@media (max-width: 680px) {
+  .guide-inspection .venue-seat-details { left: 16px; right: 16px; bottom: 205px; width: auto; max-height: calc(100% - 360px); }
+}
+
+.guide-scene-card:has(.venue-seat-details) .guide-scene-note { visibility: hidden; }
+@media (max-width: 1050px) {
+  .guide-table-controls-slot { display: block; }
+  .guide-controls .guide-viewbar { width: 240px; }
+  .guide-inspection-controls { display: block; width: 100%; padding: 12px 6px 6px; border-left: 0; border-top: 1px solid var(--wedding-line); }
+  .guide-inspection-controls label { flex-direction: column; align-items: stretch; gap: 8px; }
+  .guide-inspection-controls select { width: 100%; max-width: none; }
+}

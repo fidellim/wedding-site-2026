@@ -11,6 +11,7 @@ const migrationPaths = [
   "supabase/migrations/20261004000100_add_venue_reconstruction_estimates.sql",
   "supabase/migrations/20261013000100_retire_guest_seating_tokens.sql",
   "supabase/migrations/20261029000100_preserve_guest_table_names.sql",
+  "supabase/migrations/20261029000200_add_guest_seating_directory.sql",
 ];
 
 const forbiddenPatterns = [

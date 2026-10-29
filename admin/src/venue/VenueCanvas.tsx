@@ -59,7 +59,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
-    renderer.domElement.setAttribute("aria-label", highlightTarget !== undefined ? "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Choose your name in the seating panel to highlight your place." : "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Click a seat or table for seating details. Use view buttons and the Inspect table menu for keyboard navigation.");
+    renderer.domElement.setAttribute("aria-label", highlightTarget !== undefined ? "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Choose your name in the seating panel to highlight your place. Tap a table or chair for guest details; use Explore tables for keyboard navigation." : "Interactive 3D venue. Drag to rotate, pinch or scroll to zoom. Click a seat or table for seating details. Use view buttons and the Inspect table menu for keyboard navigation.");
     renderer.domElement.setAttribute("role", "img");
     container.prepend(renderer.domElement);
     const scene = new THREE.Scene(); scene.background = new THREE.Color("#e7ebe5"); scene.fog = new THREE.Fog("#e7ebe5", 180, 330);
@@ -120,7 +120,16 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       const rect = renderer.domElement.getBoundingClientRect();
       raycaster.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1), camera);
       const object = raycaster.intersectObjects(furniture.root.children, true)[0]?.object;
-      return object?.userData.furnitureTarget ?? object?.parent?.userData.furnitureTarget ?? null;
+      const target: FurnitureTarget | null = object?.userData.furnitureTarget ?? object?.parent?.userData.furnitureTarget ?? null;
+      if (!target || !inspectionRef.current) return target;
+      // At a distant overview, chairs are too small to target reliably.
+      if (target.seatNumber !== undefined && object) {
+        const point = object.getWorldPosition(new THREE.Vector3());
+        const edge = point.clone().add(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(.44));
+        const chairPixels = Math.abs(edge.project(camera).x - point.project(camera).x) * rect.width / 2;
+        if (!inspectionRef.current.chairsEnabled || (highlightTarget !== undefined && chairPixels < 18)) return { tableId: target.tableId };
+      }
+      return target;
     }
     const pointers = new Set<number>();
     let press: { x: number; y: number; id: number; dragged: boolean } | null = null;
@@ -132,7 +141,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     }
     function pointerMove(event: PointerEvent) {
       if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) press.dragged = true;
-      if (pointers.size || event.pointerType === "touch") return;
+      if (pointers.size || event.pointerType === "touch" || journey || transition) return;
       const target = hit(event);
       renderer.domElement.style.cursor = target ? "pointer" : "grab";
       inspectionRef.current?.peek(target ? { target, x: event.clientX, y: event.clientY } : null);
@@ -156,7 +165,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     let transition: { start: number; from: THREE.Vector3; to: THREE.Vector3; fromTarget: THREE.Vector3; toTarget: THREE.Vector3 } | null = null;
     let frame = 0, last = 0, visible = true, disposed = false;
     let journey: { start: number; positions: THREE.CatmullRomCurve3; targets: THREE.CatmullRomCurve3 } | null = null;
-    function stop() { transition = null; journey = null; controls.enabled = true; setMoving(false); tourLabel.current?.(""); }
+    function stop() { inspectionRef.current?.peek(null); transition = null; journey = null; controls.enabled = true; setMoving(false); tourLabel.current?.(""); }
     function skip() {
       if (journey) { camera.position.copy(journey.positions.getPoint(1)); controls.target.copy(journey.targets.getPoint(1)); }
       else if (transition) { camera.position.copy(transition.to); controls.target.copy(transition.toTarget); }
@@ -240,7 +249,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       // Pan remains on the venue's horizontal plane, never below lawn grade.
       controls.target.z = Math.max(0, controls.target.z);
       if (!reduced) venue.waterTexture.offset.x = now * .000003;
-      const active = guestTarget.current ?? inspectionRef.current?.active;
+      const active = inspectionRef.current?.active ?? guestTarget.current;
       const nextOutlined = active ? highlightedObject(active) : null;
       if (nextOutlined !== outlined) { outlined = nextOutlined; outline.visible = !!outlined; if (outlined) outline.setFromObject(outlined); }
       if (outlined) outline.update();
@@ -258,9 +267,10 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       let seatObstacle: LabelObstacle | null = null;
       if (label) label.style.visibility = "hidden";
       if (leader) leader.style.visibility = "hidden";
-      if (label && leader && arrow && outlined && guestTarget.current?.seatNumber !== undefined) {
+      const ownChair = guestTarget.current?.seatNumber !== undefined ? highlightedObject(guestTarget.current) : null;
+      if (label && leader && arrow && ownChair) {
         // Anchor the leader to the cushion, using the chair's complete world transform.
-        const point = outlined.localToWorld(new THREE.Vector3(0, 0, .52));
+        const point = ownChair.localToWorld(new THREE.Vector3(0, 0, .52));
         const clip = new THREE.Vector4(point.x, point.y, point.z, 1).applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
         // Divide by |w| so a seat behind the camera still gives the correct arrow direction.
         const divisor = Math.max(Math.abs(clip.w), .0001);

@@ -107,12 +107,18 @@ try {
   const reviewed = structuredClone(w.published);
   w = await rpc("admin_release_seating_guide", [reviewed.id, false]);
   await execFile("20261029000100_preserve_guest_table_names.sql");
+  await execFile("20261029000200_add_guest_seating_directory.sql");
   const guide = await rpc("get_seating_guide_for_invite", ["test"]);
   assert.equal(guide.revisionNumber, reviewed.revisionNumber);
   assert.deepEqual(guide.venueLayout, layout);
   assert.equal(guide.chairsApproved, false);
   assert.equal(guide.invitees.length, 2); assert.equal(guide.assignments.length, 2);
-  assert.ok(!JSON.stringify(guide).includes("SECRET"));
+  assert.ok(!JSON.stringify({ ...guide, directory: [] }).includes("SECRET"));
+  assert.equal(guide.directory.length, 3);
+  assert.ok(guide.directory.some(entry => entry.fullName === "SECRET OTHER NAME"));
+  assert.ok(guide.directory.every(entry => Object.keys(entry).sort().join(",") === "fullName,tableId"));
+  assert.ok(!JSON.stringify(guide.directory).includes("SECRET NOTE"));
+  assert.ok(!JSON.stringify(guide.directory).includes("SECRET NON ATTENDING"));
   assert.ok(guide.invitees.every(i => !('privateNotes' in i) && !('tags' in i)));
   assert.deepEqual(guide.tables, reviewed.tables);
   assert.equal((await rpc("get_seating_guide_for_invite", ["OTHER"])).invitees.length, 1);
@@ -149,6 +155,7 @@ try {
   await rejected("admin_release_seating_guide", [reviewed.id, true], /STALE_VERSION/);
   w = await rpc("admin_release_seating_guide", [w.published.id, true]);
   assert.equal((await rpc("get_seating_guide_for_invite", ["TEST"])).chairsApproved, true);
+  assert.ok((await rpc("get_seating_guide_for_invite", ["TEST"])).directory.every(entry => Number.isInteger(entry.seatNumber)));
   assert.deepEqual((await rpc("get_seating_guide_for_invite", ["TEST"])).venueLayout, overlap);
   w = await rpc("admin_set_guest_lookup_enabled", [false]);
   assert.equal(await rpc("get_seating_guide_for_invite", ["TEST"]), null);
