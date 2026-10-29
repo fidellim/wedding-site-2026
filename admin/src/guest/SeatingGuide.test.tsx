@@ -38,17 +38,18 @@ it("automatically selects a single person, and only outlines a chair after expli
   expect(Number(container.querySelector("[data-guide-highlight]")?.getAttribute("cx"))).toBeCloseTo(1.35);
 });
 
-it("removes other parties, non-attendees, notes, preferences, and identifying table names from previews", () => {
+it("removes other parties, non-attendees, notes, and preferences while preserving table names in previews", () => {
   const data = previewFixture("split");
   const snapshot = structuredClone(data.snapshot);
   const foreign = { ...snapshot.invitees[0], id: "other", invitationPartyId: "other-party", fullName: "Secret other name" };
   snapshot.invitees.push(foreign, { ...snapshot.invitees[0], id: "declined", attendanceStatus: "not_attending", fullName: "Secret declined" });
   snapshot.assignments.push({ inviteeId: foreign.id, seatId: "sample-round-8" });
   snapshot.invitees[0].privateNotes = "Secret notes";
-  snapshot.tables[0].name = "Secret identifying name";
+  snapshot.tables[0].name = "2021";
   const guide = partyGuide(snapshot, data.party.id)!;
   expect(guide.snapshot.invitees).toHaveLength(2);
   expect(guide.snapshot.assignments).toHaveLength(2);
+  expect(guide.snapshot.tables[0].name).toBe("2021");
   expect(JSON.stringify(guide)).not.toContain("Secret");
   expect(parseGuide(null)).toBeNull();
   expect(() => parseGuide({ party: data.party })).toThrow("Invalid seating response");
@@ -90,4 +91,15 @@ it("collapses the party list while keeping the selected seat and primary action 
   expect(screen.getByRole("button", { name: "Show my seat" })).toBeVisible();
   fireEvent.click(toggle);
   expect(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ })).toBeVisible();
+});
+
+
+it("shows saved table names in seating details and the overhead fallback", async () => {
+  const data = previewFixture("single");
+  data.snapshot.tables[0].name = "2021";
+  const { container } = render(<SeatingGuide data={data} />);
+  expect(screen.getByRole("button", { name: /Alex\s*2021 · Seat 3/ })).toBeVisible();
+  expect(container.querySelector(".guide-destination")).toHaveTextContent("2021 · Seat 3");
+  await screen.findByRole("img", { name: "Venue overhead plan" });
+  expect(screen.getByRole("img", { name: "Venue overhead plan" })).toHaveTextContent("2021");
 });

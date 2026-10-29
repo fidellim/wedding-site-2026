@@ -102,13 +102,13 @@ export function SeatingGuide({ data }: { data: GuideData }) {
         const assignedSeat = snapshot.seats.find(s => s.id === snapshot.assignments.find(a => a.inviteeId === invitee.id)?.seatId);
         const assignedTable = snapshot.tables.find(t => t.id === assignedSeat?.tableId);
         return <button key={invitee.id} aria-pressed={personId === invitee.id} onClick={() => selectPerson(invitee.id)}>
-          <strong>{invitee.fullName}</strong><span>{assignedTable && assignedSeat ? `Table ${assignedTable.number} · Seat ${assignedSeat.number}` : invitee.requiresSeat ? "Your place will be shared soon" : "No separate seat assigned"}</span>
+          <strong>{invitee.fullName}</strong><span>{assignedTable && assignedSeat ? `${assignedTable.name} · Seat ${assignedSeat.number}` : invitee.requiresSeat ? "Your place will be shared soon" : "No separate seat assigned"}</span>
         </button>;
       })}
       {!snapshot.invitees.length && <p>Your party’s seating details will be shared soon.</p>}
     </div>
     <div className="guide-destination" aria-live="polite">
-      {person && table && seat ? <p><strong>{person.fullName}</strong><span>Table {table.number} <i>·</i> Seat {seat.number}</span></p> : <p>{person ? "Your seating details will be shared soon." : "Choose your name to find your place."}</p>}
+      {person && table && seat ? <p><strong>{person.fullName}</strong><span>{table.name} <i>·</i> Seat {seat.number}</span></p> : <p>{person ? "Your seating details will be shared soon." : "Choose your name to find your place."}</p>}
       <button disabled={!target || !placement || unavailable} onClick={showSeat}>Show my seat <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 19 19 5M5 5h14v14" /></svg></button>
     </div>
     <div className="guide-seat-view" role="group" aria-label="Seat camera view">

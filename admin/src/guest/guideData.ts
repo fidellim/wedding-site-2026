@@ -21,7 +21,7 @@ export function partyGuide(snapshot: SeatingSnapshot, partyId: string, chairsApp
     venueLayout: snapshot.venueLayout,
     invitationParties: [party], invitees,
     assignments: snapshot.assignments.filter(a => allowed.has(a.inviteeId)),
-    tables: snapshot.tables.map(t => ({ ...t, name: `Table ${t.number}` })), seats: snapshot.seats,
+    tables: snapshot.tables, seats: snapshot.seats,
   } };
 }
 

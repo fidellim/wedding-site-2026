@@ -106,6 +106,7 @@ try {
   w = await rpc("admin_publish_seating_plan", [w.draft.version, true]);
   const reviewed = structuredClone(w.published);
   w = await rpc("admin_release_seating_guide", [reviewed.id, false]);
+  await execFile("20261029000100_preserve_guest_table_names.sql");
   const guide = await rpc("get_seating_guide_for_invite", ["test"]);
   assert.equal(guide.revisionNumber, reviewed.revisionNumber);
   assert.deepEqual(guide.venueLayout, layout);
@@ -113,7 +114,7 @@ try {
   assert.equal(guide.invitees.length, 2); assert.equal(guide.assignments.length, 2);
   assert.ok(!JSON.stringify(guide).includes("SECRET"));
   assert.ok(guide.invitees.every(i => !('privateNotes' in i) && !('tags' in i)));
-  assert.ok(guide.tables.every(t => t.name === `Table ${t.number}`));
+  assert.deepEqual(guide.tables, reviewed.tables);
   assert.equal((await rpc("get_seating_guide_for_invite", ["OTHER"])).invitees.length, 1);
   for (const code of ["", "invalid", "DECLINED", null]) assert.equal(await rpc("get_seating_guide_for_invite", [code]), null);
   // Rehearse and apply the cleanup against a populated, released guide.
