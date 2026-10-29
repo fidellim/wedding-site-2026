@@ -123,6 +123,13 @@ establish guessability; verify code issuance separately. Future invitation codes
 must also remain unique after trimming and ignoring case.
 
 
+Navigation instructions are available from the info button beside **Your seats**.
+Help opens a modal sheet on phones and a centered dialog on desktop. Opening
+Help, Views or guest details closes the other overlays. Views remains at the
+top-right; on smaller screens its menu is anchored directly below its button,
+including pages with a Back to invitation link. The development previews include
+that link so they exercise the same layout as the guest page.
+
 ## Exploring other guests' tables
 
 Invited guests can explore the released plan by hovering a chair on desktop or

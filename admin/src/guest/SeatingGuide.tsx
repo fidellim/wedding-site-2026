@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { GuideHelp } from "./GuideHelp";
 import { VenuePlan } from "../venue/VenuePlan";
 import { TableFurniture } from "../venue/TableFurniture";
 import { tableLabel } from "../venue/tableLabel";
@@ -20,6 +21,9 @@ export function SeatingGuide({ data }: { data: GuideData }) {
   const viewMenuId = useId();
   const controls = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const helpButton = useRef<HTMLButtonElement>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [inspectionReset, setInspectionReset] = useState(0);
   const [tableControlsHost, setTableControlsHost] = useState<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(true);
@@ -96,9 +100,17 @@ export function SeatingGuide({ data }: { data: GuideData }) {
     <header className="guide-heading guide-heading--logo" data-guide-overlay><img src={logoUrl} alt="Hannah & Fidel" width="512" height="512" /><h1 className="guide-sr-only">Your seating guide</h1></header>
     <div className="guide-layout">
     <aside className="guide-seats" aria-label="Your seats" data-guide-overlay>
-    <button className="guide-panel-toggle" aria-expanded={expanded} aria-controls={partyPanelId} onClick={() => setExpanded(!expanded)}>
-      Your seats <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={expanded ? "m6 15 6-6 6 6" : "m6 9 6 6 6-6"} /></svg>
+    <div className="guide-panel-header">
+      <div className="guide-panel-title"><span>Your seats</span>
+        <button className="guide-info-toggle" ref={helpButton} aria-label="Seating guide help" aria-haspopup="dialog" onClick={() => {
+          setMenuOpen(false); setInspectionReset(value => value + 1);
+          setRequest(null); setTourLabel(""); setHelpOpen(true);
+        }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7v2" /></svg></button>
+      </div>
+    <button aria-label="Your seats" className="guide-panel-toggle" aria-expanded={expanded} aria-controls={partyPanelId} onClick={() => setExpanded(!expanded)}>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={expanded ? "m6 15 6-6 6 6" : "m6 9 6 6 6-6"} /></svg>
     </button>
+    </div>
     <div id={partyPanelId} hidden={!expanded} className="guide-party" aria-label="Your invitation party">
       {snapshot.invitees.map(invitee => {
         const assignedSeat = snapshot.seats.find(s => s.id === snapshot.assignments.find(a => a.inviteeId === invitee.id)?.seatId);
@@ -125,7 +137,7 @@ export function SeatingGuide({ data }: { data: GuideData }) {
         if (event.key === "Escape" && menuOpen) { setMenuOpen(false); menuButton.current?.focus(); }
       }}>
         <button className="guide-menu-toggle" ref={menuButton} aria-expanded={menuOpen} aria-controls={viewMenuId} onClick={() => {
-          if (!menuOpen) { setRequest(null); setTourLabel(""); }
+          if (!menuOpen) { setHelpOpen(false); setInspectionReset(value => value + 1); setRequest(null); setTourLabel(""); }
           setMenuOpen(!menuOpen);
         }}>
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={menuOpen ? "m6 6 12 12M6 18 18 6" : "M4 6h16M4 12h16M4 18h16"} /></svg>Views
@@ -143,8 +155,8 @@ export function SeatingGuide({ data }: { data: GuideData }) {
           <div className="guide-table-controls-slot" ref={setTableControlsHost} />
         </div>
       </div>
-      <VenueInspection snapshot={snapshot} directory={data.directory} chairsApproved={chairsApproved} resetKey={request?.key} controlsHost={tableControlsHost} onInspect={() => {
-        setExpanded(false);
+      <VenueInspection snapshot={snapshot} directory={data.directory} chairsApproved={chairsApproved} resetKey={`${request?.key ?? ""}:${inspectionReset}`} controlsHost={tableControlsHost} onInspect={() => {
+        setExpanded(false); setHelpOpen(false);
         if (menuOpen) {
           setMenuOpen(false);
           if (window.matchMedia?.("(max-width: 1050px)").matches) menuButton.current?.focus();
@@ -165,10 +177,12 @@ export function SeatingGuide({ data }: { data: GuideData }) {
         {tourLabel && <p className="guide-tour-label" role="status" data-guide-overlay>{tourLabel}</p>}
       </div>
       </VenueInspection>
-      <p className="guide-scene-note" data-guide-overlay>{unavailable ? "The overhead view is available on this device." : view === "3d" ? "Drag to look around · tap a table to see guests" : "Your selected place is outlined in gold."} <span>Venue preview · positions are approximate.</span></p>
     </div> : <p className="guide-empty" role="status" data-guide-overlay>The venue view will be available once the table layout is ready.</p>}
     <p className="guide-welcome">Enjoy a little tour of the venue before we celebrate together.</p>
     </div>
     </div>
+    <GuideHelp open={helpOpen} chairsApproved={chairsApproved} unavailable={unavailable} onClose={() => {
+      setHelpOpen(false); helpButton.current?.focus();
+    }} />
   </section>;
 }

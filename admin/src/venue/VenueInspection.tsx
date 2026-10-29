@@ -24,7 +24,7 @@ export function seatGuest(snapshot: SeatingSnapshot, tableId: string, number: nu
   return snapshot.invitees.find(i => i.id === assignment?.inviteeId)?.fullName ?? "Unassigned";
 }
 export function VenueInspection({ snapshot, children, directory, chairsApproved = true, onInspect, resetKey, controlsHost }: {
-  snapshot: SeatingSnapshot; children: ReactNode; directory?: SeatingDirectoryEntry[]; chairsApproved?: boolean; onInspect?: () => void; resetKey?: number; controlsHost?: HTMLElement | null;
+  snapshot: SeatingSnapshot; children: ReactNode; directory?: SeatingDirectoryEntry[]; chairsApproved?: boolean; onInspect?: () => void; resetKey?: string | number; controlsHost?: HTMLElement | null;
 }) {
   const guestView = directory !== undefined;
   const normalize = (target: FurnitureTarget) => chairsApproved ? target : { tableId: target.tableId };
