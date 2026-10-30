@@ -13,10 +13,10 @@ describe("physical venue layout", () => {
     const p = estimatedPlacement(t);
     const chairs = physicalChairs(t, p);
     expect(chairs.map(c => c.number)).toEqual([3, 4, 1, 2]);
-    expect(chairs[2]).toMatchObject({ number: 1, y: p.depth / 2 + .45 });
+    expect(chairs[2]).toMatchObject({ number: 1, y: -(p.depth / 2 + .45) });
     expect(physicalChairs(t, { ...p, rotation: 90 })).toEqual(chairs);
     const round = { ...t, shape: "round" as const, seatOneAngle: 90 };
-    expect(physicalChairs(round, p)[0].x).toBeCloseTo(p.width / 2 + .45);
+    expect(physicalChairs(round, p)[0].x).toBeCloseTo(-(p.width / 2 + .45));
   });
   it("blocks missing assigned tables, but allows empty unplaced tables", () => {
     const w = placed(); delete w.draft.venueLayout!.tables["table-2"];

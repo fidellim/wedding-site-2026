@@ -3,6 +3,36 @@ import { afterEach, expect, it, vi } from "vitest";
 import { createDemoWorkspace } from "../data/memoryRepository";
 import { defaultVenueLayout, estimatedPlacement } from "./layout";
 import { buildFurniture } from "./buildFurniture";
+import { cameraView } from "./venueModel";
+import { toScenePosition } from "./venueCoordinates";
+import { seatDestination } from "../guest/flight";
+
+it("places planner Seat 1 on the LED side and Seat 3 on the right when looking toward the LED", () => {
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+  const snapshot = createDemoWorkspace().draft;
+  const table = snapshot.tables[0];
+  table.capacity = 8; table.seatOneAngle = 0;
+  const placement = { ...estimatedPlacement(table), x: 5, y: -2 };
+  const layout = { ...defaultVenueLayout(), tables: { [table.id]: placement } };
+  const furniture = buildFurniture(snapshot, layout);
+  try {
+    furniture.root.updateMatrixWorld(true);
+    const group = furniture.root.getObjectByName(`TABLE_${table.id}`)!;
+    const position = (number: number) => group.children.find(child => child.userData.furnitureTarget?.seatNumber === number)!.getWorldPosition(new THREE.Vector3());
+    const center = group.getWorldPosition(new THREE.Vector3());
+    const stage = new THREE.Vector3(...toScenePosition([layout.landmarks.stage.x, layout.landmarks.stage.y, 0]));
+    expect(position(1).distanceTo(stage)).toBeLessThan(position(5).distanceTo(stage));
+    const view = cameraView(layout.parameters, "stage", 1.5, layout.led);
+    const camera = new THREE.PerspectiveCamera(45, 1.5, .1, 1000);
+    camera.up.set(0, 0, 1); camera.position.fromArray(view.position); camera.lookAt(new THREE.Vector3(...view.target));
+    camera.updateMatrixWorld(true);
+    expect(position(3).project(camera).x).toBeGreaterThan(center.clone().project(camera).x);
+    expect(position(7).project(camera).x).toBeLessThan(center.clone().project(camera).x);
+    const destination = seatDestination(snapshot, layout, { tableId: table.id, seatNumber: 1 })!;
+    expect(destination.target[0]).toBeCloseTo(position(1).x);
+    expect(destination.target[1]).toBeCloseTo(position(1).y);
+  } finally { furniture.dispose(); }
+});
 
 afterEach(() => vi.restoreAllMocks());
 

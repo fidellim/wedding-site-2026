@@ -48,8 +48,14 @@ export function isVenueLayout(value: unknown): value is VenueLayout {
       && Number.isFinite(t.width) && t.width >= .5 && t.width <= 10 && Number.isFinite(t.depth) && t.depth >= .5 && t.depth <= 10
       && typeof t.dimensionsVerified === "boolean");
 }
-/** Chair centers in physical units, with stable numbering independent of table heading. */
+/** Rotate the planner toward the LED (+plan Y), preserving seat order and saved table headings.
+ * Shared by the 2D/3D furniture, seat highlights, and guest camera destinations. */
 export function physicalChairs(table: SeatingTable, p: TablePlacement) {
+  return plannerChairs(table, p).map(chair => ({ ...chair, x: -chair.x, y: -chair.y }));
+}
+
+/** Chair centers in the planner's local top-first orientation, in physical units. */
+function plannerChairs(table: SeatingTable, p: TablePlacement) {
   if (table.shape === "round") return Array.from({ length: table.capacity }, (_, i) => {
     const angle = (table.seatOneAngle + i * 360 / table.capacity) * Math.PI / 180;
     return { number: i + 1, x: (p.width / 2 + .45) * Math.sin(angle), y: -(p.width / 2 + .45) * Math.cos(angle) };

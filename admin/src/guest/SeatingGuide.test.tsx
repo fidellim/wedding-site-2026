@@ -35,7 +35,7 @@ it("automatically selects a single person, and only outlines a chair after expli
   expect(Number(container.querySelector("[data-guide-highlight]")?.getAttribute("r"))).toBeCloseTo(1.7);
   rerender(<SeatingGuide data={{ ...data, chairsApproved: true }} />);
   expect(container.querySelector("[data-guide-highlight]")).toHaveAttribute("r", "0.4");
-  expect(Number(container.querySelector("[data-guide-highlight]")?.getAttribute("cx"))).toBeCloseTo(1.35);
+  expect(Number(container.querySelector("[data-guide-highlight]")?.getAttribute("cx"))).toBeCloseTo(-1.35);
 });
 
 it("removes other parties, non-attendees, notes, and preferences while preserving table names in previews", () => {
@@ -65,8 +65,8 @@ it("reflects plan Y once and rotates chair offsets when focusing a numbered chai
   const chair = seatDestination(snapshot, layout, { tableId: "sample-long", seatNumber: 6 }, 1.5)!;
   expect(table.target).toEqual([5, 4, .4]);
   expect(chair.target).not.toEqual(table.target);
-  expect(chair.target[0]).toBeCloseTo(3.95);
-  expect(chair.target[1]).toBeCloseTo(3.625);
+  expect(chair.target[0]).toBeCloseTo(6.05);
+  expect(chair.target[1]).toBeCloseTo(4.375);
 });
 
 it("requires review of the current published revision and resets review when chair approval changes", () => {
