@@ -1,10 +1,11 @@
 export interface LabelObstacle { left: number; top: number; width: number; height: number }
 interface Anchor { id: string; x: number; y: number; width: number; height: number }
 export interface LandmarkCallout extends Anchor { left: number; top: number; lineX: number; lineY: number }
-const order = ["lawn", "stage", "plaza", "entrance", "pavilion", "sand", "water"];
+const order = ["lawn", "stage", "event-couple", "event-cake", "plaza", "entrance", "pavilion", "sand", "water"];
 const preferred: Record<string, [number, number]> = {
   lawn: [44, -22], stage: [42, 20], plaza: [40, -54], entrance: [28, -52],
   pavilion: [-190, -36], sand: [-130, 24], water: [36, 18],
+  "event-couple": [-130, -44], "event-cake": [-110, 28],
 };
 
 /** Screen-space placement preserves the physical anchor without covering it with a tag. */

@@ -43,6 +43,7 @@ try {
   assert.equal((await db.query("select exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'seating_plan_state' and column_name = 'venue_layout') as present")).rows[0].present, false);
   await execFile("20261002000100_add_shared_venue_layout.sql");
   await execFile("20261004000100_add_venue_reconstruction_estimates.sql");
+  await execFile("20261031000100_add_couple_and_cake_furniture.sql");
   assert.deepEqual(await db.query("select (select count(*) from public.seating_tables) as tables, (select count(*) from public.seating_seats) as seats, (select count(*) from public.seating_assignments) as assignments, (select count(*) from public.invites) as invites"), baseline);
   assert.equal((await db.query(inspectionSql)).rows[0].save_function_exists, true);
   w = await workspace(); assert.equal(w.draft.venueLayout, null);
@@ -164,6 +165,40 @@ try {
   assert.equal(await rpc("get_seating_guide_for_invite", ["TEST"]), null);
   assert.equal((await db.query("select has_function_privilege('anon', 'public.admin_release_seating_guide(uuid,boolean)', 'execute') as allowed")).rows[0].allowed, false);
   assert.equal((await db.query("select has_function_privilege('anon', 'public.get_seating_guide_for_invite(text)', 'execute') as allowed")).rows[0].allowed, true);
+  // Couple and cake tables persist through the existing immutable publication contract.
+  const furnitureLayout = { ...structuredClone(layout), eventFurniture: {
+    couple: { x: -7, y: 5, rotation: 330, width: 1.8, depth: .75, dimensionsVerified: false },
+    cake: { x: -10, y: 2, rotation: 0, width: .9, depth: .9, dimensionsVerified: false },
+  } };
+  const guestRecords = { tables: w.draft.tables, seats: w.draft.seats, assignments: w.draft.assignments };
+  for (const eventFurniture of [null, [], { buffet: furnitureLayout.eventFurniture.cake }, { cake: null },
+    { cake: { ...furnitureLayout.eventFurniture.cake, depth: 2 } },
+    { couple: { ...furnitureLayout.eventFurniture.couple, rotation: 360 } }]) {
+    await rejected("admin_save_venue_layout", [w.draft.version, { ...furnitureLayout, eventFurniture }], /INVALID_VENUE_LAYOUT/);
+  }
+  w = await rpc("admin_save_venue_layout", [w.draft.version, furnitureLayout]);
+  assert.deepEqual({ tables: w.draft.tables, seats: w.draft.seats, assignments: w.draft.assignments }, guestRecords);
+  assert.deepEqual(w.draft.venueLayout, furnitureLayout);
+  w = await rpc("admin_publish_seating_plan", [w.draft.version, true]);
+  const furnitureRevision = structuredClone(w.published);
+  assert.deepEqual(furnitureRevision.venueLayout.eventFurniture, furnitureLayout.eventFurniture);
+  w = await rpc("admin_release_seating_guide", [w.published.id, false]);
+  assert.deepEqual((await rpc("get_seating_guide_for_invite", ["TEST"])).venueLayout.eventFurniture, furnitureLayout.eventFurniture);
+  const outside = structuredClone(furnitureLayout); outside.eventFurniture.couple.x = 100;
+  w = await rpc("admin_save_venue_layout", [w.draft.version, outside]);
+  await rejected("admin_publish_seating_plan", [w.draft.version, true], /table_outside_venue/);
+  assert.deepEqual(w.published, furnitureRevision);
+  const collision = structuredClone(furnitureLayout);
+  collision.eventFurniture.cake = { ...collision.eventFurniture.cake, x: layout.tables[a.id].x, y: layout.tables[a.id].y };
+  w = await rpc("admin_save_venue_layout", [w.draft.version, collision]);
+  const validation = await rpc("seating_venue_publication_validation", []);
+  assert.ok(validation.warnings.some(warning => warning.relatedIds.includes("cake") && warning.relatedIds.includes(a.id)));
+  w = await rpc("admin_restore_seating_revision", [w.draft.version, furnitureRevision.id]);
+  assert.deepEqual(w.draft.venueLayout, furnitureLayout);
+  assert.deepEqual({ tables: w.draft.tables, seats: w.draft.seats, assignments: w.draft.assignments }, guestRecords);
+  // Removing optional furniture and restoring a legacy revision remain supported.
+  w = await rpc("admin_save_venue_layout", [w.draft.version, layout]);
+  assert.equal(w.draft.venueLayout.eventFurniture, undefined);
   await db.query("select set_config('test.admin_id', '', false)");
   await assert.rejects(rpc("admin_save_venue_layout", [w.draft.version, layout]), /administrator access required/);
   assert.equal((await db.query("select has_function_privilege('anon', 'public.admin_save_venue_layout(bigint,jsonb)', 'execute') as allowed")).rows[0].allowed, false);

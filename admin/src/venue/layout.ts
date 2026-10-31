@@ -1,4 +1,5 @@
 import { defaultSideCounts, rectangularChairs } from "../domain/tableLayout";
+import { eventFurnitureFootprint, eventFurnitureKinds, eventFurnitureNames, type EventFurnitureLayout } from "./eventFurniture";
 import type { PublicationValidation, SeatingSnapshot, SeatingTable } from "../domain/types";
 import { defaultParameters, reconstructionParameterKeys, ledLayout, normalizeParameters, stageLayout, venueLayout, type VenueParameters } from "./venueModel";
 
@@ -13,6 +14,7 @@ export interface VenueLayout {
   parameters: VenueParameters;
   led: "center" | "side";
   tables: Record<string, TablePlacement>;
+  eventFurniture?: EventFurnitureLayout;
   landmarks: Record<"stage" | "danceFloor" | "entrance", Point>;
 }
 export function defaultVenueLayout(): VenueLayout {
@@ -43,10 +45,14 @@ export function isVenueLayout(value: unknown): value is VenueLayout {
   const normalized = normalizeParameters(l.parameters);
   if (Object.keys(normalized).some(k => !(reconstructionParameterKeys.includes(k as keyof VenueParameters) && l.parameters[k as keyof VenueParameters] === undefined) && normalized[k as keyof VenueParameters] !== l.parameters[k as keyof VenueParameters])) return false;
   const point = (p: Point) => p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 200 && Math.abs(p.y) <= 200;
-  return ["stage", "danceFloor", "entrance"].every(k => point(l.landmarks[k as keyof VenueLayout["landmarks"]]))
-    && Object.values(l.tables).every(t => t && point(t) && Number.isFinite(t.rotation) && t.rotation >= 0 && t.rotation < 360
+  const placement = (t: TablePlacement) => t && point(t) && Number.isFinite(t.rotation) && t.rotation >= 0 && t.rotation < 360
       && Number.isFinite(t.width) && t.width >= .5 && t.width <= 10 && Number.isFinite(t.depth) && t.depth >= .5 && t.depth <= 10
-      && typeof t.dimensionsVerified === "boolean");
+      && typeof t.dimensionsVerified === "boolean";
+  return ["stage", "danceFloor", "entrance"].every(k => point(l.landmarks[k as keyof VenueLayout["landmarks"]]))
+    && Object.values(l.tables).every(placement)
+    && (l.eventFurniture === undefined || (!!l.eventFurniture && typeof l.eventFurniture === "object" && !Array.isArray(l.eventFurniture)
+      && Object.entries(l.eventFurniture).every(([key, p]) => eventFurnitureKinds.some(kind => kind === key) && placement(p)
+        && (key !== "cake" || p.width === p.depth))));
 }
 /** Rotate the planner toward the LED (+plan Y), preserving seat order and saved table headings.
  * Shared by the 2D/3D furniture, seat highlights, and guest camera destinations. */
@@ -98,6 +104,19 @@ export function layoutValidation(snapshot: SeatingSnapshot): PublicationValidati
   placed.forEach(({ table, f }, i) => {
     placed.slice(i + 1).forEach(other => { if (near(f, other.f)) warnings.push({ code: "layout_clearance", message: `${table.name} and ${other.table.name} may overlap or have less than 0.5 m clearance.`, relatedIds: [table.id, other.table.id] }); });
     obstacles.forEach(o => { if (near(f, o)) warnings.push({ code: "layout_clearance", message: `${table.name} may overlap or be too close to the ${o.label}.`, relatedIds: [table.id] }); });
+  });
+  const fixtures = eventFurnitureKinds.flatMap(kind => {
+    const p = layout.eventFurniture?.[kind];
+    return p ? [{ id: kind, name: eventFurnitureNames[kind], f: eventFurnitureFootprint(kind, p) }] : [];
+  });
+  fixtures.forEach(({ id, name, f }, index) => {
+    if (Math.abs(f.x) + f.halfWidth > layout.parameters.lawnWidth / 2 + 1e-6
+      || Math.abs(f.y) + f.halfDepth > layout.parameters.lawnLength / 2 + 1e-6) {
+      errors.push({ code: "table_outside_venue", message: `${name} and its furniture extend outside the reception lawn.`, relatedIds: [id] });
+    }
+    const others = [...placed.map(({ table, f }) => ({ id: table.id, name: table.name, f })), ...fixtures.slice(index + 1)];
+    others.forEach(other => { if (near(f, other.f)) warnings.push({ code: "layout_clearance", message: `${name} and ${other.name} may overlap or have less than 0.5 m clearance.`, relatedIds: [id, other.id] }); });
+    obstacles.forEach(o => { if (near(f, o)) warnings.push({ code: "layout_clearance", message: `${name} may overlap or be too close to the ${o.label}.`, relatedIds: [id] }); });
   });
   return { canPublish: !errors.length, errors, warnings };
 }

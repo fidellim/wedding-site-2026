@@ -4,6 +4,7 @@ import type { SeatingSnapshot } from "../domain/types";
 import { planToSceneScale } from "./venueCoordinates";
 import { physicalChairs, type VenueLayout } from "./layout";
 import { banquetChairGeometry } from "./banquetChair";
+import { buildEventFurniture } from "./buildEventFurniture";
 
 export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
   const root = new THREE.Group(); root.name = "TABLE_FURNITURE"; root.scale.fromArray(planToSceneScale);
@@ -49,6 +50,7 @@ export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
       marker.scale.y = -1;
     }
   });
+  buildEventFurniture(root, layout, chairGeometry, materials);
   return { root, dispose() {
     const geometries = new Set<THREE.BufferGeometry>([chairGeometry]);
     root.traverse(o => { if (o instanceof THREE.Mesh) geometries.add(o.geometry); });

@@ -4,6 +4,7 @@ import { flightProgress, flightViews, seatDestination, type SeatCameraView } fro
 import { useVenueInspection, sameTarget, type FurnitureTarget } from "./VenueInspection";
 import type { SeatingSnapshot } from "../domain/types";
 import { buildFurniture } from "./buildFurniture";
+import { eventFurnitureLandmarks } from "./eventFurniture";
 import { buildCeremony } from "./buildCeremony";
 import { ceremonyChairCount, ceremonyLayout } from "./ceremonyLayout";
 import type { VenueLayout } from "./layout";
@@ -92,6 +93,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
         const point = l.id === "stage" ? nextLayout?.landmarks.stage : l.id === "entrance" ? nextLayout?.landmarks.entrance : undefined;
         return point ? { ...l, position: [point.x, point.y, l.position[2]] } : l;
       });
+      landmarks.push(...eventFurnitureLandmarks(nextLayout));
       if (nextSnapshot && nextLayout) {
         furniture = buildFurniture(nextSnapshot, nextLayout); scene.add(furniture.root);
         const stage = venue.weddingLayout.getObjectByName("HF_STAGE");
@@ -359,9 +361,9 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     </div>
     <div className={`venue-labels venue-labels--callouts${labels ? "" : " is-hidden"}`} aria-hidden="true">
       <svg className="venue-label-leaders" width="100%" height="100%">
-        {venueLandmarks(parameters, led).map(item => <g key={item.id} ref={element => { if (element) leaderElements.current.set(item.id, element); else leaderElements.current.delete(item.id); }} style={{ visibility: "hidden" }}><line /><circle r="3" /></g>)}
+        {[...venueLandmarks(parameters, led), ...eventFurnitureLandmarks(layout)].map(item => <g key={item.id} ref={element => { if (element) leaderElements.current.set(item.id, element); else leaderElements.current.delete(item.id); }} style={{ visibility: "hidden" }}><line /><circle r="3" /></g>)}
       </svg>
-      {venueLandmarks(parameters, led).map(item => <span key={item.id} ref={element => { if (element) labelElements.current.set(item.id, element); else labelElements.current.delete(item.id); }} className={`venue-map-label venue-map-label-${item.id}`}><i />{item.label}</span>)}
+      {[...venueLandmarks(parameters, led), ...eventFurnitureLandmarks(layout)].map(item => <span key={item.id} ref={element => { if (element) labelElements.current.set(item.id, element); else labelElements.current.delete(item.id); }} className={`venue-map-label venue-map-label-${item.id}`}><i />{item.label}</span>)}
     </div>
     {moving && <button className="venue-skip" onClick={() => api.current?.skip()}>{focusRequest ? "Skip to my seat" : "Skip movement"}</button>}
   </div>;

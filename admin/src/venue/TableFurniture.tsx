@@ -2,6 +2,7 @@ import { tableLabel, tableTopLabel } from "./tableLabel";
 import { useVenueInspection, sameTarget, seatGuest, type FurnitureTarget } from "./VenueInspection";
 import type { SeatingSnapshot } from "../domain/types";
 import { physicalChairs, type VenueLayout } from "./layout";
+import { EventFurniture } from "./EventFurniturePlan";
 
 export function TableFurniture({ snapshot, layout, showSeatNumbers = true, guestView = false }: { snapshot: SeatingSnapshot; layout: VenueLayout; showSeatNumbers?: boolean; guestView?: boolean }) {
   const inspection = useVenueInspection();
@@ -18,7 +19,7 @@ export function TableFurniture({ snapshot, layout, showSeatNumbers = true, guest
       onKeyDown: (event: React.KeyboardEvent<SVGGElement>) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); inspection.select(target); } },
     };
   }
-  return <g>{snapshot.tables.map(t => {
+  return <g><EventFurniture layout={layout} />{snapshot.tables.map(t => {
     const p = layout.tables[t.id]; if (!p) return null;
     return <g key={t.id} transform={`translate(${p.x},${p.y}) rotate(${p.rotation})`}>
       <g {...interaction({ tableId: t.id }, `${tableLabel(t.name)} · View guests`)}>
