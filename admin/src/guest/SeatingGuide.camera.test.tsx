@@ -6,7 +6,7 @@ import { flightProgress, flightViews, seatDestination } from "./flight";
 
 vi.mock("../venue/VenueCanvas", () => ({
   VenueCanvas: (props: Parameters<typeof import("../venue/VenueCanvas").VenueCanvas>[0]) =>
-    <output data-testid="camera-request">{JSON.stringify(props.focusRequest)}</output>,
+    <><output data-testid="camera-request">{JSON.stringify(props.focusRequest)}</output><output data-testid="chair-numbers">{String(props.chairNumbers)}</output></>,
 }));
 afterEach(cleanup);
 const request = async () => JSON.parse((await screen.findByTestId("camera-request")).textContent!);
@@ -15,6 +15,7 @@ it("starts a single guest's aerial journey automatically", async () => {
   render(<SeatingGuide data={previewFixture("single")} />);
   expect(await request()).toMatchObject({ tour: true, view: "aerial", target: { tableId: "sample-round", seatNumber: 3 } });
   expect(screen.getByRole("button", { name: "Aerial" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByTestId("chair-numbers")).toHaveTextContent("true");
 });
 
 it("waits for a party member, supports close-up, and replays aerial for the selected guest", async () => {
@@ -47,6 +48,7 @@ it("frames the table from above for aerial and the exact chair for close-up", ()
 it("keeps unapproved chair arrangements focused on the table", async () => {
   render(<SeatingGuide data={previewFixture("single", false)} />);
   expect((await request()).target).toEqual({ tableId: "sample-round" });
+  expect(screen.getByTestId("chair-numbers")).toHaveTextContent("false");
 });
 
 it("keeps queued frames before the automatic flight start inside the camera curve", () => {

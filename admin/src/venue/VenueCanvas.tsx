@@ -32,8 +32,9 @@ interface Props {
   onUnavailable: () => void;
   snapshot?: SeatingSnapshot;
   layout?: VenueLayout;
+  chairNumbers?: boolean;
 }
-export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false, ceremonyChairs, labelExclusions = [], cameraLift = 0, highlightTarget, focusRequest, onTourLabel }: Props) {
+export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false, ceremonyChairs, labelExclusions = [], cameraLift = 0, highlightTarget, focusRequest, onTourLabel, chairNumbers = true }: Props) {
   const exclusionRef = useRef(labelExclusions); exclusionRef.current = labelExclusions;
   const liftRef = useRef(cameraLift); liftRef.current = cameraLift;
   const ceremonyCountRef = useRef(ceremonyChairs); ceremonyCountRef.current = ceremonyChairs;
@@ -41,6 +42,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   const tourLabel = useRef(onTourLabel); tourLabel.current = onTourLabel;
   const inspection = useVenueInspection();
   const inspectionRef = useRef(inspection); inspectionRef.current = inspection;
+  const chairNumbersRef = useRef(chairNumbers); chairNumbersRef.current = chairNumbers;
   const host = useRef<HTMLDivElement>(null);
   const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean, view?: SeatCameraView) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
   const leaderElements = useRef(new Map<string, SVGGElement>());
@@ -95,7 +97,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       });
       landmarks.push(...eventFurnitureLandmarks(nextLayout));
       if (nextSnapshot && nextLayout) {
-        furniture = buildFurniture(nextSnapshot, nextLayout); scene.add(furniture.root);
+        furniture = buildFurniture(nextSnapshot, nextLayout, { chairNumbers: chairNumbersRef.current, textureAnisotropy: Math.min(8, renderer.capabilities.getMaxAnisotropy()) }); scene.add(furniture.root);
         const stage = venue.weddingLayout.getObjectByName("HF_STAGE");
         if (stage) {
           stage.position.x = nextLayout.landmarks.stage.x; stage.position.y = nextLayout.landmarks.stage.y;
@@ -113,7 +115,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       let found: THREE.Object3D | null = null;
       furniture?.root.traverse(object => {
         const candidate: FurnitureTarget | undefined = object.userData.furnitureTarget;
-        if (candidate && sameTarget(target, candidate)) found = object;
+        // A chair's number cards share its target; outline and anchor the complete chair.
+        if (!found && candidate && sameTarget(target, candidate)) found = object;
       });
       return found;
     }
@@ -343,7 +346,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
 
   useEffect(() => { api.current?.setParameters(parameters, led); }, [parameters, led]);
 
-  useEffect(() => { api.current?.setFurniture(snapshot, layout); }, [snapshot, layout, parameters, led, ceremonyChairs]);
+  useEffect(() => { api.current?.setFurniture(snapshot, layout); }, [snapshot, layout, parameters, led, ceremonyChairs, chairNumbers]);
 
   useEffect(() => { api.current?.setCocktailFixtures(cocktailFixtures); }, [cocktailFixtures, parameters, led, onUnavailable]);
 

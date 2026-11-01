@@ -6,6 +6,7 @@ import { EventFurniture } from "./EventFurniturePlan";
 
 export function TableFurniture({ snapshot, layout, showSeatNumbers = true, guestView = false }: { snapshot: SeatingSnapshot; layout: VenueLayout; showSeatNumbers?: boolean; guestView?: boolean }) {
   const inspection = useVenueInspection();
+  const clearNumbers = showSeatNumbers && !guestView;
   function interaction(target: FurnitureTarget, label: string) {
     if (!inspection || (target.seatNumber !== undefined && !inspection.chairsEnabled)) return {};
     return {
@@ -31,8 +32,9 @@ export function TableFurniture({ snapshot, layout, showSeatNumbers = true, guest
         const assignment = snapshot.assignments.find(a => a.seatId === seat?.id);
         const name = snapshot.invitees.find(i => i.id === assignment?.inviteeId)?.fullName;
         return <g key={chair.number} {...interaction({ tableId: t.id, seatNumber: chair.number }, `${tableLabel(t.name)} · Seat ${chair.number} · ${inspection?.guestName({ tableId: t.id, seatNumber: chair.number }) ?? seatGuest(snapshot, t.id, chair.number)}`)} transform={`translate(${chair.x},${chair.y})`}>
-          <circle r=".22" fill={assignment ? "#753248" : "#e4d2ad"} stroke="#725c46" strokeWidth=".04" />
-          {showSeatNumbers && <text transform={`rotate(${-p.rotation})`} textAnchor="middle" dominantBaseline="central" fontSize=".21" fill={assignment ? "white" : "#342b25"}>{chair.number}</text>}
+          <circle r={clearNumbers ? ".28" : ".22"} fill={assignment ? "#753248" : clearNumbers ? "#fffdf7" : "#e4d2ad"} stroke={clearNumbers ? "#753248" : "#725c46"} strokeWidth=".04" strokeDasharray={clearNumbers && !assignment ? ".08 .04" : undefined} />
+          {clearNumbers && chair.number === 1 && <circle r=".35" fill="none" stroke="#9b793e" strokeWidth=".055" pointerEvents="none" />}
+          {showSeatNumbers && <text transform={`rotate(${-p.rotation})`} textAnchor="middle" dominantBaseline="central" fontSize={clearNumbers ? ".3" : ".21"} fontWeight={clearNumbers ? "700" : undefined} fill={assignment ? "white" : "#342b25"} pointerEvents="none">{chair.number}</text>}
           {!inspection && <title>{tableLabel(t.name)}{showSeatNumbers ? ` · Seat ${chair.number}` : " · Chair"}{name ? ` · ${name}` : guestView ? "" : " · Empty"}</title>}
         </g>;
       })}

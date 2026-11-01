@@ -5,8 +5,9 @@ import { planToSceneScale } from "./venueCoordinates";
 import { physicalChairs, type VenueLayout } from "./layout";
 import { banquetChairGeometry } from "./banquetChair";
 import { buildEventFurniture } from "./buildEventFurniture";
+import { chairNumberCards } from "./chairNumbers";
 
-export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
+export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout, { chairNumbers = true, textureAnisotropy = 1 }: { chairNumbers?: boolean; textureAnisotropy?: number } = {}) {
   const root = new THREE.Group(); root.name = "TABLE_FURNITURE"; root.scale.fromArray(planToSceneScale);
   const cloth = new THREE.MeshStandardMaterial({ color: "#f8f0df", roughness: .9 });
   const chair = new THREE.MeshStandardMaterial({ color: "#c9aa76", roughness: .8 });
@@ -15,6 +16,7 @@ export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
   const chairGeometry = banquetChairGeometry();
   const emptyChairMaterials = [chair, frame], occupiedChairMaterials = [occupied, frame];
   const materials: THREE.Material[] = [cloth, chair, occupied, frame];
+  const addChairNumbers = chairNumberCards(materials, textureAnisotropy);
   const add = (parent: THREE.Group, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[], x: number, y: number, z: number) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); return mesh;
   };
@@ -33,6 +35,7 @@ export function buildFurniture(snapshot: SeatingSnapshot, layout: VenueLayout) {
         : Math.abs(c.x) > p.width / 2 ? Math.sign(c.x) * Math.PI / 2 : c.y > 0 ? Math.PI : 0;
       mesh.userData.furnitureTarget = { tableId: table.id, seatNumber: c.number };
       mesh.name = `SEAT_${seat?.id ?? c.number}`;
+      if (chairNumbers) addChairNumbers(mesh, c.number);
     });
     const label = tableTopLabel(table.name);
     const canvas = document.createElement("canvas"); canvas.width = 512; canvas.height = 128;
