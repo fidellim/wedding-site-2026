@@ -3,7 +3,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { ceremonyLayout } from "./ceremonyLayout";
 import type { VenueParameters } from "./venueModel";
 
-/** Temporary ceremony décor. Local +Y faces the arch and water. */
+/** Temporary ceremony décor. Local +Y faces the water. */
 export function buildCeremony(p: VenueParameters, chairCount: number) {
   const layout = ceremonyLayout(p, chairCount);
   const root = new THREE.Group(); root.name = "CEREMONY_LAYOUT";
@@ -11,7 +11,7 @@ export function buildCeremony(p: VenueParameters, chairCount: number) {
   const mat = (color: string) => {
     const material = new THREE.MeshStandardMaterial({ color, roughness: .8 }); materials.push(material); return material;
   };
-  const white = mat("#fffdf6"), frame = mat("#e9e6da"), blossom = mat("#fffef1"), ivory = mat("#eee8cb"), leaves = mat("#809261");
+  const white = mat("#fffdf6"), blossom = mat("#fffef8"), ivory = mat("#f0e8cf"), leaves = mat("#536b43");
   const cloth = mat("#fffdf9"); cloth.roughness = 1;
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); return mesh;
@@ -21,46 +21,35 @@ export function buildCeremony(p: VenueParameters, chairCount: number) {
   add("CEREMONY_STRAIGHT_WHITE_AISLE", new THREE.BoxGeometry(layout.aisleWidth, layout.aisleEnd - layout.aisleStart, .025), white,
     layout.platformX, (layout.aisleStart + layout.aisleEnd) / 2, layout.floor + .015);
 
-  const archZ = layout.floor + layout.platformHeight + layout.archRadius;
-  const archGeometry = new THREE.TorusGeometry(layout.archRadius, .025, 6, 80); archGeometry.rotateX(Math.PI / 2);
-  add("CEREMONY_CIRCULAR_ARCH_FRAME", archGeometry, frame, layout.platformX, layout.archY, archZ);
-  for (const side of [-1, 1]) {
-    add("CEREMONY_ARCH_SUPPORT", new THREE.BoxGeometry(.045, .045, 1.6), frame,
-      layout.platformX + side * layout.archRadius * .77, layout.archY, layout.floor + layout.platformHeight + .8);
-    add("CEREMONY_ARCH_FOOT", new THREE.BoxGeometry(.38, .45, .025), frame,
-      layout.platformX + side * layout.archRadius * .77, layout.archY, layout.floor + layout.platformHeight + .015);
-  }
-
-  const flowerCenters: THREE.Vector3[] = [];
+  const flowerCenters: THREE.Vector3[] = [], stemBases: THREE.Vector3[] = [];
   let seed = 173;
   const random = () => { seed = seed * 16807 % 2147483647; return seed / 2147483647; };
-  const cluster = (x: number, y: number, z: number, spread: number, count: number) => {
+  const cluster = (x: number, y: number, spread: number, height: number, count: number) => {
     for (let i = 0; i < count; i++) {
       const angle = random() * Math.PI * 2, radius = Math.sqrt(random()) * spread;
-      flowerCenters.push(new THREE.Vector3(x + Math.cos(angle) * radius, y + (random() - .5) * spread,
-        z + Math.sin(angle) * radius * .85));
+      const stemX = x + Math.cos(angle) * radius, stemY = y + Math.sin(angle) * radius;
+      // Dense low blooms with a few airy stems breaking the silhouette.
+      const rise = i % 7 === 0 ? height * (.8 + random() * .2) : height * (.2 + random() * .48);
+      flowerCenters.push(new THREE.Vector3(stemX, stemY, layout.floor + .12 + rise));
+      stemBases.push(new THREE.Vector3(x + (stemX - x) * .65, y + (stemY - y) * .65, layout.floor + .025));
     }
   };
-  // Dense, asymmetric white sprays follow the reference while leaving the ring opening clear.
-  for (let i = 0; i < 42; i++) {
-    const angle = i / 42 * Math.PI * 2;
-    const full = Math.cos(angle) < -.2 || angle > .2 && angle < 1.3;
-    cluster(layout.platformX + Math.cos(angle) * layout.archRadius, layout.archY - .07,
-      archZ + Math.sin(angle) * layout.archRadius, full ? .23 : .14, full ? 12 : 5);
-  }
-  for (const side of [-1, 1]) {
-    cluster(layout.platformX + side * 1.45, layout.archY - .18, layout.floor + layout.platformHeight + .35, .42, 45);
-  }
-  for (const point of layout.platformFlowers) cluster(point.x, point.y, layout.floor + .35, .55, 60);
-  for (const point of layout.flowers) cluster(point.x, point.y, layout.floor + .22, .25, 24);
+  for (const point of layout.platformFlowers) cluster(point.x, point.y, point.spread, point.height, 85);
+  for (const point of layout.flowers) cluster(point.x, point.y, .25, .34, 24);
 
   const petalGeometry = new THREE.SphereGeometry(1, 6, 4);
   const petals = new THREE.InstancedMesh(petalGeometry, blossom, flowerCenters.length * 6); petals.name = "CEREMONY_WHITE_FLOWER_PETALS";
   const centers = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 6, 4), ivory, flowerCenters.length); centers.name = "CEREMONY_FLOWER_CENTERS";
   const foliage = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 5, 3), leaves, flowerCenters.length * 2); foliage.name = "CEREMONY_FLORAL_GREENERY";
-  const dummy = new THREE.Object3D();
+  const stems = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 5), leaves, flowerCenters.length); stems.name = "CEREMONY_FLORAL_STEMS";
+  const dummy = new THREE.Object3D(), stemAxis = new THREE.Vector3(0, 1, 0), direction = new THREE.Vector3();
   flowerCenters.forEach((center, index) => {
-    const size = .065 + random() * .035;
+    const base = stemBases[index];
+    direction.subVectors(center, base);
+    dummy.position.copy(base).addScaledVector(direction, .5);
+    dummy.quaternion.setFromUnitVectors(stemAxis, direction.clone().normalize());
+    dummy.scale.set(.006, direction.length(), .006); dummy.updateMatrix(); stems.setMatrixAt(index, dummy.matrix);
+    const size = .055 + random() * .05;
     for (let i = 0; i < 6; i++) {
       const angle = i * Math.PI / 3 + random() * .2;
       dummy.position.set(center.x + Math.cos(angle) * size * .7, center.y - .035, center.z + Math.sin(angle) * size * .7);
@@ -68,11 +57,12 @@ export function buildCeremony(p: VenueParameters, chairCount: number) {
     }
     dummy.position.copy(center); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(size * .32); dummy.updateMatrix(); centers.setMatrixAt(index, dummy.matrix);
     for (let i = 0; i < 2; i++) {
-      dummy.position.set(center.x + (i ? 1 : -1) * size, center.y + .035, center.z - size);
-      dummy.rotation.set(.4, i ? .7 : -.7, .2); dummy.scale.set(size * .38, size * .2, size * 1.55); dummy.updateMatrix(); foliage.setMatrixAt(index * 2 + i, dummy.matrix);
+      dummy.position.copy(base).lerp(center, i ? .65 : .38);
+      dummy.position.x += (i ? 1 : -1) * size * .55;
+      dummy.rotation.set(.4, i ? .7 : -.7, .2); dummy.scale.set(size * .55, size * .22, size * 1.6); dummy.updateMatrix(); foliage.setMatrixAt(index * 2 + i, dummy.matrix);
     }
   });
-  for (const mesh of [foliage, petals, centers]) { mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); }
+  for (const mesh of [stems, foliage, petals, centers]) { mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); }
 
   const chairPieces: THREE.BufferGeometry[] = [];
   const chairBox = (width: number, depth: number, height: number, x: number, y: number, z: number) => {

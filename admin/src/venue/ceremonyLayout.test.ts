@@ -78,3 +78,20 @@ it.each([12, 18, 24, 26])("accounts for full rotated footprints and overflow in 
     }
   }
 });
+
+
+it("keeps the floral garden outside the couple's standing area and the aisle entrance", () => {
+  const layout = ceremonyLayout(defaultParameters, 92);
+  expect(layout.platformFlowers.length).toBeGreaterThan(10);
+  for (const flowers of layout.platformFlowers) {
+    // Include the bloom beyond each stem cluster's spread.
+    const radius = flowers.spread + .15;
+    expect(Math.abs(flowers.x - layout.platformX) - radius > 1.1
+      || Math.abs(flowers.y - layout.platformY) - radius > 1.2).toBe(true);
+    if (flowers.y - radius < layout.platformY - layout.platformSize / 2) {
+      expect(Math.abs(flowers.x - layout.platformX) - radius).toBeGreaterThan(layout.aisleWidth / 2);
+    }
+  }
+  const back = layout.platformFlowers.filter(flowers => Math.abs(flowers.x - layout.platformX) < 1);
+  expect(back.every(flowers => flowers.height < .5)).toBe(true);
+});

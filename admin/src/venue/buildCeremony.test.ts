@@ -4,7 +4,7 @@ import { buildCeremony } from "./buildCeremony";
 import { ceremonyLayout } from "./ceremonyLayout";
 import { defaultParameters } from "./venueModel";
 
-it("renders the shared square platform and full chair footprint without losing the circular arch", () => {
+it("renders the shared square platform and full chair footprint with ground-grown flowers and no arch", () => {
   const layout = ceremonyLayout(defaultParameters, 48), ceremony = buildCeremony(defaultParameters, 48);
   try {
     const platform = ceremony.root.getObjectByName("CEREMONY_WHITE_SQUARE_PLATFORM");
@@ -15,7 +15,9 @@ it("renders the shared square platform and full chair footprint without losing t
     expect(bounds.max.x - bounds.min.x).toBeCloseTo(4.6);
     expect(bounds.max.y - bounds.min.y).toBeCloseTo(4.6);
     expect(platform.position.y - 2.3).toBeLessThan(layout.aisleEnd);
-    expect(ceremony.root.getObjectByName("CEREMONY_CIRCULAR_ARCH_FRAME")).toBeInstanceOf(Mesh);
+    expect(ceremony.root.getObjectByName("CEREMONY_CIRCULAR_ARCH_FRAME")).toBeUndefined();
+    expect(ceremony.root.getObjectByName("CEREMONY_ARCH_SUPPORT")).toBeUndefined();
+    expect(ceremony.root.getObjectByName("CEREMONY_FLORAL_STEMS")).toBeInstanceOf(InstancedMesh);
     const chairs = ceremony.root.getObjectByName("CEREMONY_UNASSIGNED_CHAIRS");
     expect(chairs).toBeInstanceOf(InstancedMesh);
     if (!(chairs instanceof InstancedMesh)) throw new Error("Chair mesh missing");

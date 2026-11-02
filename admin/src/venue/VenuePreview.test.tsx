@@ -64,6 +64,8 @@ it("updates anonymous ceremony chairs from RSVP totals without relying on recept
   expect(platform?.tagName).toBe("rect");
   expect(platform).toHaveAttribute("width", "4.6");
   expect(platform).toHaveAttribute("height", "4.6");
+  expect(container.querySelectorAll("[data-ceremony-floral]")).toHaveLength(ceremonyLayout(defaultParameters, 5).platformFlowers.length);
+  expect(container.querySelector("[aria-label='Ceremony with 5 unassigned chairs'] title")).toHaveTextContent("white floral garden surround");
   expect(container.querySelector("[data-ceremony-chair] rect")).toHaveAttribute("width", String(ceremonyLayout(defaultParameters, 5).chair.footprintWidth));
   const updated = { ...workspace, draft: { ...workspace.draft, assignments: [], invitationParties: workspace.draft.invitationParties.map((party, index) => index === 0 ? { ...party, attendingCount: 6 } : party) } };
   rerender(<VenuePreview workspace={updated} disabled={false} history={history} />);

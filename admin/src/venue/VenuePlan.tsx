@@ -67,11 +67,14 @@ export function VenuePlan({ parameters: input, led = "none", landmarks, children
       </g>
     </g>
     {!receptionOnly && <g aria-label={`Ceremony with ${ceremonyChairs} unassigned chairs`}>
-      <title>Straight white aisle, square platform and circular white floral arch · {ceremonyChairs} chairs without assignments</title>
+      <title>Straight white aisle, square platform with a white floral garden surround · {ceremonyChairs} chairs without assignments</title>
       <rect x={ceremony.platformX - ceremony.aisleWidth / 2} y={ceremony.aisleStart} width={ceremony.aisleWidth} height={ceremony.aisleEnd - ceremony.aisleStart} fill="#fffdf6" stroke="#d4cebd" strokeWidth=".06" />
       <rect data-ceremony-platform="" x={ceremony.platformX - ceremony.platformSize / 2} y={ceremony.platformY - ceremony.platformSize / 2} width={ceremony.platformSize} height={ceremony.platformSize} fill="#fffdf6" stroke="#d4cebd" strokeWidth=".08" />
-      <path d={`M ${ceremony.platformX - ceremony.archRadius} ${ceremony.archY} H ${ceremony.platformX + ceremony.archRadius}`} stroke="#f8f5e5" strokeWidth=".5" />
-      {[...ceremony.flowers, ...ceremony.platformFlowers].map((point, index) => <circle key={index} cx={point.x} cy={point.y} r=".28" fill="#fffef1" stroke="#809261" strokeWidth=".07" />)}
+      {ceremony.flowers.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r=".28" fill="#fffef1" stroke="#809261" strokeWidth=".07" />)}
+      {ceremony.platformFlowers.map((point, index) => <g key={index} data-ceremony-floral="">
+        <circle cx={point.x} cy={point.y} r={point.spread} fill="#536b43" />
+        {[-1, 0, 1].map(offset => <circle key={offset} cx={point.x + offset * point.spread * .4} cy={point.y + (offset === 0 ? -.12 : .09)} r={point.spread * .55} fill="#fffef8" stroke="#d9d6c5" strokeWidth=".025" />)}
+      </g>)}
       {ceremony.chairs.map((chair, index) => <g key={index} data-ceremony-chair="" transform={`translate(${chair.x},${chair.y}) rotate(${chair.rotation * 180 / Math.PI})`} fill="#fffdf9" stroke="#c5beac" strokeWidth=".055">
         <rect x={-ceremony.chair.footprintWidth / 2} y={-ceremony.chair.footprintWidth / 2} width={ceremony.chair.footprintWidth} height={ceremony.chair.footprintWidth} rx=".05" />
         <path d={`M ${-ceremony.chair.seatWidth / 2} ${-ceremony.chair.seatWidth / 2 + .03} H ${ceremony.chair.seatWidth / 2}`} strokeWidth=".08" />

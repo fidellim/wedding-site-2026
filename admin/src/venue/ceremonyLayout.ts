@@ -59,9 +59,18 @@ export function ceremonyLayout(p: VenueParameters, chairCount: number) {
       && point.y - extent >= aisleStart
       && point.y + extent <= platformY - platformHalf;
   });
-  const platformFlowers = [-1, 1].map(side => ({
-    x: platformX + side * (platformHalf + .22), y: platformY - 1.25,
-  }));
+  // Ground-grown floral surround; the front opening stays wider than the aisle.
+  const platformFlowers = [-1, 1].flatMap(side => [
+    { x: platformX + side * 1.92, y: platformY - platformHalf - .12, spread: .48, height: side < 0 ? .72 : .9 },
+    ...[-1.25, -.15, 1.05, 2.05].map((offset, index) => ({
+      x: platformX + side * (platformHalf + .14), y: platformY + offset,
+      spread: index % 2 ? .38 : .46, height: [.7, .55, .9, side < 0 ? .95 : 1.25][index],
+    })),
+  ]);
+  for (const offset of [-1.65, -.8, 0, .8, 1.65]) platformFlowers.push({
+    x: platformX + offset, y: platformY + platformHalf + .12,
+    spread: .38, height: Math.abs(offset) < 1 ? .42 : .7,
+  });
   return { platformX, platformY, platformSize, platformHeight, floor, aisleWidth, aisleStart, aisleEnd, chair,
-    archY: platformY + .55, archRadius: 1.55, chairs, flowers, platformFlowers, fits };
+    chairs, flowers, platformFlowers, fits };
 }
