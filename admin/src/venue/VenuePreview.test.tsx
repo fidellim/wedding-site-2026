@@ -1,10 +1,40 @@
 import { createDemoWorkspace } from "../data/memoryRepository";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import VenuePreview from "./VenuePreview";
-import { defaultVenueLayout, estimatedPlacement } from "./layout";
+import { defaultVenueLayout, estimatedPlacement, type VenueLayout } from "./layout";
 
 afterEach(cleanup);
+
+it("saves crew visibility to the draft and restores the choice when reopened", async () => {
+  const workspace = createDemoWorkspace();
+  workspace.draft.venueLayout = defaultVenueLayout();
+  const save = vi.fn(async (layout: VenueLayout) => { workspace.draft.venueLayout = layout; return true; });
+  const history = { save, undo: vi.fn(), redo: vi.fn(), canUndo: false, canRedo: false };
+  const { unmount } = render(<VenuePreview workspace={workspace} disabled={false} history={history} />);
+  await screen.findByRole("group", { name: "Venue overhead plan" });
+  fireEvent.click(screen.getByRole("button", { name: "Hide SDE & DJ" }));
+  await waitFor(() => expect(save).toHaveBeenCalledWith({ ...defaultVenueLayout(), productionTablesVisible: false }));
+  await screen.findByText(/SDE & DJ visibility saved/);
+  unmount();
+  render(<VenuePreview workspace={workspace} disabled={false} history={history} />);
+  await screen.findByRole("group", { name: "Venue overhead plan" });
+  expect(screen.getByRole("button", { name: "Show SDE & DJ" })).toHaveAttribute("aria-pressed", "false");
+  expect(screen.queryByText("SDE table", { exact: true })).not.toBeInTheDocument();
+  expect(screen.queryByText("DJ table", { exact: true })).not.toBeInTheDocument();
+});
+
+it("keeps saved visibility when a write fails and prevents read-only changes", async () => {
+  const history = { save: vi.fn(async () => false), undo: vi.fn(), redo: vi.fn(), canUndo: false, canRedo: false };
+  const workspace = createDemoWorkspace();
+  const { rerender } = render(<VenuePreview workspace={workspace} disabled={false} history={history} />);
+  await screen.findByRole("group", { name: "Venue overhead plan" });
+  fireEvent.click(screen.getByRole("button", { name: "Hide SDE & DJ" }));
+  await screen.findByText(/SDE & DJ visibility could not be saved/);
+  expect(screen.getByText("SDE table", { exact: true })).toBeVisible();
+  rerender(<VenuePreview workspace={workspace} disabled history={history} />);
+  expect(screen.getByRole("button", { name: "Hide SDE & DJ" })).toBeDisabled();
+});
 
 vi.mock("three", async importOriginal => {
   const actual = await importOriginal<typeof import("three")>();

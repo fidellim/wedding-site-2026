@@ -48,6 +48,7 @@ describe("physical venue layout", () => {
   });
   it("requires explicit warning acknowledgement, publishes an immutable layout, and restores it without losing assignments", async () => {
     const w = placed();
+    w.draft.venueLayout!.productionTablesVisible = false;
     w.draft.invitees.forEach(i => { if (i.id === "charlie" || i.id === "franco") i.requiresSeat = false; });
     w.draft.venueLayout!.tables["table-2"].x = 2;
     const repo = createMemorySeatingRepository(w);
@@ -55,11 +56,13 @@ describe("physical venue layout", () => {
     let next = await repo.execute({ type: "publish", expectedVersion: w.draft.version, acknowledgeLayoutWarnings: true });
     const published = structuredClone(next.published!);
     const moved = structuredClone(next.draft.venueLayout!); moved.tables["table-2"].x = 12;
+    moved.productionTablesVisible = true;
     next = await repo.execute({ type: "save_venue_layout", expectedVersion: next.draft.version, layout: moved });
     expect(next.draft.assignments).toEqual(w.draft.assignments); expect(next.draft.seats).toEqual(w.draft.seats);
     expect(next.published).toEqual(published);
     next = await repo.execute({ type: "restore_revision", expectedVersion: next.draft.version, revisionId: published.id });
     expect(next.draft.venueLayout).toEqual(published.venueLayout);
+    expect(next.draft.venueLayout?.productionTablesVisible).toBe(false);
     expect(next.draft.assignments).toEqual(w.draft.assignments);
   });
   it("rejects non-finite and malformed geometry before saving", () => {
@@ -67,6 +70,11 @@ describe("physical venue layout", () => {
     expect(isVenueLayout(l)).toBe(false);
     expect(isVenueLayout({ ...l, tables: { bad: null } })).toBe(false);
     expect(isVenueLayout({ ...defaultVenueLayout(), tables: [] })).toBe(false);
+  });
+  it("accepts legacy visibility and explicit booleans, rejecting malformed stored choices", () => {
+    expect(isVenueLayout(defaultVenueLayout())).toBe(true);
+    for (const productionTablesVisible of [true, false]) expect(isVenueLayout({ ...defaultVenueLayout(), productionTablesVisible })).toBe(true);
+    for (const productionTablesVisible of [null, "false", 0, {}, undefined]) expect(isVenueLayout({ ...defaultVenueLayout(), productionTablesVisible })).toBe(false);
   });
 });
 

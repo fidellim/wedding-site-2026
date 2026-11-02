@@ -23,6 +23,7 @@ interface Props {
   dusk: boolean;
   led: LedLayout;
   cocktailFixtures?: boolean;
+  productionTables?: boolean;
   ceremonyChairs?: number;
   labelExclusions?: readonly LabelObstacle[];
   cameraLift?: number;
@@ -34,7 +35,7 @@ interface Props {
   layout?: VenueLayout;
   chairNumbers?: boolean;
 }
-export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false, ceremonyChairs, labelExclusions = [], cameraLift = 0, highlightTarget, focusRequest, onTourLabel, chairNumbers = true }: Props) {
+export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, onUnavailable, snapshot, layout, cocktailFixtures = false, productionTables = true, ceremonyChairs, labelExclusions = [], cameraLift = 0, highlightTarget, focusRequest, onTourLabel, chairNumbers = true }: Props) {
   const exclusionRef = useRef(labelExclusions); exclusionRef.current = labelExclusions;
   const liftRef = useRef(cameraLift); liftRef.current = cameraLift;
   const ceremonyCountRef = useRef(ceremonyChairs); ceremonyCountRef.current = ceremonyChairs;
@@ -44,7 +45,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   const inspectionRef = useRef(inspection); inspectionRef.current = inspection;
   const chairNumbersRef = useRef(chairNumbers); chairNumbersRef.current = chairNumbers;
   const host = useRef<HTMLDivElement>(null);
-  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean, view?: SeatCameraView) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
+  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean, view?: SeatCameraView) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setProductionTables: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
   const leaderElements = useRef(new Map<string, SVGGElement>());
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
   const seatLabel = useRef<HTMLSpanElement>(null);
@@ -52,6 +53,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   const seatArrow = useRef<SVGSVGElement>(null);
   const initialPreset = useRef(preset); initialPreset.current = preset;
   const [moving, setMoving] = useState(false);
+  const visibleLandmarks = [...venueLandmarks(parameters, led), ...eventFurnitureLandmarks(layout)]
+    .filter(item => productionTables || (item.id !== "sde" && item.id !== "dj"));
 
   useEffect(() => {
     if (!host.current) return;
@@ -204,7 +207,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       if (instant || reduced) { stop(); camera.position.copy(to); controls.target.copy(toTarget); controls.update(); }
       else { transition = { start: performance.now(), from: camera.position.clone(), to, fromTarget: controls.target.clone(), toTarget }; setMoving(true); }
     }
-    api.current = { setView, stop, focus, skip, setCocktailFixtures(visible) { const fixtures = venue.weddingLayout.getObjectByName("COCKTAIL_FIXTURES"); if (fixtures) fixtures.visible = visible; }, setDusk(value) {
+    api.current = { setView, stop, focus, skip, setProductionTables(visible) { const tables = venue.weddingLayout.getObjectByName("PRODUCTION_TABLES"); if (tables) tables.visible = visible; }, setCocktailFixtures(visible) { const fixtures = venue.weddingLayout.getObjectByName("COCKTAIL_FIXTURES"); if (fixtures) fixtures.visible = visible; }, setDusk(value) {
       scene.background = new THREE.Color(value ? "#30384e" : "#e7ebe5");
       if (scene.fog instanceof THREE.Fog) scene.fog.color.copy(scene.background);
       hemisphere.intensity = value ? .65 : 2.3;
@@ -349,6 +352,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   useEffect(() => { api.current?.setFurniture(snapshot, layout); }, [snapshot, layout, parameters, led, ceremonyChairs, chairNumbers]);
 
   useEffect(() => { api.current?.setCocktailFixtures(cocktailFixtures); }, [cocktailFixtures, parameters, led, onUnavailable]);
+  useEffect(() => { api.current?.setProductionTables(productionTables); }, [productionTables, parameters, led, onUnavailable]);
 
   useEffect(() => { api.current?.setView(preset); }, [preset, resetKey]);
   useEffect(() => { if (focusRequest) api.current?.focus(focusRequest.target, focusRequest.tour, focusRequest.view); else if (focusRequest === null) api.current?.stop(); }, [focusRequest, onUnavailable]);
@@ -364,9 +368,9 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     </div>
     <div className={`venue-labels venue-labels--callouts${labels ? "" : " is-hidden"}`} aria-hidden="true">
       <svg className="venue-label-leaders" width="100%" height="100%">
-        {[...venueLandmarks(parameters, led), ...eventFurnitureLandmarks(layout)].map(item => <g key={item.id} ref={element => { if (element) leaderElements.current.set(item.id, element); else leaderElements.current.delete(item.id); }} style={{ visibility: "hidden" }}><line /><circle r="3" /></g>)}
+        {visibleLandmarks.map(item => <g key={item.id} ref={element => { if (element) leaderElements.current.set(item.id, element); else leaderElements.current.delete(item.id); }} style={{ visibility: "hidden" }}><line /><circle r="3" /></g>)}
       </svg>
-      {[...venueLandmarks(parameters, led), ...eventFurnitureLandmarks(layout)].map(item => <span key={item.id} ref={element => { if (element) labelElements.current.set(item.id, element); else labelElements.current.delete(item.id); }} className={`venue-map-label venue-map-label-${item.id}`}><i />{item.label}</span>)}
+      {visibleLandmarks.map(item => <span key={item.id} ref={element => { if (element) labelElements.current.set(item.id, element); else labelElements.current.delete(item.id); }} className={`venue-map-label venue-map-label-${item.id}`}><i />{item.label}</span>)}
     </div>
     {moving && <button className="venue-skip" onClick={() => api.current?.skip()}>{focusRequest ? "Skip to my seat" : "Skip movement"}</button>}
   </div>;

@@ -44,6 +44,7 @@ try {
   await execFile("20261002000100_add_shared_venue_layout.sql");
   await execFile("20261004000100_add_venue_reconstruction_estimates.sql");
   await execFile("20261031000100_add_couple_and_cake_furniture.sql");
+  await execFile("20261102000100_add_production_table_visibility.sql");
   assert.deepEqual(await db.query("select (select count(*) from public.seating_tables) as tables, (select count(*) from public.seating_seats) as seats, (select count(*) from public.seating_assignments) as assignments, (select count(*) from public.invites) as invites"), baseline);
   assert.equal((await db.query(inspectionSql)).rows[0].save_function_exists, true);
   w = await workspace(); assert.equal(w.draft.venueLayout, null);
@@ -64,6 +65,14 @@ try {
   for (const [key, value] of [["approachLength", 2], ["pavilionPlazaGap", 100], ["bridgeHeight", 999], ["bridgeStepCount", 7], ["bridgeTread", .31]]) {
     const invalid = structuredClone(layout); invalid.parameters[key] = value;
     await rejected("admin_save_venue_layout", [w.draft.version, invalid], /INVALID_VENUE_LAYOUT/);
+  }
+
+  for (const productionTablesVisible of [null, "false", 0, {}]) {
+    await rejected("admin_save_venue_layout", [w.draft.version, { ...layout, productionTablesVisible }], /INVALID_VENUE_LAYOUT/);
+  }
+  for (const productionTablesVisible of [true, false]) {
+    w = await rpc("admin_save_venue_layout", [w.draft.version, { ...layout, productionTablesVisible }]);
+    assert.equal((await workspace()).draft.venueLayout.productionTablesVisible, productionTablesVisible);
   }
 
   w = await rpc("admin_save_venue_layout", [w.draft.version, layout]);
@@ -166,7 +175,7 @@ try {
   assert.equal((await db.query("select has_function_privilege('anon', 'public.admin_release_seating_guide(uuid,boolean)', 'execute') as allowed")).rows[0].allowed, false);
   assert.equal((await db.query("select has_function_privilege('anon', 'public.get_seating_guide_for_invite(text)', 'execute') as allowed")).rows[0].allowed, true);
   // Couple and cake tables persist through the existing immutable publication contract.
-  const furnitureLayout = { ...structuredClone(layout), eventFurniture: {
+  const furnitureLayout = { ...structuredClone(layout), productionTablesVisible: false, eventFurniture: {
     couple: { x: -7, y: 5, rotation: 330, width: 1.8, depth: .75, dimensionsVerified: false },
     cake: { x: -10, y: 2, rotation: 0, width: .9, depth: .9, dimensionsVerified: false },
   } };
@@ -184,6 +193,7 @@ try {
   assert.deepEqual(furnitureRevision.venueLayout.eventFurniture, furnitureLayout.eventFurniture);
   w = await rpc("admin_release_seating_guide", [w.published.id, false]);
   assert.deepEqual((await rpc("get_seating_guide_for_invite", ["TEST"])).venueLayout.eventFurniture, furnitureLayout.eventFurniture);
+  assert.equal((await rpc("get_seating_guide_for_invite", ["TEST"])).venueLayout.productionTablesVisible, false);
   const outside = structuredClone(furnitureLayout); outside.eventFurniture.couple.x = 100;
   w = await rpc("admin_save_venue_layout", [w.draft.version, outside]);
   await rejected("admin_publish_seating_plan", [w.draft.version, true], /table_outside_venue/);

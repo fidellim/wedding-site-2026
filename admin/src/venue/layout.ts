@@ -15,6 +15,8 @@ export interface VenueLayout {
   led: "center" | "side";
   tables: Record<string, TablePlacement>;
   eventFurniture?: EventFurnitureLayout;
+  /** Omitted by older layouts, where the crew tables remain visible. */
+  productionTablesVisible?: boolean;
   landmarks: Record<"stage" | "danceFloor" | "entrance", Point>;
 }
 export function defaultVenueLayout(): VenueLayout {
@@ -42,6 +44,7 @@ export function isVenueLayout(value: unknown): value is VenueLayout {
   const l = value as VenueLayout;
   if (Array.isArray(value) || Array.isArray(l.parameters) || Array.isArray(l.tables) || Array.isArray(l.landmarks)) return false;
   if (!l.parameters || !l.tables || !l.landmarks || !["center", "side"].includes(l.led)) return false;
+  if ("productionTablesVisible" in l && typeof l.productionTablesVisible !== "boolean") return false;
   const normalized = normalizeParameters(l.parameters);
   if (Object.keys(normalized).some(k => !(reconstructionParameterKeys.includes(k as keyof VenueParameters) && l.parameters[k as keyof VenueParameters] === undefined) && normalized[k as keyof VenueParameters] !== l.parameters[k as keyof VenueParameters])) return false;
   const point = (p: Point) => p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 200 && Math.abs(p.y) <= 200;

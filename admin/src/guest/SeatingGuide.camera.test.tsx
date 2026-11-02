@@ -6,10 +6,17 @@ import { flightProgress, flightViews, seatDestination } from "./flight";
 
 vi.mock("../venue/VenueCanvas", () => ({
   VenueCanvas: (props: Parameters<typeof import("../venue/VenueCanvas").VenueCanvas>[0]) =>
-    <><output data-testid="camera-request">{JSON.stringify(props.focusRequest)}</output><output data-testid="chair-numbers">{String(props.chairNumbers)}</output></>,
+    <><output data-testid="camera-request">{JSON.stringify(props.focusRequest)}</output><output data-testid="chair-numbers">{String(props.chairNumbers)}</output><output data-testid="crew-visible">{String(props.productionTables)}</output></>,
 }));
 afterEach(cleanup);
 const request = async () => JSON.parse((await screen.findByTestId("camera-request")).textContent!);
+
+it("uses the saved crew visibility in the guest 3D view", async () => {
+  const data = previewFixture("single");
+  data.snapshot.venueLayout!.productionTablesVisible = false;
+  render(<SeatingGuide data={data} />);
+  expect(await screen.findByTestId("crew-visible")).toHaveTextContent("false");
+});
 
 it("starts a single guest's aerial journey automatically", async () => {
   render(<SeatingGuide data={previewFixture("single")} />);

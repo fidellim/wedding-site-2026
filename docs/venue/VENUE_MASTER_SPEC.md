@@ -2,7 +2,7 @@
 
 **Project:** Interactive 3D Wedding Venue + Guest Seating Experience  
 **Document role:** PRIMARY AND AUTHORITATIVE SOURCE OF TRUTH  
-**Revision:** 1.12
+**Revision:** 1.13
 **Created:** 21 September 2026  
 **Primary source used to author this specification:** user-supplied venue walkthrough video (`shangrila-venue.MP4`, approximately 150.5 seconds)  
 **Additional owner-authorized source:** [September 29 walkthrough](<reference-video/Shangri-la AD - 29-9-26.MOV>), 63.96 seconds; reviewed on 4 October 2026.
@@ -193,7 +193,12 @@ monitor, keyboard, portable SSD, card reader, camera with lens and spare batteri
 All equipment stays on the tabletops, with screens facing the crew on the inland
 side. Use the same positions in 2D and 3D. Inventory, dimensions and equipment
 models are illustrative DESIGN-DECISION estimates, not a confirmed vendor list.
-
+The admin preview's Show/Hide SDE & DJ control saves `productionTablesVisible`
+to the shared draft and toggles both tables, equipment and labels in 2D and 3D.
+Older layouts without the field show them by default. Publishing and releasing
+the updated guest guide carries the choice to both guest views; draft edits do
+not modify an already released revision. The optional cocktail fixture toggle
+remains independent and preview-only.
 
 ### Display orientation agreement (owner correction)
 
@@ -1379,6 +1384,7 @@ Whenever a physical fact changes or becomes confirmed, add a revision entry belo
 
 | Revision | Date | Change |
 |---|---|---|
+| 1.13 | 2026-11-02 | Persist SDE/DJ visibility in the shared draft and immutable published guest layout, with legacy defaults and boolean validation. |
 | 1.12 | 2026-11-02 | Owner-requested representative DJ and same-day edit equipment on the terrace tables; tabletop footprints and stair clearance retained. |
 | 1.11 | 2026-11-01 | Owner-confirmed separate SDE and DJ tables on the raised terrace, SDE nearer the pavilion and DJ nearer the broad stairs, facing the lawn with stair access clear; dimensions remain estimates. |
 | 1.10 | 2026-10-04 | Owner-directed proportion correction: longer adjustable approach, taller turning stair flight, larger ceremony plaza, compact pavilion/tree connection, continuing canal and shaped inland terrace; existing layout compatibility, no drone-view feature. |

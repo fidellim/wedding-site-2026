@@ -13,6 +13,7 @@ const migrationPaths = [
   "supabase/migrations/20261029000100_preserve_guest_table_names.sql",
   "supabase/migrations/20261029000200_add_guest_seating_directory.sql",
   "supabase/migrations/20261031000100_add_couple_and_cake_furniture.sql",
+  "supabase/migrations/20261102000100_add_production_table_visibility.sql",
 ];
 
 const forbiddenPatterns = [

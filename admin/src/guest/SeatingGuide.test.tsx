@@ -13,6 +13,15 @@ vi.mock("three", async importOriginal => {
 });
 afterEach(cleanup);
 
+it("hides crew tables and equipment in the guest overhead view when saved as hidden", async () => {
+  const data = previewFixture("single");
+  data.snapshot.venueLayout!.productionTablesVisible = false;
+  const { container } = render(<SeatingGuide data={data} />);
+  await screen.findByRole("img", { name: "Venue overhead plan" });
+  expect(container.querySelector("[data-production-table]")).toBeNull();
+  expect(container.querySelector("[data-production-equipment]")).toBeNull();
+});
+
 it("shows assignments immediately, switches between split tables, and preserves an overhead fallback", async () => {
   const data = previewFixture("split", false);
   const { container } = render(<SeatingGuide data={data} />);

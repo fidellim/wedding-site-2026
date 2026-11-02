@@ -21,6 +21,8 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
   const [preset, setPreset] = useState<ViewPreset>("reverse");
   const [resetKey, setResetKey] = useState(0);
   const [cocktailFixtures, setCocktailFixtures] = useState(false);
+  const productionTables = layout.productionTablesVisible ?? true;
+  const [savingVisibility, setSavingVisibility] = useState(false);
   const [labels, setLabels] = useState(true);
   const [dusk, setDusk] = useState(false);
   const [plan, setPlan] = useState(false);
@@ -37,6 +39,17 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
     if (disabled) return;
     const ok = await history.save({ ...setup, tables: layout.tables });
     setStatus(ok ? "Venue setup saved to shared draft · not published" : "Venue setup could not be saved. Review the message above.");
+  }
+  async function toggleProductionTables() {
+    if (disabled || savingVisibility) return;
+    setSavingVisibility(true);
+    try {
+      const ok = await history.save({ ...layout, productionTablesVisible: !productionTables });
+      setStatus(ok ? "SDE & DJ visibility saved to shared draft · publish and release the guest guide to update guests"
+        : "SDE & DJ visibility could not be saved. Try again.");
+    } catch {
+      setStatus("SDE & DJ visibility could not be saved. Try again.");
+    } finally { setSavingVisibility(false); }
   }
   return <section className="venue-preview" aria-labelledby="venue-title">
     <div className="page-heading venue-heading">
@@ -62,6 +75,7 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
         {workspace.draft.venueLayout && workspace.draft.venueLayout.parameters.approachLength === undefined && <p className="venue-led-note">Updated venue proportions are previewed. Save venue setup to keep these estimates.</p>}
         <p className="venue-led-note">Video-informed venue revision · awaiting venue-recognition review. Dimensions, planting positions and shoreline width remain estimates.</p>
         <div className="venue-led-options">
+          <button aria-pressed={productionTables} disabled={disabled || savingVisibility} onClick={() => void toggleProductionTables()}>{savingVisibility ? "Saving visibility…" : productionTables ? "Hide SDE & DJ" : "Show SDE & DJ"}</button>
           <button aria-pressed={cocktailFixtures} onClick={() => setCocktailFixtures(value => !value)}>{cocktailFixtures ? "Hide cocktail fixtures" : "Show cocktail fixtures"}</button>
           <span>{cocktailFixtures ? "Planned fixtures · schematic positions, not venue architecture" : "Cocktail fixtures hidden for architecture review"}</span>
         </div>
@@ -70,7 +84,7 @@ export default function VenuePreview({ workspace, disabled, history }: { workspa
           <button aria-pressed={plan} onClick={() => setPlan(current => unavailable || !current)}>2D plan</button>
         </div>
         <VenueInspection snapshot={workspace.draft}><div className={`venue-stage${dusk && !plan ? " is-dusk" : ""}`}>
-          {plan ? <VenuePlan interactive cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} landmarks={layout.landmarks} ceremonyChairs={chairCount}><TableFurniture snapshot={workspace.draft} layout={layout} /></VenuePlan> : <VenueCanvas cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} preset={preset} resetKey={resetKey} labels={labels} dusk={dusk} snapshot={workspace.draft} layout={layout} onUnavailable={handleUnavailable} />}
+          {plan ? <VenuePlan interactive productionTables={productionTables} cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} landmarks={layout.landmarks} ceremonyChairs={chairCount}><TableFurniture snapshot={workspace.draft} layout={layout} /></VenuePlan> : <VenueCanvas productionTables={productionTables} cocktailFixtures={cocktailFixtures} parameters={parameters} led={led} preset={preset} resetKey={resetKey} labels={labels} dusk={dusk} snapshot={workspace.draft} layout={layout} onUnavailable={handleUnavailable} />}
           <div className="venue-scene-caption"><span>HANNAH &amp; FIDEL</span><strong>Where it all comes together.</strong></div>
           <div className="venue-approximate">Approximate venue · dimensions unverified</div>
           {!plan && <button className="venue-light-toggle" aria-pressed={dusk} onClick={() => setDusk(current => !current)}>{dusk ? "Dusk · switch to daylight" : "Daylight · preview dusk"}</button>}
