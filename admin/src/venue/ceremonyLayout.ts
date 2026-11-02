@@ -11,23 +11,31 @@ export function ceremonyChairCount(snapshot: SeatingSnapshot) {
   }, 0);
 }
 
+// Physical dimensions include the skirt pleats, not just the seat cushion.
+const chairDimensions = { seatWidth: .5, skirtWidth: .54, pleatDepth: .016 } as const;
+const chair = { ...chairDimensions, footprintWidth: chairDimensions.skirtWidth + chairDimensions.pleatDepth * 2 };
+
 /** Approximate event footprint; chairs have positions but no guest or seat identities. */
 export function ceremonyLayout(p: VenueParameters, chairCount: number) {
   const l = venueLayout(p), aisleWidth = 2.2;
-  const platformRadius = Math.min(2.3, l.plazaWidth * .18);
+  const platformSize = 4.6, platformHalf = platformSize / 2;
   const platformX = l.plazaX, structure = ceremonyStructure(p);
-  const structureClearance = platformRadius + structure.radius + .8;
-  const horizontalGap = structure.x - platformX;
-  const verticalGap = Math.sqrt(Math.max(0, structureClearance ** 2 - horizontalGap ** 2));
-  const platformY = Math.min(l.terraceFront - platformRadius - 1.2, structure.y - verticalGap);
+  // Distance from the fountain center to the nearest square edge/corner.
+  const structureClearance = structure.radius + .8;
+  const horizontalGap = Math.max(0, Math.abs(structure.x - platformX) - platformHalf);
+  const verticalGap = horizontalGap < structureClearance
+    ? platformHalf + Math.sqrt(structureClearance ** 2 - horizontalGap ** 2) : 0;
+  const platformY = Math.min(l.terraceFront - platformHalf - 1.2, structure.y - verticalGap);
   const floor = p.terraceHeight + .075, platformHeight = .18;
   const aisleStart = l.terraceFront - p.plazaLength + .3;
-  const aisleEnd = platformY - platformRadius + .1;
-  const rowSpacing = .9, chairSpacing = .65;
-  const maxColumns = Math.max(1, Math.floor((l.plazaWidth / 2 - 1.2 - aisleWidth / 2 - .85) / chairSpacing) + 1);
+  const aisleEnd = platformY - platformHalf + .1;
+  // A circumscribed footprint keeps adjacent curved rows clear at every heading.
+  const chairRadius = Math.SQRT2 * chair.footprintWidth / 2;
+  const rowSpacing = 1, chairSpacing = chairRadius * 2 + .06;
+  const maxColumns = Math.max(1, Math.floor((l.plazaWidth / 2 - chairRadius - aisleWidth / 2 - .85) / chairSpacing) + 1);
   const innerX = aisleWidth / 2 + .85;
-  const rowRadius = (columns: number) => Math.hypot(innerX + (columns - 1) * chairSpacing, platformRadius + 1.15);
-  const maxRadius = Math.hypot(Math.max(0, platformY - aisleStart - .5), innerX);
+  const rowRadius = (columns: number) => Math.hypot(innerX + (columns - 1) * chairSpacing, platformHalf + 1.15);
+  const maxRadius = Math.hypot(Math.max(0, platformY - aisleStart - chairRadius), innerX);
   const capacity = (columns: number) => Math.max(0, Math.floor((maxRadius - rowRadius(columns)) / rowSpacing) + 1) * columns * 2;
   let columns = Math.min(4, maxColumns);
   while (columns < maxColumns && chairCount > capacity(columns)) columns++;
@@ -44,6 +52,16 @@ export function ceremonyLayout(p: VenueParameters, chairCount: number) {
     x: platformX + side * (aisleWidth / 2 + .32),
     y: aisleStart + .7 + fraction * Math.max(0, aisleEnd - aisleStart - 1.4),
   })));
-  return { platformX, platformY, platformRadius, platformHeight, floor, aisleWidth, aisleStart, aisleEnd,
-    archY: platformY + .55, archRadius: 1.55, chairs, flowers, fits: chairCount <= capacity(columns) };
+  const fits = chairs.every(point => {
+    const extent = (Math.abs(Math.cos(point.rotation)) + Math.abs(Math.sin(point.rotation))) * chair.footprintWidth / 2;
+    return Math.abs(point.x - platformX) + extent <= l.plazaWidth / 2
+      && Math.abs(point.x - platformX) - extent >= aisleWidth / 2
+      && point.y - extent >= aisleStart
+      && point.y + extent <= platformY - platformHalf;
+  });
+  const platformFlowers = [-1, 1].map(side => ({
+    x: platformX + side * (platformHalf + .22), y: platformY - 1.25,
+  }));
+  return { platformX, platformY, platformSize, platformHeight, floor, aisleWidth, aisleStart, aisleEnd, chair,
+    archY: platformY + .55, archRadius: 1.55, chairs, flowers, platformFlowers, fits };
 }

@@ -16,8 +16,8 @@ export function buildCeremony(p: VenueParameters, chairCount: number) {
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); return mesh;
   };
-  const platformGeometry = new THREE.CylinderGeometry(layout.platformRadius, layout.platformRadius, layout.platformHeight, 64); platformGeometry.rotateX(Math.PI / 2);
-  add("CEREMONY_WHITE_CIRCULAR_PLATFORM", platformGeometry, white, layout.platformX, layout.platformY, layout.floor + layout.platformHeight / 2);
+  const platformGeometry = new THREE.BoxGeometry(layout.platformSize, layout.platformSize, layout.platformHeight);
+  add("CEREMONY_WHITE_SQUARE_PLATFORM", platformGeometry, white, layout.platformX, layout.platformY, layout.floor + layout.platformHeight / 2);
   add("CEREMONY_STRAIGHT_WHITE_AISLE", new THREE.BoxGeometry(layout.aisleWidth, layout.aisleEnd - layout.aisleStart, .025), white,
     layout.platformX, (layout.aisleStart + layout.aisleEnd) / 2, layout.floor + .015);
 
@@ -50,8 +50,8 @@ export function buildCeremony(p: VenueParameters, chairCount: number) {
   }
   for (const side of [-1, 1]) {
     cluster(layout.platformX + side * 1.45, layout.archY - .18, layout.floor + layout.platformHeight + .35, .42, 45);
-    cluster(layout.platformX + side * (layout.platformRadius + .22), layout.platformY - 1.25, layout.floor + .35, .55, 60);
   }
+  for (const point of layout.platformFlowers) cluster(point.x, point.y, layout.floor + .35, .55, 60);
   for (const point of layout.flowers) cluster(point.x, point.y, layout.floor + .22, .25, 24);
 
   const petalGeometry = new THREE.SphereGeometry(1, 6, 4);
@@ -78,15 +78,16 @@ export function buildCeremony(p: VenueParameters, chairCount: number) {
   const chairBox = (width: number, depth: number, height: number, x: number, y: number, z: number) => {
     const geometry = new THREE.BoxGeometry(width, depth, height); geometry.translate(x, y, z); chairPieces.push(geometry);
   };
-  chairBox(.46, .46, .065, 0, 0, .46);
-  chairBox(.46, .085, .43, 0, -.2, .7);
+  const { seatWidth, skirtWidth, pleatDepth } = layout.chair;
+  chairBox(seatWidth, seatWidth, .065, 0, 0, .46);
+  chairBox(seatWidth, .085, .43, 0, -seatWidth / 2 + .03, .7);
   // Four softly flared, pleated fabric panels hide the chair legs down to the floor.
   const skirtVertices: number[] = [], skirtIndices: number[] = [];
   for (let side = 0; side < 4; side++) {
     const angle = side * Math.PI / 2, start = skirtVertices.length / 3;
     for (let i = 0; i <= 12; i++) for (const bottom of [false, true]) {
-      const along = (i / 12 - .5) * (bottom ? .5 : .46);
-      const outward = bottom ? .25 + .016 * Math.cos(i * Math.PI) : .23;
+      const along = (i / 12 - .5) * (bottom ? skirtWidth : seatWidth);
+      const outward = bottom ? skirtWidth / 2 + pleatDepth * Math.cos(i * Math.PI) : seatWidth / 2;
       skirtVertices.push(along * Math.cos(angle) - outward * Math.sin(angle),
         along * Math.sin(angle) + outward * Math.cos(angle), bottom ? .025 + .007 * Math.sin(i * Math.PI / 2) : .46);
     }

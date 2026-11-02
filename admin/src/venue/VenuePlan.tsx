@@ -67,14 +67,14 @@ export function VenuePlan({ parameters: input, led = "none", landmarks, children
       </g>
     </g>
     {!receptionOnly && <g aria-label={`Ceremony with ${ceremonyChairs} unassigned chairs`}>
-      <title>Straight white aisle, circular platform and white floral arch · {ceremonyChairs} chairs without assignments</title>
+      <title>Straight white aisle, square platform and circular white floral arch · {ceremonyChairs} chairs without assignments</title>
       <rect x={ceremony.platformX - ceremony.aisleWidth / 2} y={ceremony.aisleStart} width={ceremony.aisleWidth} height={ceremony.aisleEnd - ceremony.aisleStart} fill="#fffdf6" stroke="#d4cebd" strokeWidth=".06" />
-      <circle cx={ceremony.platformX} cy={ceremony.platformY} r={ceremony.platformRadius} fill="#fffdf6" stroke="#d4cebd" strokeWidth=".08" />
+      <rect data-ceremony-platform="" x={ceremony.platformX - ceremony.platformSize / 2} y={ceremony.platformY - ceremony.platformSize / 2} width={ceremony.platformSize} height={ceremony.platformSize} fill="#fffdf6" stroke="#d4cebd" strokeWidth=".08" />
       <path d={`M ${ceremony.platformX - ceremony.archRadius} ${ceremony.archY} H ${ceremony.platformX + ceremony.archRadius}`} stroke="#f8f5e5" strokeWidth=".5" />
-      {ceremony.flowers.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r=".28" fill="#fffef1" stroke="#809261" strokeWidth=".07" />)}
+      {[...ceremony.flowers, ...ceremony.platformFlowers].map((point, index) => <circle key={index} cx={point.x} cy={point.y} r=".28" fill="#fffef1" stroke="#809261" strokeWidth=".07" />)}
       {ceremony.chairs.map((chair, index) => <g key={index} data-ceremony-chair="" transform={`translate(${chair.x},${chair.y}) rotate(${chair.rotation * 180 / Math.PI})`} fill="#fffdf9" stroke="#c5beac" strokeWidth=".055">
-        <rect x="-.25" y="-.25" width=".5" height=".5" rx=".05" />
-        <path d="M -.23 -.2 H .23" strokeWidth=".08" />
+        <rect x={-ceremony.chair.footprintWidth / 2} y={-ceremony.chair.footprintWidth / 2} width={ceremony.chair.footprintWidth} height={ceremony.chair.footprintWidth} rx=".05" />
+        <path d={`M ${-ceremony.chair.seatWidth / 2} ${-ceremony.chair.seatWidth / 2 + .03} H ${ceremony.chair.seatWidth / 2}`} strokeWidth=".08" />
       </g>)}
     </g>}
     <g aria-label="Terrace walls and landscaping">

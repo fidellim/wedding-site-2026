@@ -2,6 +2,8 @@ import { createDemoWorkspace } from "../data/memoryRepository";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import VenuePreview from "./VenuePreview";
+import { ceremonyLayout } from "./ceremonyLayout";
+import { defaultParameters } from "./venueModel";
 import { defaultVenueLayout, estimatedPlacement, type VenueLayout } from "./layout";
 
 afterEach(cleanup);
@@ -58,6 +60,11 @@ it("updates anonymous ceremony chairs from RSVP totals without relying on recept
   await screen.findByRole("group", { name: "Venue overhead plan" });
   expect(screen.getByText(/Ceremony: 5 chairs/)).toBeVisible();
   expect(container.querySelectorAll("[data-ceremony-chair]")).toHaveLength(5);
+  const platform = container.querySelector("[data-ceremony-platform]");
+  expect(platform?.tagName).toBe("rect");
+  expect(platform).toHaveAttribute("width", "4.6");
+  expect(platform).toHaveAttribute("height", "4.6");
+  expect(container.querySelector("[data-ceremony-chair] rect")).toHaveAttribute("width", String(ceremonyLayout(defaultParameters, 5).chair.footprintWidth));
   const updated = { ...workspace, draft: { ...workspace.draft, assignments: [], invitationParties: workspace.draft.invitationParties.map((party, index) => index === 0 ? { ...party, attendingCount: 6 } : party) } };
   rerender(<VenuePreview workspace={updated} disabled={false} history={history} />);
   expect(screen.getByText(/Ceremony: 8 chairs/)).toBeVisible();
