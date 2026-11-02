@@ -2,7 +2,7 @@
 
 **Project:** Interactive 3D Wedding Venue + Guest Seating Experience  
 **Document role:** PRIMARY AND AUTHORITATIVE SOURCE OF TRUTH  
-**Revision:** 1.10
+**Revision:** 1.12
 **Created:** 21 September 2026  
 **Primary source used to author this specification:** user-supplied venue walkthrough video (`shangrila-venue.MP4`, approximately 150.5 seconds)  
 **Additional owner-authorized source:** [September 29 walkthrough](<reference-video/Shangri-la AD - 29-9-26.MOV>), 63.96 seconds; reviewed on 4 October 2026.
@@ -174,6 +174,26 @@ sits on the X-negative side and ceremony/paved-plaza context on the X-positive
 side of the lawn. The exact correspondence between the patterned paving seen
 in the stills and the ceremony polygon is APPROXIMATED-VISUAL; do not treat the
 colored overlay as a surveyed paving boundary.
+
+### SDE and DJ terrace tables (1 November 2026)
+
+Owner-confirmed event layout: two separate tables on the raised paved terrace,
+between the pavilion and the broad lawn/terrace stairs. SDE is nearer the
+pavilion and DJ nearer the stairs; both face the reception lawn. Keep the stair
+opening clear. These are temporary crew worktables, without guest seat targets,
+and appear in both the 2D plan and 3D venue independently of the optional cocktail
+fixtures. Table dimensions (1.8 × 0.75 m, 0.75 m high), a 0.6 m gap between tables,
+and 1.5 m beside the stair opening are DESIGN-DECISION estimates, pending vendor
+measurements. They sit along the terrace frontage, outside the pavilion floor.
+
+Owner-requested equipment update (2 November 2026): show representative equipment
+on both tables. DJ: two-deck controller/mixer, laptop on a stand, headphones and
+wireless microphone. SDE (same-day edit photo/video team): editing laptop, preview
+monitor, keyboard, portable SSD, card reader, camera with lens and spare batteries.
+All equipment stays on the tabletops, with screens facing the crew on the inland
+side. Use the same positions in 2D and 3D. Inventory, dimensions and equipment
+models are illustrative DESIGN-DECISION estimates, not a confirmed vendor list.
+
 
 ### Display orientation agreement (owner correction)
 
@@ -1359,6 +1379,8 @@ Whenever a physical fact changes or becomes confirmed, add a revision entry belo
 
 | Revision | Date | Change |
 |---|---|---|
+| 1.12 | 2026-11-02 | Owner-requested representative DJ and same-day edit equipment on the terrace tables; tabletop footprints and stair clearance retained. |
+| 1.11 | 2026-11-01 | Owner-confirmed separate SDE and DJ tables on the raised terrace, SDE nearer the pavilion and DJ nearer the broad stairs, facing the lawn with stair access clear; dimensions remain estimates. |
 | 1.10 | 2026-10-04 | Owner-directed proportion correction: longer adjustable approach, taller turning stair flight, larger ceremony plaza, compact pavilion/tree connection, continuing canal and shaped inland terrace; existing layout compatibility, no drone-view feature. |
 | 1.9 | 2026-10-04 | Owner-authorized September 29 video refinement: canal-side approach and bridge clearance, chain barriers and lanterns, circular plaza inlays, ribbed pavilion roof/eaves and lattice/panel framing, mature planting and stone coping; dimensions remain estimates. |
 | 1.0 | 2026-09-21 | Initial venue specification derived from supplied walkthrough video; labeled reference set created. |

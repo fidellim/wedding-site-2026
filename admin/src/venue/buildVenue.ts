@@ -1,9 +1,10 @@
 import { venueArchitecture } from "./venueArchitecture";
 import { buildStage } from "./buildStage";
+import { productionEquipment } from "./productionEquipment";
 import { planToSceneScale } from "./venueCoordinates";
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { ceremonyStructure, ceremonyPalms, stageLayout, venueLayout, type LedLayout, type VenueParameters, normalizeParameters } from "./venueModel";
+import { ceremonyStructure, ceremonyPalms, stageLayout, venueLayout, productionTableLayout, type LedLayout, type VenueParameters, normalizeParameters } from "./venueModel";
 
 /** Z-up, origin at the reception lawn. Every number is a documented visual placeholder. */
 export function buildVenue(input: VenueParameters, led: LedLayout = "none") {
@@ -545,6 +546,38 @@ export function buildVenue(input: VenueParameters, led: LedLayout = "none") {
   // Temporary wedding furniture remains separate from the permanent venue.
   const weddingLayout = new THREE.Group(); weddingLayout.name = "WEDDING_LAYOUT"; weddingLayout.scale.fromArray(planToSceneScale);
   const stage = buildStage(p, led); weddingLayout.add(stage.root);
+  const productionTables = group("PRODUCTION_TABLES", weddingLayout);
+  const crewLinen = material("#fff9ed");
+  const equipmentMaterials = { case: material("#303238", .65), metal: material("#a6adb3", .5),
+    screen: material("#50787f", .3), control: material("#bda36e", .5) };
+  for (const table of productionTableLayout(p)) {
+    const crewTable = group(`PRODUCTION_${table.id.toUpperCase()}`, productionTables);
+    crewTable.position.set(table.x, table.y, p.terraceHeight);
+    box(crewTable, "TABLE_TOP", 0, 0, table.height - .035, table.width, table.depth, .07, crewLinen);
+    for (const side of [-1, 1]) {
+      box(crewTable, "TABLE_LEGS", side * (table.width / 2 - .15), 0, (table.height - .07) / 2,
+        .06, table.depth - .16, table.height - .07, iron);
+    }
+    // Linen fronts face +plan Y, toward the lawn; the crew works from the pavilion side.
+    box(crewTable, "LAWN_FACING_LINEN", 0, table.depth / 2 - .02, table.height / 2,
+      table.width, .04, table.height - .08, crewLinen);
+    const equipment = group("EQUIPMENT", crewTable); equipment.position.z = table.height;
+    for (const part of productionEquipment(table.id)) {
+      const mat = equipmentMaterials[part.finish];
+      if (part.shape === "box") {
+        box(equipment, part.name, part.x, part.y, part.z, part.width, part.depth, part.height, mat);
+      } else if (part.shape === "disc") {
+        cylinder(equipment, part.name, part.x, part.y, part.z, part.width / 2, part.width / 2, part.height, mat, 24);
+      } else {
+        const geometry = part.shape === "headband"
+          ? new THREE.TorusGeometry(part.width / 2, .0125, 6, 16, Math.PI)
+          : new THREE.CylinderGeometry(part.width / 2, part.width / 2, part.depth, 16);
+        const object = new THREE.Mesh(geometry, mat); object.name = part.name;
+        object.position.set(part.x, part.y, part.z); object.castShadow = true; object.receiveShadow = true;
+        equipment.add(object);
+      }
+    }
+  }
   const cocktailFixtures = group("COCKTAIL_FIXTURES", weddingLayout); cocktailFixtures.visible = false;
   for (const fixture of architecture.fixtures) {
     box(cocktailFixtures, fixture.id, fixture.x, fixture.y, p.terraceHeight + fixture.height / 2, fixture.width, fixture.depth, fixture.height, plaster);
@@ -553,6 +586,7 @@ export function buildVenue(input: VenueParameters, led: LedLayout = "none") {
   return { root, weddingLayout, waterTexture,
     dispose() {
       stage.dispose();
+      productionTables.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
       cocktailFixtures.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
       root.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
       materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose());

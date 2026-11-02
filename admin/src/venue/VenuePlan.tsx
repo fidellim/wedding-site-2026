@@ -1,8 +1,9 @@
 import { useId, type ReactNode } from "react";
 import { polygonPoints, venueArchitecture } from "./venueArchitecture";
 import type { VenueLayout } from "./layout";
+import { ProductionEquipmentPlan } from "./ProductionEquipmentPlan";
 import { ceremonyLayout } from "./ceremonyLayout";
-import { ceremonyPalms, ceremonyStructure, LED_WIDTH, ledLayout, stageLayout, venueLandmarks, venueLayout, type LedLayout, type VenueParameters, normalizeParameters } from "./venueModel";
+import { ceremonyPalms, ceremonyStructure, LED_WIDTH, ledLayout, productionTableLayout, stageLayout, venueLandmarks, venueLayout, type LedLayout, type VenueParameters, normalizeParameters } from "./venueModel";
 
 /** Always available, including on devices without WebGL. Uses the same parametric layout. */
 export function VenuePlan({ parameters: input, led = "none", landmarks, children, receptionOnly = false, interactive = false, ceremonyChairs = 0, cocktailFixtures = false }: { parameters: VenueParameters; led?: LedLayout; landmarks?: VenueLayout["landmarks"]; children?: ReactNode; receptionOnly?: boolean; interactive?: boolean; ceremonyChairs?: number; cocktailFixtures?: boolean }) {
@@ -98,6 +99,16 @@ export function VenuePlan({ parameters: input, led = "none", landmarks, children
       </g>)}
     </g>}
     <circle cx={l.pavilionX} cy={l.pavilionY} r={p.pavilionDiameter * .585} fill="#795842" />
+    <g aria-label="SDE and DJ tables on the raised terrace, facing the reception lawn">
+      {productionTableLayout(p).map(table => <g key={table.id} data-production-table={table.id} transform={`translate(${table.x},${table.y})`}>
+        <title>{table.label} · Raised terrace · Faces reception lawn · Estimated 1.8 × 0.75 m</title>
+        <rect x={-table.width / 2} y={-table.depth / 2} width={table.width} height={table.depth} fill="#fff9ed" stroke="#795842" strokeWidth=".06" />
+        <ProductionEquipmentPlan kind={table.id} />
+        <path d={`M ${-table.width / 2} ${table.depth / 2} H ${table.width / 2}`} stroke="#a88a52" strokeWidth=".1" />
+        <path d={`M ${-table.width / 2} 0 L ${l.terraceLeft - table.x - .5} ${table.id === "sde" ? .5 : 2.5}`} fill="none" stroke="#46392e" strokeWidth=".045" />
+        <text x={l.terraceLeft - table.x - 1} y={table.id === "sde" ? .5 : 2.5} dominantBaseline="central" textAnchor="end" fontSize=".9" fontWeight="600" fill="#46392e" stroke="#f2eee4" strokeWidth=".08" paintOrder="stroke">{table.label}</text>
+      </g>)}
+    </g>
     {Array.from({ length: p.stairCount }, (_, i) => <rect key={i} x={l.stairX - p.stairWidth / 2} y={l.lawnBack - (i + 1) * p.stairTread} width={p.stairWidth} height={p.stairTread} fill="#e9ddc9" stroke="#c1b29a" strokeWidth=".08" />)}
     <g transform={`translate(${stagePoint.x},${stagePoint.y}) rotate(180)`} fill="#f4ead7" stroke="#b89c67" strokeWidth=".08">
       <rect x={-design.width / 2} y={-p.stageDepth / 2} width={design.width} height={p.stageDepth} />

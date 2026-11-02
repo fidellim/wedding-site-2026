@@ -17,6 +17,8 @@ it("retains a readable overhead venue plan when WebGL cannot start", async () =>
   expect(screen.getByText(/3D is unavailable on this device/)).toBeVisible();
   expect(screen.getByRole("button", { name: "Entrance" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "2D plan" })).toBeEnabled();
+  expect(screen.getByText("SDE table", { exact: true })).toBeVisible();
+  expect(screen.getByText("DJ table", { exact: true })).toBeVisible();
 });
 
 it("updates anonymous ceremony chairs from RSVP totals without relying on reception assignments", async () => {

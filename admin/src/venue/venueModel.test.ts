@@ -1,7 +1,32 @@
 import { planToSceneScale, toScenePosition } from "./venueCoordinates";
 import { Group, PerspectiveCamera, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
-import { ceremonyStructure, ceremonyPalms, ledLayout, LED_WIDTH, stageLayout, cameraView, defaultParameters, normalizeParameters, parameterDefinitions, parameterKeys, venueLayout, viewPresets } from "./venueModel";
+import { ceremonyStructure, ceremonyPalms, ledLayout, LED_WIDTH, stageLayout, cameraView, defaultParameters, normalizeParameters, parameterDefinitions, parameterKeys, productionTableLayout, venueLayout, viewPresets } from "./venueModel";
+
+it("places SDE nearer the pavilion and DJ nearer the broad stairs, with separate tables on the terrace", () => {
+  const p = defaultParameters, l = venueLayout(p), [sde, dj] = productionTableLayout(p);
+  expect(sde.x).toBeGreaterThan(l.pavilionX);
+  expect(sde.x + sde.width / 2 + .6).toBeCloseTo(dj.x - dj.width / 2);
+  expect(dj.x + dj.width / 2 + 1.5).toBeCloseTo(l.stairX - p.stairWidth / 2);
+  for (const table of [sde, dj]) {
+    expect(table.y + table.depth / 2).toBeLessThan(l.terraceFront);
+    expect(table.y - table.depth / 2).toBeGreaterThan(l.pavilionY + p.pavilionDiameter / 2);
+    expect(table.x - table.width / 2).toBeGreaterThan(l.terraceLeft);
+  }
+});
+
+it("retains crew table stair clearance and terrace placement when venue dimensions change", () => {
+  for (const edge of ["min", "max"] as const) {
+    const p = normalizeParameters(Object.fromEntries(parameterKeys.map(key => [key, parameterDefinitions[key][edge]])));
+    const l = venueLayout(p);
+    for (const table of productionTableLayout(p)) {
+      expect(table.x + table.width / 2 + 1.5).toBeLessThanOrEqual(l.stairX - p.stairWidth / 2 + 1e-6);
+      expect(table.x - table.width / 2).toBeGreaterThan(l.terraceLeft);
+      expect(table.y + table.depth / 2).toBeLessThan(l.terraceFront);
+      expect(table.y - table.depth / 2).toBeGreaterThan(l.pavilionY + p.pavilionDiameter / 2);
+    }
+  }
+});
 
 describe("private venue preview parameters", () => {
   it("recovers from corrupt or old browser estimates without invalid geometry", () => {

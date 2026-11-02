@@ -72,6 +72,17 @@ export function venueLayout(input: VenueParameters) {
   };
 }
 
+/** Estimated crew worktables face +plan Y (the lawn), clear of the broad stair opening. */
+export function productionTableLayout(p: VenueParameters) {
+  const l = venueLayout(p), width = 1.8, depth = .75;
+  const djX = l.stairX - p.stairWidth / 2 - 1.5 - width / 2;
+  const y = l.terraceFront - Math.min(1, p.pavilionLawnGap - .5);
+  return [
+    { id: "sde", label: "SDE table", x: djX - width - .6, y, width, depth, height: .75 },
+    { id: "dj", label: "DJ table", x: djX, y, width, depth, height: .75 },
+  ];
+}
+
 /** Stage sits just inland of the sand, facing -plan Y toward the ceremony. */
 export function stageLayout(p: VenueParameters) {
   const backY = p.lawnLength / 2 - .5;
@@ -134,6 +145,8 @@ export function cameraView(p: VenueParameters, preset: ViewPreset, aspect = 1.5,
 export function venueLandmarks(p: VenueParameters, led: LedLayout = "none") {
   const l = venueLayout(p);
   return [
+    ...productionTableLayout(p).map(table => ({ id: table.id, label: table.label,
+      position: [table.x, table.y, p.terraceHeight + table.height + .25] })),
     { id: "stage", label: "HF stage", position: [stageLayout(p).centerX, stageLayout(p).centerY, p.stageHeight + ledLayout(p, led).height + .5] },
     { id: "entrance", label: "Ceremony approach", position: [l.plazaX, l.entranceY + 4, p.terraceHeight + 1] },
     { id: "plaza", label: "Ceremony area", position: [l.plazaX, l.plazaY, p.terraceHeight + .6] },
