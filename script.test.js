@@ -247,3 +247,34 @@ it("shows the private-event gate without a code and makes no request", async () 
   await settle(() => expectClosed("Please use your personalized invitation link."));
   expect(fetch).not.toHaveBeenCalled();
 });
+
+it("offers the released seating guide only after the guest opens their invitation", async () => {
+  fetch.mockImplementation(async url => response(url.endsWith("/lookup_invite")
+    ? [currentRecord] : url.endsWith("/get_seating_guide_for_invite")
+      ? { invitees: [{ id: "guest-1" }] } : []));
+  await import("./script.js");
+  await settle(expectAdmitted);
+  const shortcut = document.getElementById("floatingSeatingLink");
+  expect(shortcut).not.toBeVisible();
+  document.getElementById("envelopeBtn").click();
+  await vi.advanceTimersByTimeAsync(2500);
+  expect(shortcut).toBeVisible();
+  expect(new URL(shortcut.href).pathname).toBe("/seating/");
+  expect(new URL(shortcut.href).searchParams.get("code")).toBe("test-code");
+
+  document.getElementById("registryOpenBtn").click();
+  expect(shortcut).not.toBeVisible();
+  document.getElementById("registryListModalCloseBtn").click();
+  expect(shortcut).toBeVisible();
+});
+
+it.each([null, { invitees: [] }])("keeps the seating shortcut hidden when the release endpoint returns %j", async guide => {
+  fetch.mockImplementation(async url => response(url.endsWith("/lookup_invite") ? [currentRecord] : guide));
+  await import("./script.js");
+  await settle(expectAdmitted);
+  document.getElementById("envelopeBtn").click();
+  await vi.advanceTimersByTimeAsync(2500);
+  const shortcut = document.getElementById("floatingSeatingLink");
+  expect(shortcut).not.toBeVisible();
+  expect(shortcut).not.toHaveAttribute("href");
+});

@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-11-07T16:55:25.908Z",
+        "reason": "Agent review: shortcut text inherits cream #eee9df on burgundy #630000 from styles.css; HTML has no color declarations. Cream on burgundy has a computed contrast of 11.34:1."
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-11-07T16:55:26.024Z",
+        "reason": "Agent review: HTML has no shadow declarations; new shortcut elevation uses offset neutral black shadows in styles.css, not colored glow."
+      }
+    ]
+  }
+}

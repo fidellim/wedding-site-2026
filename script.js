@@ -94,6 +94,7 @@ const photoSliderRoot = q("photoSlider");
 const sliderPrevBtn = q("sliderPrevBtn");
 const sliderNextBtn = q("sliderNextBtn");
 const scrollTopBtn = q("scrollTopBtn");
+const floatingSeatingLink = q("floatingSeatingLink");
 
 let countdownInterval = null;
 let invitationOpened = false;
@@ -393,6 +394,9 @@ async function updateSeatingGuideLink(guest) {
   const link = q("seatingGuideLink");
   if (!link) return;
   link.hidden = true;
+  link.removeAttribute("href");
+  if (floatingSeatingLink) floatingSeatingLink.removeAttribute("href");
+  syncScrollTopButtonVisibility(true);
   if (!guest.isValidCode || !guest.code || !isBackendConfigured()) return;
   try {
     const response = await fetchWithTimeout(`${weddingConfig.backend.supabaseUrl}/rest/v1/rpc/get_seating_guide_for_invite`, {
@@ -404,6 +408,8 @@ async function updateSeatingGuideLink(guest) {
     const url = new URL("/seating/", window.location.origin);
     url.searchParams.set("code", guest.code);
     link.href = url.toString(); link.hidden = false;
+    if (floatingSeatingLink) floatingSeatingLink.href = url.toString();
+    syncScrollTopButtonVisibility(true);
   } catch { /* The invitation remains usable while the seating guide is unavailable. */ }
 }
 
@@ -672,6 +678,7 @@ function syncModalOpenState() {
   const hasOpenModal =
     isRegistryListModalOpen() || isRegistryConfirmModalOpen() || isRsvpConfirmModalOpen();
   document.body.classList.toggle("modal-open", hasOpenModal);
+  syncScrollTopButtonVisibility(true);
 }
 
 function getActiveRegistryModalCard() {
@@ -990,13 +997,17 @@ function initClickHeartSpark() {
 }
 
 function shouldShowScrollTopButton() {
-  if (!scrollTopBtn || !mainContent || mainContent.classList.contains("hidden")) {
+  if (!scrollTopBtn || !mainContent || mainContent.classList.contains("hidden") || document.body.classList.contains("modal-open")) {
     return false;
   }
   return window.scrollY > window.innerHeight;
 }
 
 function syncScrollTopButtonVisibility(force = false) {
+  if (floatingSeatingLink) {
+    floatingSeatingLink.hidden = !floatingSeatingLink.hasAttribute("href") ||
+      !mainContent || mainContent.classList.contains("hidden") || document.body.classList.contains("modal-open");
+  }
   if (!scrollTopBtn) {
     return;
   }
@@ -1009,6 +1020,7 @@ function syncScrollTopButtonVisibility(force = false) {
   scrollTopBtnVisible = nextVisible;
   scrollTopBtn.classList.toggle("is-visible", nextVisible);
   scrollTopBtn.setAttribute("aria-hidden", nextVisible ? "false" : "true");
+  scrollTopBtn.tabIndex = nextVisible ? 0 : -1;
 }
 
 function queueScrollTopButtonSync() {
