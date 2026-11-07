@@ -27,7 +27,7 @@ it("shows assignments immediately, switches between split tables, and preserves 
   const { container } = render(<SeatingGuide data={data} />);
   expect(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ })).toBeVisible();
   expect(screen.getByRole("button", { name: /Jamie\s*Table 2 · Seat 6/ })).toBeVisible();
-  expect(screen.getByRole("button", { name: "Show my seat" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ })).toHaveAttribute("aria-pressed", "true");
   await screen.findByRole("img", { name: "Venue overhead plan" });
   fireEvent.click(screen.getByRole("button", { name: /Jamie\s*Table 2 · Seat 6/ }));
   expect(screen.getByRole("button", { name: /Jamie\s*Table 2 · Seat 6/ })).toHaveAttribute("aria-pressed", "true");

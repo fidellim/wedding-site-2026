@@ -25,10 +25,10 @@ it("starts a single guest's aerial journey automatically", async () => {
   expect(screen.getByTestId("chair-numbers")).toHaveTextContent("true");
 });
 
-it("waits for a party member, supports close-up, and replays aerial for the selected guest", async () => {
-  render(<SeatingGuide data={previewFixture("split")} />);
-  expect(await request()).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ }));
+it("starts with the first alphabetical assigned guest, supports close-up, and replays aerial", async () => {
+  const data = previewFixture("split");
+  data.snapshot.invitees.reverse();
+  render(<SeatingGuide data={data} />);
   expect(await request()).toMatchObject({ tour: true, view: "aerial", target: { seatNumber: 3 } });
   fireEvent.click(screen.getByRole("button", { name: "Close-up" }));
   expect(await request()).toMatchObject({ tour: false, view: "close-up" });
@@ -39,6 +39,24 @@ it("waits for a party member, supports close-up, and replays aerial for the sele
   expect(replay).toMatchObject({ tour: true, view: "aerial", target: { seatNumber: 6 } });
   fireEvent.click(screen.getByRole("button", { name: "Show my seat" }));
   expect((await request()).key).toBeGreaterThan(replay.key);
+});
+
+it("skips alphabetically earlier guests without assigned seats", async () => {
+  const data = previewFixture("split");
+  data.snapshot.assignments = data.snapshot.assignments.filter(assignment => assignment.inviteeId !== "Alex");
+  render(<SeatingGuide data={data} />);
+  expect(await request()).toMatchObject({ tour: true, target: { tableId: "sample-long", seatNumber: 6 } });
+  expect(screen.getByRole("button", { name: /Jamie\s*Table 2 · Seat 6/ })).toHaveAttribute("aria-pressed", "true");
+});
+
+it("starts with landmarks off and lets guests enable them", async () => {
+  render(<SeatingGuide data={previewFixture("single")} />);
+  await request();
+  fireEvent.click(screen.getByRole("button", { name: "Views" }));
+  const landmarks = screen.getByRole("button", { name: "Landmarks" });
+  expect(landmarks).toHaveAttribute("aria-pressed", "false");
+  fireEvent.click(landmarks);
+  expect(landmarks).toHaveAttribute("aria-pressed", "true");
 });
 
 it("frames the table from above for aerial and the exact chair for close-up", () => {

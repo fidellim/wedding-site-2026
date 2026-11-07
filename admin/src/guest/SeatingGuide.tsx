@@ -16,6 +16,10 @@ const VenueCanvas = lazy(() => import("../venue/VenueCanvas").then(m => ({ defau
 
 export function SeatingGuide({ data }: { data: GuideData }) {
   const { snapshot, chairsApproved } = data;
+  const partyMembers = useMemo(() => [...snapshot.invitees].sort((a, b) =>
+    a.fullName.localeCompare(b.fullName, "en", { sensitivity: "base" }) || a.id.localeCompare(b.id)), [snapshot.invitees]);
+  const firstAssigned = partyMembers.find(person => snapshot.assignments.some(assignment =>
+    assignment.inviteeId === person.id && snapshot.seats.some(seat => seat.id === assignment.seatId)));
   const root = useRef<HTMLElement>(null);
   const partyPanelId = useId();
   const viewMenuId = useId();
@@ -28,12 +32,12 @@ export function SeatingGuide({ data }: { data: GuideData }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [framing, setFraming] = useState<{ exclusions: LabelObstacle[]; lift: number }>({ exclusions: [], lift: 0 });
-  const [personId, setPersonId] = useState<string | null>(() => snapshot.invitees.length === 1 ? snapshot.invitees[0].id : null);
+  const [personId, setPersonId] = useState<string | null>(() => firstAssigned?.id ?? (partyMembers.length === 1 ? partyMembers[0].id : null));
   const [view, setView] = useState<"3d" | "plan">("3d");
   const [receptionOnly, setReceptionOnly] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   const [dusk, setDusk] = useState(false);
-  const [showLabels, setShowLabels] = useState(true);
+  const [showLabels, setShowLabels] = useState(false);
   const [tourLabel, setTourLabel] = useState("");
   const [seatView, setSeatView] = useState<SeatCameraView>("aerial");
   const onUnavailable = useCallback(() => { setUnavailable(true); setView("plan"); setTourLabel(""); }, []);
@@ -112,7 +116,7 @@ export function SeatingGuide({ data }: { data: GuideData }) {
     </button>
     </div>
     <div id={partyPanelId} hidden={!expanded} className="guide-party" aria-label="Your invitation party">
-      {snapshot.invitees.map(invitee => {
+      {partyMembers.map(invitee => {
         const assignedSeat = snapshot.seats.find(s => s.id === snapshot.assignments.find(a => a.inviteeId === invitee.id)?.seatId);
         const assignedTable = snapshot.tables.find(t => t.id === assignedSeat?.tableId);
         return <button key={invitee.id} aria-pressed={personId === invitee.id} onClick={() => selectPerson(invitee.id)}>

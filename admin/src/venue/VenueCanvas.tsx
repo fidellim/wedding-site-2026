@@ -53,6 +53,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   const seatArrow = useRef<SVGSVGElement>(null);
   const initialPreset = useRef(preset); initialPreset.current = preset;
   const [moving, setMoving] = useState(false);
+  const [ready, setReady] = useState(false);
   const visibleLandmarks = [...venueLandmarks(parameters, led), ...eventFurnitureLandmarks(layout)]
     .filter(item => productionTables || (item.id !== "sde" && item.id !== "dj"));
 
@@ -62,6 +63,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     let renderer: THREE.WebGLRenderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "low-power" }); }
     catch { onUnavailable(); return; }
+    setReady(false);
+    renderer.domElement.style.visibility = "hidden";
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
@@ -173,13 +176,16 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     let transition: { start: number; from: THREE.Vector3; to: THREE.Vector3; fromTarget: THREE.Vector3; toTarget: THREE.Vector3 } | null = null;
     let frame = 0, last = 0, visible = true, disposed = false;
     let journey: { start: number; positions: THREE.CatmullRomCurve3; targets: THREE.CatmullRomCurve3 } | null = null;
-    function stop() { inspectionRef.current?.peek(null); transition = null; journey = null; controls.enabled = true; setMoving(false); tourLabel.current?.(""); }
+    let shadersReady = false, sceneReady = false;
+    let queuedFocus: { target: FurnitureTarget; tour: boolean; view: SeatCameraView } | null = null;
+    function stop() { queuedFocus = null; inspectionRef.current?.peek(null); transition = null; journey = null; controls.enabled = true; setMoving(false); tourLabel.current?.(""); }
     function skip() {
       if (journey) { camera.position.copy(journey.positions.getPoint(1)); controls.target.copy(journey.targets.getPoint(1)); }
       else if (transition) { camera.position.copy(transition.to); controls.target.copy(transition.toTarget); }
       stop(); controls.update();
     }
     function focus(target: FurnitureTarget, tour: boolean, view: SeatCameraView = "close-up") {
+      if (!sceneReady) { queuedFocus = { target, tour, view }; return; }
       if (!currentSnapshot || !currentLayout) return;
       const end = seatDestination(currentSnapshot, currentLayout, target, camera.aspect, view);
       if (!end) return;
@@ -236,12 +242,23 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     const observer = new IntersectionObserver(entries => { visible = entries[0]?.isIntersecting ?? true; }); observer.observe(container);
     const onLost = (event: Event) => { event.preventDefault(); onUnavailable(); }; renderer.domElement.addEventListener("webglcontextlost", onLost);
     let previousLift = liftRef.current;
+    // Models and canvas textures are built synchronously. Compile after the
+    // initial prop effects finish, then draw one complete, stationary frame
+    // before starting any queued seat journey.
+    void Promise.resolve().then(() => {
+      if (!disposed) return renderer.compileAsync(scene, camera);
+    }).then(() => { if (!disposed) shadersReady = true; }, () => { if (!disposed) onUnavailable(); });
     function draw(now: number) {
       if (disposed) return;
       frame = requestAnimationFrame(draw);
-      if (!visible || document.hidden || now - last < 1000 / 30) return;
+      if (!shadersReady || !visible || document.hidden || !container.clientWidth || !container.clientHeight || now - last < 1000 / 30) return;
       last = now;
       if (previousLift !== liftRef.current) { previousLift = liftRef.current; size(); }
+      if (sceneReady && queuedFocus) {
+        const pending = queuedFocus;
+        queuedFocus = null;
+        focus(pending.target, pending.tour, pending.view);
+      }
       if (journey) {
         const t = flightProgress(now, journey.start);
         camera.position.copy(journey.positions.getPoint(t)); controls.target.copy(journey.targets.getPoint(t));
@@ -269,6 +286,11 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
         if (marker) marker.rotation.z = -textAngle - table.rotation.z;
       });
       renderer.render(scene, camera);
+      if (!sceneReady) {
+        sceneReady = true;
+        renderer.domElement.style.visibility = "visible";
+        setReady(true);
+      }
       const anchors: { id: string; x: number; y: number; width: number; height: number }[] = [];
       const width = container.clientWidth, height = container.clientHeight;
       const label = seatLabel.current, leader = seatLeader.current, arrow = seatArrow.current;
@@ -356,7 +378,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
 
   useEffect(() => { api.current?.setView(preset); }, [preset, resetKey]);
   useEffect(() => { if (focusRequest) api.current?.focus(focusRequest.target, focusRequest.tour, focusRequest.view); else if (focusRequest === null) api.current?.stop(); }, [focusRequest, onUnavailable]);
-  return <div className="venue-canvas" ref={host} onClick={event => event.stopPropagation()}>
+  return <div className="venue-canvas" ref={host} aria-busy={!ready} onClick={event => event.stopPropagation()}>
+    {!ready && <p className="venue-loading" role="status">Preparing the venue…</p>}
     <div className="venue-seat-marker">
       <svg className="venue-seat-leader" width="100%" height="100%" aria-hidden="true">
         <g ref={seatLeader} style={{ visibility: "hidden" }}><line /><circle r="4" /></g>
