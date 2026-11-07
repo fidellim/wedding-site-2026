@@ -1254,6 +1254,46 @@ body.modal-open {
   margin-top: 0.15rem;
 }
 
+.countdown-complete-rings { display: none; }
+
+.countdown-panel.is-complete .countdown-heading,
+.countdown-panel.is-complete .countdown-grid { display: none; }
+
+.countdown-panel.is-complete .countdown-right {
+  padding-block: clamp(2rem, 5vw, 4rem);
+  gap: 1.25rem;
+}
+
+.countdown-panel.is-complete .countdown-complete-rings {
+  display: block;
+  color: var(--band-fg);
+}
+
+.countdown-panel.is-complete .date-text {
+  margin: 0;
+  max-width: 100%;
+  color: var(--band-fg);
+  text-align: center;
+}
+
+.countdown-complete-opening {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.4;
+}
+
+.countdown-complete-celebration {
+  display: block;
+  margin-top: 0.25rem;
+  padding: 0.05em 0.15em 0.2em;
+  font-family: var(--wedding-script);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 400;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
 @keyframes countdownFlipTop {
   from {
     transform: rotateX(0deg);

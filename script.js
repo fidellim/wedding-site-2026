@@ -1405,7 +1405,8 @@ async function loadGuestProfile() {
 }
 
 function startCountdown() {
-  const target = new Date(weddingConfig.weddingDateISO).getTime();
+  const previewComplete = import.meta.env.DEV && params.get("preview") === "countdown-complete";
+  const target = previewComplete ? 0 : new Date(weddingConfig.weddingDateISO).getTime();
   const weddingDateText = q("weddingDateText");
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const flipAnimationEnabled = !prefersReducedMotion;
@@ -1433,7 +1434,14 @@ function startCountdown() {
         seconds: 0,
       });
       if (weddingDateText) {
-        weddingDateText.textContent = "Today is the wedding day!";
+        const opening = document.createElement("span");
+        opening.className = "countdown-complete-opening";
+        opening.textContent = "Today is the ";
+        const celebration = document.createElement("span");
+        celebration.className = "countdown-complete-celebration";
+        celebration.textContent = "wedding day!";
+        weddingDateText.replaceChildren(opening, celebration);
+        weddingDateText.closest(".countdown-panel")?.classList.add("is-complete");
       }
       if (countdownInterval !== null) {
         window.clearTimeout(countdownInterval);

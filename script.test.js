@@ -278,3 +278,30 @@ it.each([null, { invitees: [] }])("keeps the seating shortcut hidden when the re
   expect(shortcut).not.toBeVisible();
   expect(shortcut).not.toHaveAttribute("href");
 });
+
+it("replaces the finished countdown with the wedding-day message", async () => {
+  vi.setSystemTime(new Date("2026-11-15T10:59:57Z"));
+  fetch.mockImplementation(async url => response(url.endsWith("/lookup_invite") ? [currentRecord] : []));
+  await import("./script.js");
+  await settle(expectAdmitted);
+  document.getElementById("envelopeBtn").click();
+  await vi.advanceTimersByTimeAsync(2500);
+  const panel = document.querySelector(".countdown-panel");
+  expect(panel).not.toHaveClass("is-complete");
+  expect(document.getElementById("weddingDateText")).not.toHaveTextContent("Today is the wedding day!");
+  await vi.advanceTimersByTimeAsync(1100);
+  expect(panel).toHaveClass("is-complete");
+  expect(document.getElementById("weddingDateText")).toHaveTextContent("Today is the wedding day!");
+  expect(document.getElementById("weddingDateText")).toHaveAttribute("aria-atomic", "true");
+});
+
+it("previews the completed countdown in development without changing the wedding date", async () => {
+  window.history.replaceState({}, "", "/?code=TEST-CODE&preview=countdown-complete");
+  fetch.mockImplementation(async url => response(url.endsWith("/lookup_invite") ? [currentRecord] : []));
+  await import("./script.js");
+  await settle(expectAdmitted);
+  document.getElementById("envelopeBtn").click();
+  await vi.advanceTimersByTimeAsync(2500);
+  expect(document.querySelector(".countdown-panel")).toHaveClass("is-complete");
+  expect(document.getElementById("weddingDateText")).toHaveTextContent("Today is the wedding day!");
+});
