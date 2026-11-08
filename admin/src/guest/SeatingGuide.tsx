@@ -170,7 +170,7 @@ export function SeatingGuide({ data }: { data: GuideData }) {
         {view === "3d" && !unavailable ? <Suspense fallback={<p className="guide-loading" role="status">Preparing the venue…</p>}><VenueCanvas
           parameters={layout.parameters} led={layout.led} snapshot={furnitureSnapshot} layout={layout} productionTables={layout.productionTablesVisible ?? true}
           preset="overview" resetKey={0} labels={showLabels} labelExclusions={framing.exclusions} cameraLift={framing.lift} dusk={dusk} onUnavailable={onUnavailable}
-          ceremonyChairs={data.ceremonyChairs} highlightTarget={target} focusRequest={request} onTourLabel={setTourLabel} chairNumbers={chairsApproved}
+          ceremonyChairs={data.ceremonyChairs} highlightTarget={target} focusRequest={request} onTourLabel={setTourLabel} chairNumbers={false}
         /></Suspense> : <VenuePlan productionTables={layout.productionTablesVisible ?? true} parameters={layout.parameters} led={layout.led} landmarks={layout.landmarks} receptionOnly={receptionOnly} ceremonyChairs={data.ceremonyChairs}>
           <TableFurniture snapshot={furnitureSnapshot} layout={layout} showSeatNumbers={chairsApproved} guestView />
           {placement && <g transform={`translate(${placement.x},${placement.y}) rotate(${placement.rotation})`}>

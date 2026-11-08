@@ -22,7 +22,8 @@ it("starts a single guest's aerial journey automatically", async () => {
   render(<SeatingGuide data={previewFixture("single")} />);
   expect(await request()).toMatchObject({ tour: true, view: "aerial", target: { tableId: "sample-round", seatNumber: 3 } });
   expect(screen.getByRole("button", { name: "Aerial" })).toHaveAttribute("aria-pressed", "true");
-  expect(screen.getByTestId("chair-numbers")).toHaveTextContent("true");
+  expect(screen.getByTestId("chair-numbers")).toHaveTextContent("false");
+  expect(screen.getByRole("button", { name: /Alex\s*Table 1 · Seat 3/ })).toHaveAttribute("aria-pressed", "true");
 });
 
 it("starts with the first alphabetical assigned guest, supports close-up, and replays aerial", async () => {

@@ -187,11 +187,12 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     function focus(target: FurnitureTarget, tour: boolean, view: SeatCameraView = "close-up") {
       if (!sceneReady) { queuedFocus = { target, tour, view }; return; }
       if (!currentSnapshot || !currentLayout) return;
-      const end = seatDestination(currentSnapshot, currentLayout, target, camera.aspect, view);
+      const screenPosition = venue.weddingLayout.getObjectByName("LED_5_BY_3M_FACE")?.getWorldPosition(new THREE.Vector3()).toArray();
+      const end = seatDestination(currentSnapshot, currentLayout, target, camera.aspect, view, screenPosition);
       if (!end) return;
       stop(); controls.enableRotate = true; controls.minDistance = 3; controls.maxTargetRadius = Infinity;
       if (!tour || reduced) { camera.position.fromArray(end.position); controls.target.fromArray(end.target); controls.update(); return; }
-      const views = flightViews(currentSnapshot, currentLayout, target, camera.aspect, view);
+      const views = flightViews(currentSnapshot, currentLayout, target, camera.aspect, view, screenPosition);
       if (!views) return;
       journey = { start: performance.now(), positions: new THREE.CatmullRomCurve3(views.map(v => new THREE.Vector3(...v.position))), targets: new THREE.CatmullRomCurve3(views.map(v => new THREE.Vector3(...v.target))) };
       camera.position.copy(journey.positions.getPoint(0)); controls.target.copy(journey.targets.getPoint(0));
