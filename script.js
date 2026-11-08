@@ -391,11 +391,10 @@ function initVenueMapEmbed() {
 let guideLookupSequence = 0;
 async function updateSeatingGuideLink(guest) {
   const sequence = ++guideLookupSequence;
-  const link = q("seatingGuideLink");
+  const link = floatingSeatingLink;
   if (!link) return;
   link.hidden = true;
   link.removeAttribute("href");
-  if (floatingSeatingLink) floatingSeatingLink.removeAttribute("href");
   syncScrollTopButtonVisibility(true);
   if (!guest.isValidCode || !guest.code || !isBackendConfigured()) return;
   try {
@@ -407,8 +406,7 @@ async function updateSeatingGuideLink(guest) {
     if (sequence !== guideLookupSequence || !data || !Array.isArray(data.invitees) || !data.invitees.length) return;
     const url = new URL("/seating/", window.location.origin);
     url.searchParams.set("code", guest.code);
-    link.href = url.toString(); link.hidden = false;
-    if (floatingSeatingLink) floatingSeatingLink.href = url.toString();
+    link.href = url.toString();
     syncScrollTopButtonVisibility(true);
   } catch { /* The invitation remains usable while the seating guide is unavailable. */ }
 }

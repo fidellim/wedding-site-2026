@@ -3727,6 +3727,3 @@ body.scroll-animate .reveal-unit.is-visible {
     transition: none;
   }
 }
-
-.seating-guide-link { display: block; margin-top: 1rem; }
-.seating-guide-link[hidden] { display: none; }
