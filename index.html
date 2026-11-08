@@ -41,7 +41,9 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Great+Vibes&family=Outfit:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Pinyon+Script&family=Questrial&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="preload" href="font/CormorantSC-SemiBold-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="font/Questrial-Regular-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -150,7 +152,7 @@
           <div class="hero-copy">
             <img src="/images/logo-text.webp" alt="" loading="lazy">
           </div>
-          <a class="hero-rsvp-btn" href="#rsvpSection">RSVP HERE</a>
+          <a class="hero-timeline-btn" href="#weddingTimeline">Wedding Day Timeline</a>
         </header>
 
         <section class="invitation-note reveal" aria-label="Invitation message">
@@ -330,7 +332,45 @@
           </div>
         </section>
 
-        <section id="rsvpSection" class="panel reveal">
+        <section id="weddingTimeline" class="panel wedding-timeline reveal" aria-labelledby="timelineHeading">
+          <div class="section-wrap">
+            <h2 id="timelineHeading" class="timeline-heading">Wedding Day Timeline</h2>
+            <ol class="timeline-events" role="list" aria-label="Wedding day schedule">
+              <li class="timeline-event">
+                <div class="timeline-illustration"><img src="images/timeline/guest-arrival-icon.webp" alt="" width="106" height="84" loading="lazy" decoding="async" /></div>
+                <time class="timeline-time" datetime="14:30">2:30 PM</time>
+                <span class="timeline-marker" aria-hidden="true"></span>
+                <p class="timeline-label">Guest Arrival</p>
+              </li>
+              <li class="timeline-event">
+                <div class="timeline-illustration"><img src="images/timeline/ceremony-icon.webp" alt="" width="96" height="64" loading="lazy" decoding="async" /></div>
+                <time class="timeline-time" datetime="15:00">3:00 PM</time>
+                <span class="timeline-marker" aria-hidden="true"></span>
+                <p class="timeline-label">Ceremony</p>
+              </li>
+              <li class="timeline-event">
+                <div class="timeline-illustration"><img src="images/timeline/sip-icon.webp" alt="" width="72" height="88" loading="lazy" decoding="async" /></div>
+                <time class="timeline-time" datetime="16:30">4:30 PM</time>
+                <span class="timeline-marker" aria-hidden="true"></span>
+                <p class="timeline-label">Sips, Swirls &amp; Mingling</p>
+              </li>
+              <li class="timeline-event">
+                <div class="timeline-illustration"><img src="images/timeline/reception-icon.webp" alt="" width="72" height="118" loading="lazy" decoding="async" /></div>
+                <time class="timeline-time" datetime="18:30">6:30 PM</time>
+                <span class="timeline-marker" aria-hidden="true"></span>
+                <p class="timeline-label">Reception</p>
+              </li>
+              <li class="timeline-event">
+                <div class="timeline-illustration"><img src="images/timeline/thankyou-icon.webp" alt="" width="86" height="106" loading="lazy" decoding="async" /></div>
+                <time class="timeline-time" datetime="21:30">9:30 PM</time>
+                <span class="timeline-marker" aria-hidden="true"></span>
+                <p class="timeline-label">Thank You!</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        <div id="rsvpSection" class="panel hidden" hidden inert>
           <div class="section-wrap">
             <div class="rsvp-editorial">
               <aside class="rsvp-editorial-intro">
@@ -471,7 +511,7 @@
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
         <section class="panel reveal countdown-panel">
           <div class="section-wrap">
@@ -836,7 +876,7 @@
                 </div>
               </article>
 
-              <article class="faq-item">
+              <article class="faq-item" hidden>
                 <h4 class="faq-item-title">
                   <button
                     class="faq-trigger"

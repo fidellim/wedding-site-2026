@@ -1,5 +1,21 @@
 @import "./wedding-theme.css";
 
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("./font/CormorantSC-SemiBold-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Questrial";
+  src: url("./font/Questrial-Regular-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --font-heading: var(--wedding-heading);
   --font-body: var(--wedding-body);
@@ -64,7 +80,7 @@ html {
   text-size-adjust: 100%;
 }
 
-#rsvpSection {
+#weddingTimeline {
   scroll-margin-top: clamp(1.25rem, 4vh, 2.5rem);
 }
 
@@ -707,11 +723,13 @@ body.modal-open {
   font-weight: 500;
 }
 
-.hero-rsvp-btn {
+.hero-timeline-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 170px;
+  min-height: 48px;
+  max-width: 100%;
   border: 1px solid rgba(233, 212, 195, 0.9);
   border-radius: 6px;
   padding: 0.62rem 1.05rem;
@@ -721,15 +739,21 @@ body.modal-open {
   letter-spacing: 0.14em;
   font-size: 0.82rem;
   font-weight: 500;
+  line-height: 1.5;
   background: rgba(19, 39, 63, 0.42);
   backdrop-filter: blur(1px);
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.hero-rsvp-btn:hover {
+.hero-timeline-btn:hover {
   transform: translateY(-2px);
   background: rgba(19, 39, 63, 0.64);
   border-color: #e9d4c3;
+}
+
+.hero-timeline-btn:focus-visible {
+  outline: 2px solid var(--wedding-cream);
+  outline-offset: 5px;
 }
 
 .invitation-note {
@@ -871,6 +895,152 @@ body.modal-open {
   margin: 0 0 0.8rem;
   font-family: var(--font-heading);
   font-size: var(--h3-size);
+}
+
+.content > section.wedding-timeline {
+  --band-bg: #ddcabb;
+  --band-fg: #58301d;
+  --timeline-line: #630000;
+  padding: clamp(3.5rem, 7vw, 6.5rem) clamp(1.25rem, 4vw, 3rem);
+  background: var(--band-bg) url("./images/timeline/wedding-timeline-bg.webp") center / cover no-repeat;
+  text-align: center;
+}
+
+.wedding-timeline .timeline-heading {
+  margin: 0 0 clamp(2.5rem, 5vw, 4.5rem);
+  font-family: var(--wedding-script);
+  font-size: clamp(2.75rem, 5.5vw, 5rem);
+  font-weight: 400;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.timeline-events {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline-event {
+  display: grid;
+  grid-template-rows: 120px 3.5rem 3rem auto;
+  justify-items: center;
+  min-width: 0;
+}
+
+.timeline-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px 12px;
+}
+
+.timeline-illustration img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 108px;
+}
+
+.timeline-time {
+  align-self: end;
+  font-family: "Cormorant SC", Georgia, serif;
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+  font-weight: 600;
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.timeline-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--timeline-line);
+}
+
+.timeline-marker::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.timeline-event:first-child .timeline-marker::before { left: 50%; }
+.timeline-event:last-child .timeline-marker::before { right: 50%; }
+
+.timeline-marker::after {
+  content: "";
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: var(--band-bg);
+}
+
+.timeline-label {
+  max-width: 15ch;
+  margin: 0;
+  padding-inline: 10px;
+  font-family: "Questrial", sans-serif;
+  font-weight: 400;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.5;
+  text-wrap: balance;
+}
+
+@media (max-width: 760px) {
+  .timeline-events {
+    max-width: 420px;
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    text-align: left;
+  }
+
+  .timeline-event {
+    grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+    grid-template-rows: 1fr 1fr;
+    min-height: 120px;
+    justify-items: start;
+  }
+
+  .timeline-illustration {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    align-self: center;
+    justify-self: center;
+    width: 100%;
+    min-width: 0;
+    padding: 0 12px;
+  }
+
+  .timeline-illustration img { max-width: min(84px, 100%); max-height: 100px; }
+  .timeline-time { grid-column: 3; grid-row: 1; padding-left: 12px; font-size: 1.25rem; }
+  .timeline-label { grid-column: 3; grid-row: 2; align-self: start; max-width: 19ch; padding: 2px 0 0 12px; }
+  .timeline-marker { grid-column: 2; grid-row: 1 / 3; }
+
+  .timeline-marker::before {
+    top: -12px;
+    right: auto;
+    bottom: -12px;
+    left: 50%;
+    width: 1px;
+    height: auto;
+  }
+
+  .timeline-event:first-child .timeline-marker::before { top: 50%; }
+  .timeline-event:last-child .timeline-marker::before { right: auto; bottom: 50%; }
 }
 
 .section-title {
