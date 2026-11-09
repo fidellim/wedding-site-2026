@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import logoUrl from "../../../images/logo-white.webp";
+import { danceFloorArtwork } from "./danceFloorArtwork";
 import { ledLayout, LED_WIDTH, LED_HEIGHT, stageLayout, type LedLayout, type VenueParameters } from "./venueModel";
 
 /** Event décor, kept separate from permanent venue geometry. Local +Y faces guests. */
@@ -22,7 +23,21 @@ export function buildStage(input: VenueParameters, mode: LedLayout = "none") {
   };
   add("PLATFORM", new THREE.BoxGeometry(p.stageWidth, p.stageDepth, p.stageHeight), ivory, 0, 0, p.stageHeight / 2);
   add("FRONT_STEP", new THREE.BoxGeometry(layout.stepWidth, layout.stepDepth, p.stageHeight / 2), ivory, 0, p.stageDepth / 2 + layout.stepDepth / 2, p.stageHeight / 4);
-  add("DANCE_FLOOR", new THREE.BoxGeometry(p.danceFloorSize, p.danceFloorSize, .04), ivory, 0, layout.centerY - layout.danceY, 0);
+  const danceFloor = add("DANCE_FLOOR", new THREE.BoxGeometry(p.danceFloorSize, p.danceFloorSize, .04), ivory, 0, layout.centerY - layout.danceY, 0);
+  const floorTexture = new THREE.TextureLoader().load(danceFloorArtwork.url);
+  floorTexture.colorSpace = THREE.SRGBColorSpace;
+  const floorMaterial = new THREE.MeshBasicMaterial({ map: floorTexture, color: danceFloorArtwork.color, transparent: true, depthWrite: false, toneMapped: false, fog: false });
+  materials.push(floorMaterial);
+  const artworkWidth = p.danceFloorSize * danceFloorArtwork.widthRatio;
+  const floorLogo = new THREE.Mesh(new THREE.PlaneGeometry(artworkWidth, artworkWidth / danceFloorArtwork.aspectRatio), floorMaterial);
+  floorLogo.name = "DANCE_FLOOR_WEDDING_ARTWORK";
+  // Face the stage, and move with the floor when its saved position changes.
+  floorLogo.rotation.z = Math.PI;
+  // The venue reflects plan Y into scene Y; cancel that reflection for lettering.
+  floorLogo.scale.x = -1;
+  floorLogo.position.z = .022;
+  floorLogo.receiveShadow = true;
+  danceFloor.add(floorLogo);
   const back = -p.stageDepth / 2 + .18, base = p.stageHeight;
   const top = (t: number) => base + p.backdropHeight * (centered ? .93 + .07 * Math.cos((t - .5) * Math.PI * 2) : .91 + .09 * Math.cos(t * Math.PI * 2.4));
   const railPoints = Array.from({ length: 65 }, (_, i) => new THREE.Vector3((i / 64 - .5) * p.stageWidth, back, top(i / 64)));
@@ -171,6 +186,6 @@ export function buildStage(input: VenueParameters, mode: LedLayout = "none") {
   }
   return { root, dispose() {
     root.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
-    materials.forEach(material => material.dispose()); logoTexture.dispose();
+    materials.forEach(material => material.dispose()); logoTexture.dispose(); floorTexture.dispose();
   } };
 }

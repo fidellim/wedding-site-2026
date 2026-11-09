@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from "react";
+import { danceFloorArtwork } from "./danceFloorArtwork";
 import { polygonPoints, venueArchitecture } from "./venueArchitecture";
 import type { VenueLayout } from "./layout";
 import { ProductionEquipmentPlan } from "./ProductionEquipmentPlan";
@@ -7,7 +8,7 @@ import { ceremonyPalms, ceremonyStructure, LED_WIDTH, ledLayout, productionTable
 
 /** Always available, including on devices without WebGL. Uses the same parametric layout. */
 export function VenuePlan({ parameters: input, led = "none", landmarks, children, receptionOnly = false, interactive = false, ceremonyChairs = 0, cocktailFixtures = false, productionTables = true }: { parameters: VenueParameters; led?: LedLayout; landmarks?: VenueLayout["landmarks"]; children?: ReactNode; receptionOnly?: boolean; interactive?: boolean; ceremonyChairs?: number; cocktailFixtures?: boolean; productionTables?: boolean }) {
-  const titleId = useId(), descriptionId = useId(), clipId = useId();
+  const titleId = useId(), descriptionId = useId(), clipId = useId(), artworkFilterId = useId();
   const p = normalizeParameters(input);
   const l = venueLayout(p), left = l.terraceLeft - 6, top = l.entranceY - 5;
   const originalStage = stageLayout(p), design = ledLayout(p, led), structure = ceremonyStructure(p);
@@ -16,11 +17,15 @@ export function VenuePlan({ parameters: input, led = "none", landmarks, children
   const entrance = landmarks?.entrance ?? { x: l.plazaX, y: l.entranceY + 4 };
   const width = p.lawnWidth / 2 + 5 - left, height = l.waterY + 15 - top;
   const ceremony = ceremonyLayout(p, ceremonyChairs), architecture = venueArchitecture(p);
+  const artworkWidth = p.danceFloorSize * danceFloorArtwork.widthRatio;
+  const artworkHeight = artworkWidth / danceFloorArtwork.aspectRatio;
   return <svg className="venue-plan" viewBox={receptionOnly ? `${-p.lawnWidth / 2 - 2} ${-p.lawnLength / 2 - 2} ${p.lawnWidth + 4} ${p.lawnLength + 4}` : `${left} ${top} ${width} ${height}`} role={interactive ? "group" : "img"} aria-labelledby={titleId} aria-describedby={descriptionId}>
     <title id={titleId}>Venue overhead plan</title>
     <desc id={descriptionId}>The ceremony approach leads to the ceremony area on the right. The pavilion and cocktail area sit to its left. The reception lawn lies below both, followed by the sand strip and waterfront. The HF stage sits just before the sand, facing the dance floor and ceremony inland. Positions and dimensions are approximate.</desc>
     <rect x={left} y={top} width={width} height={height} fill="#f2eee4" />
-    <defs><clipPath id={clipId}><rect x={-p.lawnWidth / 2 - 2} y={-p.lawnLength / 2 - 2} width={p.lawnWidth + 4} height={p.lawnLength + 4} /></clipPath></defs>
+    <defs><clipPath id={clipId}><rect x={-p.lawnWidth / 2 - 2} y={-p.lawnLength / 2 - 2} width={p.lawnWidth + 4} height={p.lawnLength + 4} /></clipPath>
+      <filter id={artworkFilterId} colorInterpolationFilters="sRGB"><feFlood floodColor={danceFloorArtwork.color} /><feComposite in2="SourceAlpha" operator="in" /></filter>
+    </defs>
     <g clipPath={receptionOnly ? `url(#${clipId})` : undefined}>
     <rect x={left} y={l.waterY} width={width} height="15" fill="#a4c5c5" />
     <rect x={-p.lawnWidth / 2} y={p.lawnLength / 2} width={p.lawnWidth} height={p.waterSetback} fill="#e5d5b7" />
@@ -122,9 +127,10 @@ export function VenuePlan({ parameters: input, led = "none", landmarks, children
       </g>}
     </g>
     <rect x={dancePoint.x - p.danceFloorSize / 2} y={dancePoint.y - p.danceFloorSize / 2} width={p.danceFloorSize} height={p.danceFloorSize} fill="#f4ead7" stroke="#b89c67" strokeWidth=".08" />
+    <image href={danceFloorArtwork.url} x={dancePoint.x - artworkWidth / 2} y={dancePoint.y - artworkHeight / 2} width={artworkWidth} height={artworkHeight} transform={`rotate(180 ${dancePoint.x} ${dancePoint.y})`} filter={`url(#${artworkFilterId})`} pointerEvents="none"><title>Hannah &amp; Fidel · The Wedding</title></image>
     <g fill="#675437" textAnchor="middle" fontFamily="sans-serif" fontSize=".85">
       <text x={stagePoint.x} y={stagePoint.y}>HF stage</text>
-      <text x={dancePoint.x} y={dancePoint.y}>Dance floor</text>
+      <text x={dancePoint.x} y={dancePoint.y + p.danceFloorSize / 2 - .35}>Dance floor</text>
     </g>
     <g fill="#334e3d" textAnchor="middle" fontFamily="sans-serif" fontSize="1.6">
       <text x={p.lawnWidth * .23} y={-p.lawnLength / 2 + 1.5}>Reception lawn</text><text x="0" y={l.waterY + 7}>Waterfront</text>
