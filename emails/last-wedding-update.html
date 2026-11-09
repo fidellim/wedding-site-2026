@@ -47,7 +47,7 @@
         .email-surround { background-color: #630000 !important; }
         .email-letter { background-color: #eee9df !important; color: #13273f !important; }
         .email-letter p, .email-letter td { color: #13273f !important; }
-        .email-letter h1, .email-letter h2 { color: #630000 !important; }
+        .email-letter h1, .email-letter h2, .email-letter h3 { color: #630000 !important; }
         .email-letter p[style*="color: #630000"] { color: #630000 !important; }
         .email-letter p[style*="color: #694534"] { color: #694534 !important; }
       }
@@ -58,6 +58,7 @@
       <p style="margin: 0 0 14px; font-size: 16px; line-height: 25px;">Your website update email is ready to copy. Click the button, then paste into a new Gmail message with &#8984;V (Mac) or Ctrl+V (Windows).</p>
       <button id="copy-email" type="button" style="border: 0; padding: 14px 20px; background-color: #eee9df; color: #630000; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;">Copy email for Gmail</button>
       <button id="copy-subject" type="button" style="border: 0; margin-top: 8px; padding: 14px 20px; background-color: #eee9df; color: #630000; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;">Copy subject</button>
+      <p style="margin: 14px 0 0; font-size: 14px; line-height: 22px;">For Gmail: copy and paste the email. The hosted weather image is included automatically, along with the forecast text.</p>
       <p id="copy-status" role="status" aria-live="polite" style="margin: 12px 0 0; font-size: 14px; line-height: 22px;">Only the email below will be copied.</p>
     </div>
     <div style="display: none; font-size: 1px; line-height: 1px; color: #630000; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all;">Our wedding-day timeline and reception seating plan are ready. Open your original invitation link to take a look.</div>
@@ -73,30 +74,30 @@
           </td></tr>
           <tr><td class="letter-padding" style="padding: 0 24px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">
             <p style="margin: 0 0 18px; font-family: Georgia, 'Times New Roman', serif; font-size: 21px; line-height: 29px;">Dear Family and Friends,</p>
-            <p style="margin: 0 0 28px;">We can&rsquo;t wait to celebrate with you! We&rsquo;ve added a couple of helpful updates to our wedding website so you can get ready for our special day.</p>
+            <p style="margin: 0 0 28px;">We can&rsquo;t wait to celebrate with you! Our wedding-day timeline and reception seating plan are now on our website. Here are a few details to help you get ready.</p>
           </td></tr>
-          <tr><td class="letter-padding" style="padding: 0 24px;">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse; width: 100%;">
-              <tr><td style="border-top: 1px solid #e9d4c3; padding: 24px 0; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">
-                <h2 class="section-heading" style="margin: 0 0 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; line-height: 34px; font-weight: 400; color: #630000;">The wedding-day timeline</h2>
-                <p style="margin: 0;">Take a look at the timeline on our website to see what&rsquo;s happening throughout the day.</p>
-              </td></tr>
-              <tr><td style="border-top: 1px solid #e9d4c3; padding: 24px 0; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">
-                <h2 class="section-heading" style="margin: 0 0 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; line-height: 34px; font-weight: 400; color: #630000;">Your seat at the reception</h2>
-                <p style="margin: 0;">Our reception seating plan is now available too, so you can find where you&rsquo;ll be seated for the celebration.</p>
-              </td></tr>
-              <tr><td style="border-top: 1px solid #e9d4c3; border-bottom: 1px solid #e9d4c3; padding: 24px 0; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">
-                <h2 class="section-heading" style="margin: 0 0 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; line-height: 34px; font-weight: 400; color: #630000;">For the ceremony, choose a seat</h2>
-                <p style="margin: 0;">Ceremony seating is open. Please feel free to sit in any of the chairs provided for the ceremony.</p>
-              </td></tr>
-            </table>
+          <tr><td class="letter-padding" style="padding: 0 24px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">
+            <h2 class="section-heading" style="margin: 0 0 14px; padding-top: 24px; border-top: 1px solid #e9d4c3; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; line-height: 34px; font-weight: 400; color: #630000;">New on our website</h2>
+            <p style="margin: 0 0 12px;"><strong>Wedding-day timeline</strong><br />See what&rsquo;s happening throughout the day.</p>
+            <p style="margin: 0 0 18px;"><strong>Reception seating plan</strong><br />Find where you&rsquo;ll be seated for the celebration.</p>
+            <p style="margin: 0 0 12px;">Open the <strong>original invitation link we shared with you</strong> to view the timeline. For reception seating, tap or click the burgundy <strong>&ldquo;Find my seat&rdquo;</strong> button in the <strong>bottom-right corner of your screen</strong>.</p>
+            <h3 style="margin: 24px 0 8px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; font-weight: 700; color: #630000;">Ceremony seating</h3>
+            <p style="margin: 0;">The first few rows are reserved for our entourage. All remaining ceremony seats are open, so please feel free to choose any of the other chairs provided.</p>
           </td></tr>
           <tr><td class="letter-padding" style="padding: 28px 24px 0; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">
-            <h2 style="margin: 0 0 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; line-height: 32px; font-weight: 400; color: #630000;">Open your original invitation link</h2>
-            <p style="margin: 0 0 18px;">Open the original invitation link we shared with you to visit our wedding website and view the timeline. To find your reception seat, look for the burgundy <strong>&ldquo;Find my seat&rdquo;</strong> button in the <strong>bottom-right corner of your screen</strong>. Tap or click it to open the reception seating plan.</p>
-            <p style="margin: 0;">Thank you for being part of our special day. We&rsquo;re so excited to share it with you!</p>
+            <h2 class="section-heading" style="margin: 0 0 16px; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; line-height: 34px; font-weight: 400; color: #630000;">Weather for our wedding day</h2>
+            <img src="https://tasteofserendipity.com/wp-content/uploads/2026/11/wedding-day-weather-forecast.png" width="504" alt="November 15, 2026, Abu Dhabi: warm and dry, daytime high 28–29°C." style="display: block; width: 100%; max-width: 504px; height: auto; border: 0; color: #13273f; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px;" />
+            <p style="margin: 18px 0 10px;">For our celebration at <strong>Shangri-La Qaryat Al Beri, Abu Dhabi</strong> on Sunday, November 15, the current Abu Dhabi outlook is <strong>warm and dry</strong>, with a daytime high around <strong>28&ndash;29&deg;C</strong>.</p>
+            <p style="margin: 0; font-size: 14px; line-height: 22px; color: #694534;">Forecast conditions may change.</p>
+          </td></tr>
+          <tr><td class="letter-padding" style="padding: 28px 24px 0; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">
+            <h2 class="section-heading" style="margin: 0 0 14px; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; line-height: 34px; font-weight: 400; color: #630000;">A few notes on what to wear</h2>
+            <p style="margin: 0 0 18px;">For our outdoor wedding and warm, sunny afternoon, please dress comfortably while following the <strong>semi-formal dress code</strong> on our wedding website.</p>
+            <p style="margin: 0 0 18px;">Our reception will take place on a <strong>grass lawn</strong>. For our lovely ladies, <strong>block heels, wedges, or dressy flats</strong> may be more comfortable than stilettos.</p>
+            <p style="margin: 0;"><strong>Please refrain from wearing burgundy, as this color is reserved exclusively for our groom.</strong></p>
           </td></tr>
           <tr><td class="letter-padding" style="padding: 28px 24px 36px;">
+            <p style="margin: 0 0 22px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">Thank you for your understanding and for being part of our special day. We can&rsquo;t wait to celebrate with you!</p>
             <p style="margin: 0 0 10px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 26px; color: #13273f;">With love and excitement,</p>
             <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 30px; line-height: 38px; font-style: italic; color: #630000;">Hannah &amp; Fidel</p>
           </td></tr>
@@ -144,7 +145,7 @@
               'text/plain': new Blob([email.innerText], { type: 'text/plain' }),
             }),
           ]);
-          status.textContent = 'Copied! Paste into Gmail, then send yourself a test. These controls are not included.';
+          status.textContent = 'Copied! Paste into Gmail. The hosted weather image is included. Send yourself a test before sending to guests.';
         } catch (error) {
           status.textContent = 'Copy was blocked. Open this file in Chrome through your local preview server and try again.';
         } finally {

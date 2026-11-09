@@ -20,7 +20,7 @@ Guests reopen their original personalized invitation link to access the website.
 
 ## Capabilities and Constraints
 
-Reception seating is assigned. Ceremony seating is open: guests may choose any of the chairs provided. Shared email reminders must direct guests to their original invitation links.
+Reception seating is assigned. The first few ceremony rows are reserved for the entourage. Guests may choose any of the remaining ceremony chairs. Shared email reminders must direct guests to their original invitation links.
 
 ## Brand Commitments
 
