@@ -13,6 +13,48 @@ vi.mock("three", async importOriginal => {
 });
 afterEach(cleanup);
 
+it("shows and highlights the couple’s table without numbered guest assignments", async () => {
+  const data = previewFixture("couple", false);
+  const { container } = render(<SeatingGuide data={data} />);
+  expect(screen.getByRole("button", { name: "Couple’s table" })).toHaveAttribute("aria-pressed", "true");
+  expect(container.querySelector(".guide-destination")).toHaveTextContent("Couple’s table");
+  expect(container.querySelector(".guide-seats")).not.toHaveTextContent(/Seat \d|Choose your name|individual chair|shared soon/);
+  await screen.findByRole("img", { name: "Venue overhead plan" });
+  const placement = data.snapshot.venueLayout!.eventFurniture!.couple!;
+  expect(container.querySelector("[data-guide-highlight]")?.parentElement).toHaveAttribute("transform", `translate(${placement.x},${placement.y}) rotate(${placement.rotation})`);
+  expect(container.querySelectorAll("[data-couple-chair]")).toHaveLength(2);
+});
+
+it("derives the couple destination only from the validated party ID", () => {
+  const data = previewFixture("couple");
+  const payload = { ...data.snapshot, party: { ...data.party, id: " FIDEL-JILEEN " } };
+  expect(parseGuide(payload)?.destination).toBe("couple");
+  expect(parseGuide({ ...payload, party: { ...data.party, id: "other-party" }, destination: "couple" })?.destination).toBeUndefined();
+});
+
+it("highlights the whole couple’s table even if the party also has an ordinary guest assignment", async () => {
+  const data = previewFixture("single");
+  const couple = previewFixture("couple").snapshot.venueLayout!.eventFurniture!.couple!;
+  data.destination = "couple";
+  data.snapshot.venueLayout!.eventFurniture = { couple };
+  const { container } = render(<SeatingGuide data={data} />);
+  await screen.findByRole("img", { name: "Venue overhead plan" });
+  const highlight = container.querySelector("[data-guide-highlight]");
+  expect(highlight).toHaveAttribute("cx", "0");
+  expect(highlight).toHaveAttribute("r", String(Math.max(couple.width, couple.depth) / 2 + .8));
+  expect(container.querySelector(".guide-seats")).not.toHaveTextContent("Seat 3");
+});
+
+it("does not invent a couple table position when it is absent from the released layout", async () => {
+  const data = previewFixture("couple");
+  delete data.snapshot.venueLayout!.eventFurniture;
+  const { container } = render(<SeatingGuide data={data} />);
+  expect(screen.getByRole("button", { name: "Show our table" })).toBeDisabled();
+  expect(container.querySelector(".guide-destination")).toHaveTextContent("Your table’s location will be shared soon.");
+  await screen.findByRole("img", { name: "Venue overhead plan" });
+  expect(container.querySelector("[data-guide-highlight]")).toBeNull();
+});
+
 it("hides crew tables and equipment in the guest overhead view when saved as hidden", async () => {
   const data = previewFixture("single");
   data.snapshot.venueLayout!.productionTablesVisible = false;

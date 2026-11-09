@@ -206,6 +206,27 @@ try {
   w = await rpc("admin_restore_seating_revision", [w.draft.version, furnitureRevision.id]);
   assert.deepEqual(w.draft.venueLayout, furnitureLayout);
   assert.deepEqual({ tables: w.draft.tables, seats: w.draft.seats, assignments: w.draft.assignments }, guestRecords);
+  const beforeCoupleMigration = await allRows();
+  await execFile("20261109000100_add_couple_seating_destination.sql");
+  assert.deepEqual(await allRows(), beforeCoupleMigration);
+  // The couple's invitation is valid without an RSVP or a numbered guest seat.
+  await db.exec("insert into public.invites values('fidel-jileen', 'Couple', 2, '', null, now()), ('PENDING', 'Pending party', 1, '', null, now())");
+  const coupleGuide = await rpc("get_seating_guide_for_invite", [" FIDEL-JILEEN "]);
+  assert.notEqual(coupleGuide, null, "A valid couple code must reach the released plan without an accepted guest RSVP");
+  assert.equal(coupleGuide.party.id, "fidel-jileen");
+  assert.deepEqual(coupleGuide.venueLayout.eventFurniture, furnitureLayout.eventFurniture);
+  assert.deepEqual(coupleGuide.invitees, []);
+  assert.deepEqual(coupleGuide.assignments, []);
+  assert.equal(await rpc("get_seating_guide_for_invite", ["PENDING"]), null);
+  assert.equal(await rpc("get_seating_guide_for_invite", ["invalid"]), null);
+  await db.exec("begin; delete from public.invites where code = 'fidel-jileen';");
+  assert.equal(await rpc("get_seating_guide_for_invite", ["fidel-jileen"]), null);
+  await db.exec("rollback;");
+  w = await rpc("admin_set_guest_lookup_enabled", [false]);
+  assert.equal(await rpc("get_seating_guide_for_invite", ["fidel-jileen"]), null);
+  w = await rpc("admin_set_guest_lookup_enabled", [true]);
+  w = await rpc("admin_release_seating_guide", [null, false]);
+  assert.equal(await rpc("get_seating_guide_for_invite", ["fidel-jileen"]), null);
   // Removing optional furniture and restoring a legacy revision remain supported.
   w = await rpc("admin_save_venue_layout", [w.draft.version, layout]);
   assert.equal(w.draft.venueLayout.eventFurniture, undefined);

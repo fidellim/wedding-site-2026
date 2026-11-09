@@ -22,6 +22,7 @@ Start `npm run dev`. Synthetic examples are available only in development:
 
 - `/seating/?preview=single` — one person selected automatically.
 - `/seating/?preview=split` — two people assigned to different tables.
+- `/seating/?preview=couple` — the couple’s table without numbered guest seats.
 
 These examples use sample names and sample table positions. They do not query
 production or expose real guests. Production builds do not enable these URLs.
@@ -37,6 +38,24 @@ Review table numbers, seat numbers, the roughly ten-second optional flight,
 The reception map stays available if WebGL fails. Reduced motion skips the flight.
 Unapproved layouts highlight tables and display assigned seat numbers in text;
 physical chair labels and highlights appear only after approval.
+
+## Couple’s table destination
+
+`/seating/?code=fidel-jileen` selects **Couple’s table** after the existing server
+lookup validates the invitation and returns the released plan. The couple is not
+required to RSVP or appear among the released revision’s guest parties.
+The destination uses the saved `venueLayout.eventFurniture.couple` position for
+the automatic aerial tour, close-up, and overhead highlight. It has no numbered
+guest seat. Admin guide previews apply the same mapping for this party.
+
+If the released revision has no couple’s table, the panel says its location will
+be shared soon and disables camera actions. Add the furniture and release the
+reviewed revision to provide its position. Deploy the application and install
+`supabase/migrations/20261109000100_add_couple_seating_destination.sql` in the
+Supabase SQL editor. The migration replaces only the seating guide function;
+it does not change invitation records, RSVPs, or published snapshots. Local
+development uses the same Supabase endpoint, so the code URL also requires this
+migration. The synthetic `?preview=couple` URL does not require the database.
 
 ## Installation and release
 

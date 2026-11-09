@@ -9,6 +9,7 @@ export interface SeatingDirectoryEntry {
 }
 
 export interface GuideData {
+  destination?: "couple";
   directory: SeatingDirectoryEntry[];
   revisionNumber: number | null;
   chairsApproved: boolean;
@@ -29,7 +30,9 @@ export function partyGuide(snapshot: SeatingSnapshot, partyId: string, chairsApp
     const seat = snapshot.seats.find(s => s.id === assignment.seatId);
     return person && seat ? [{ fullName: person.fullName, tableId: seat.tableId, ...(chairsApproved ? { seatNumber: seat.number } : {}) }] : [];
   });
-  return { directory, party, chairsApproved, ceremonyChairs: ceremonyChairCount(snapshot), revisionNumber, snapshot: {
+  // Use the server-validated party ID, never the unverified URL parameter.
+  return { ...(party.id.trim().toLowerCase() === "fidel-jileen" ? { destination: "couple" as const } : {}),
+    directory, party, chairsApproved, ceremonyChairs: ceremonyChairCount(snapshot), revisionNumber, snapshot: {
     venueLayout: snapshot.venueLayout,
     invitationParties: [party], invitees,
     assignments: snapshot.assignments.filter(a => allowed.has(a.inviteeId)),

@@ -279,6 +279,35 @@ it.each([null, { invitees: [] }])("keeps the seating shortcut hidden when the re
   expect(shortcut).not.toHaveAttribute("href");
 });
 
+it("shows Find my seat for the released couple destination without numbered guest invitees", async () => {
+  window.history.replaceState({}, "", "/?code=fidel-jileen");
+  fetch.mockImplementation(async url => response(url.endsWith("/lookup_invite")
+    ? [{ ...currentRecord, code: "fidel-jileen", rsvp_status: "" }]
+    : url.endsWith("/get_seating_guide_for_invite")
+      ? { party: { id: "fidel-jileen" }, invitees: [] } : []));
+  await import("./script.js");
+  await settle(expectAdmitted);
+  const shortcut = document.getElementById("floatingSeatingLink");
+  expect(shortcut).not.toBeVisible();
+  document.getElementById("envelopeBtn").click();
+  await vi.advanceTimersByTimeAsync(2500);
+  expect(shortcut).toBeVisible();
+  expect(new URL(shortcut.href).pathname).toBe("/seating/");
+  expect(new URL(shortcut.href).searchParams.get("code")).toBe("fidel-jileen");
+});
+
+it.each([null, { party: { id: "other-party" }, invitees: [] }])("keeps the couple shortcut hidden without a matching released destination: %j", async guide => {
+  window.history.replaceState({}, "", "/?code=fidel-jileen");
+  fetch.mockImplementation(async url => response(url.endsWith("/lookup_invite")
+    ? [{ ...currentRecord, code: "fidel-jileen" }] : guide));
+  await import("./script.js");
+  await settle(expectAdmitted);
+  document.getElementById("envelopeBtn").click();
+  await vi.advanceTimersByTimeAsync(2500);
+  expect(document.getElementById("floatingSeatingLink")).not.toBeVisible();
+  expect(document.getElementById("floatingSeatingLink")).not.toHaveAttribute("href");
+});
+
 it("replaces the finished countdown with the wedding-day message", async () => {
   vi.setSystemTime(new Date("2026-11-15T10:59:57Z"));
   fetch.mockImplementation(async url => response(url.endsWith("/lookup_invite") ? [currentRecord] : []));

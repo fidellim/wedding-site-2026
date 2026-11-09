@@ -4,10 +4,11 @@ import { VenuePlan } from "../venue/VenuePlan";
 import { TableFurniture } from "../venue/TableFurniture";
 import { tableLabel } from "../venue/tableLabel";
 import { physicalChairs, previewVenueLayout } from "../venue/layout";
-import { VenueInspection, type FurnitureTarget } from "../venue/VenueInspection";
+import { VenueInspection } from "../venue/VenueInspection";
 import type { LabelObstacle } from "../venue/landmarkLabels";
 import type { GuideData } from "./guideData";
 import type { SeatCameraView } from "./flight";
+import { targetPlacement, type GuideTarget } from "./guideTarget";
 import "../venue/venue.css";
 import "./guide.css";
 import logoUrl from "../../../images/hf-logo-burgundy.webp";
@@ -16,6 +17,7 @@ const VenueCanvas = lazy(() => import("../venue/VenueCanvas").then(m => ({ defau
 
 export function SeatingGuide({ data }: { data: GuideData }) {
   const { snapshot, chairsApproved } = data;
+  const coupleTable = data.destination === "couple";
   const partyMembers = useMemo(() => [...snapshot.invitees].sort((a, b) =>
     a.fullName.localeCompare(b.fullName, "en", { sensitivity: "base" }) || a.id.localeCompare(b.id)), [snapshot.invitees]);
   const firstAssigned = partyMembers.find(person => snapshot.assignments.some(assignment =>
@@ -45,9 +47,9 @@ export function SeatingGuide({ data }: { data: GuideData }) {
   const assignment = snapshot.assignments.find(a => a.inviteeId === personId);
   const seat = snapshot.seats.find(s => s.id === assignment?.seatId);
   const table = snapshot.tables.find(t => t.id === seat?.tableId);
-  const target: FurnitureTarget | null = seat ? { tableId: seat.tableId, ...(chairsApproved ? { seatNumber: seat.number } : {}) } : null;
-  const [request, setRequest] = useState<{ target: FurnitureTarget; tour: boolean; view: SeatCameraView; key: number } | null>(() =>
-    target && layout?.tables[target.tableId] ? { target, tour: true, view: "aerial", key: 1 } : null);
+  const target: GuideTarget | null = coupleTable ? { eventFurniture: "couple" } : seat ? { tableId: seat.tableId, ...(chairsApproved ? { seatNumber: seat.number } : {}) } : null;
+  const [request, setRequest] = useState<{ target: GuideTarget; tour: boolean; view: SeatCameraView; key: number } | null>(() =>
+    target && layout && targetPlacement(layout, target) ? { target, tour: true, view: "aerial", key: 1 } : null);
   const person = snapshot.invitees.find(i => i.id === personId);
   // Avoid suggesting physical chair positions before the owner approves them.
   const furnitureSnapshot = useMemo(() => chairsApproved ? snapshot : { ...snapshot, assignments: [] }, [chairsApproved, snapshot]);
@@ -97,43 +99,45 @@ export function SeatingGuide({ data }: { data: GuideData }) {
     document.addEventListener("pointerdown", dismiss);
     return () => document.removeEventListener("pointerdown", dismiss);
   }, [menuOpen]);
-  const placement = table && layout?.tables[table.id];
-  const chair = chairsApproved && table && placement && physicalChairs(table, placement).find(c => c.number === seat?.number);
+  const placement = target && layout ? targetPlacement(layout, target) : null;
+  const chair = !coupleTable && chairsApproved && table && placement && physicalChairs(table, placement).find(c => c.number === seat?.number);
 
   return <section className={`seating-guide seating-guide--canvas${dusk && view === "3d" ? " seating-guide--evening" : ""}`} ref={root} aria-label="Your seating guide">
     <header className="guide-heading guide-heading--logo" data-guide-overlay><img src={logoUrl} alt="Hannah & Fidel" width="512" height="512" /><h1 className="guide-sr-only">Your seating guide</h1></header>
     <div className="guide-layout">
-    <aside className="guide-seats" aria-label="Your seats" data-guide-overlay>
+    <aside className="guide-seats" aria-label={coupleTable ? "Your table" : "Your seats"} data-guide-overlay>
     <div className="guide-panel-header">
-      <div className="guide-panel-title"><span>Your seats</span>
+      <div className="guide-panel-title"><span>{coupleTable ? "Your table" : "Your seats"}</span>
         <button className="guide-info-toggle" ref={helpButton} aria-label="Seating guide help" aria-haspopup="dialog" onClick={() => {
           setMenuOpen(false); setInspectionReset(value => value + 1);
           setRequest(null); setTourLabel(""); setHelpOpen(true);
         }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7v2" /></svg></button>
       </div>
-    <button aria-label="Your seats" className="guide-panel-toggle" aria-expanded={expanded} aria-controls={partyPanelId} onClick={() => setExpanded(!expanded)}>
+    <button aria-label={coupleTable ? "Your table" : "Your seats"} className="guide-panel-toggle" aria-expanded={expanded} aria-controls={partyPanelId} onClick={() => setExpanded(!expanded)}>
       <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={expanded ? "m6 15 6-6 6 6" : "m6 9 6 6 6-6"} /></svg>
     </button>
     </div>
     <div id={partyPanelId} hidden={!expanded} className="guide-party" aria-label="Your invitation party">
-      {partyMembers.map(invitee => {
+      {coupleTable ? <button aria-pressed="true" onClick={() => {
+        setTourLabel(""); if (!unavailable) showSeat();
+      }}><strong>Couple’s table</strong></button> : partyMembers.map(invitee => {
         const assignedSeat = snapshot.seats.find(s => s.id === snapshot.assignments.find(a => a.inviteeId === invitee.id)?.seatId);
         const assignedTable = snapshot.tables.find(t => t.id === assignedSeat?.tableId);
         return <button key={invitee.id} aria-pressed={personId === invitee.id} onClick={() => selectPerson(invitee.id)}>
           <strong>{invitee.fullName}</strong><span>{assignedTable && assignedSeat ? `${tableLabel(assignedTable.name)} · Seat ${assignedSeat.number}` : invitee.requiresSeat ? "Your place will be shared soon" : "No separate seat assigned"}</span>
         </button>;
       })}
-      {!snapshot.invitees.length && <p>Your party’s seating details will be shared soon.</p>}
+      {!coupleTable && !snapshot.invitees.length && <p>Your party’s seating details will be shared soon.</p>}
     </div>
     <div className="guide-destination" aria-live="polite">
-      {person && table && seat ? <p><strong>{person.fullName}</strong><span>{tableLabel(table.name)} <i>·</i> Seat {seat.number}</span></p> : <p>{person ? "Your seating details will be shared soon." : "Choose your name to find your place."}</p>}
-      <button disabled={!target || !placement || unavailable} onClick={showSeat}>Show my seat <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 19 19 5M5 5h14v14" /></svg></button>
+      {coupleTable ? <p><strong>Couple’s table</strong>{!placement && <span>Your table’s location will be shared soon.</span>}</p> : person && table && seat ? <p><strong>{person.fullName}</strong><span>{tableLabel(table.name)} <i>·</i> Seat {seat.number}</span></p> : <p>{person ? "Your seating details will be shared soon." : "Choose your name to find your place."}</p>}
+      <button disabled={!target || !placement || unavailable} onClick={showSeat}>{coupleTable ? "Show our table" : "Show my seat"} <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 19 19 5M5 5h14v14" /></svg></button>
     </div>
     <div className="guide-seat-view" role="group" aria-label="Seat camera view">
       <button aria-pressed={seatView === "aerial"} disabled={!target || !placement || unavailable} onClick={() => changeSeatView("aerial")}>Aerial</button>
       <button aria-pressed={seatView === "close-up"} disabled={!target || !placement || unavailable} onClick={() => changeSeatView("close-up")}>Close-up</button>
     </div>
-    {!chairsApproved && target && <p className="guide-footnote">Your table is highlighted. We’ll show your individual chair once its position is confirmed.</p>}
+    {!coupleTable && !chairsApproved && target && <p className="guide-footnote">Your table is highlighted. We’ll show your individual chair once its position is confirmed.</p>}
     </aside>
     <div className="guide-experience">
     {layout ? <div className={`guide-scene-card${view === "3d" ? " guide-scene-card--3d" : ""}`}>

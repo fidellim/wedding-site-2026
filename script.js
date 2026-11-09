@@ -403,7 +403,10 @@ async function updateSeatingGuideLink(guest) {
     });
     if (!response.ok) return;
     const data = await response.json();
-    if (sequence !== guideLookupSequence || !data || !Array.isArray(data.invitees) || !data.invitees.length) return;
+    if (sequence !== guideLookupSequence || !data || !Array.isArray(data.invitees)) return;
+    const isCoupleDestination = String(guest.code).trim().toLowerCase() === "fidel-jileen" &&
+      typeof data.party?.id === "string" && data.party.id.trim().toLowerCase() === "fidel-jileen";
+    if (!data.invitees.length && !isCoupleDestination) return;
     const url = new URL("/seating/", window.location.origin);
     url.searchParams.set("code", guest.code);
     link.href = url.toString();

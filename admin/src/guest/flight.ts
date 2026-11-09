@@ -1,6 +1,6 @@
 import { physicalChairs, type VenueLayout } from "../venue/layout";
 import type { SeatingSnapshot } from "../domain/types";
-import type { FurnitureTarget } from "../venue/VenueInspection";
+import { targetPlacement, type GuideTarget } from "./guideTarget";
 import { cameraView, LED_HEIGHT, LED_WIDTH, normalizeParameters } from "../venue/venueModel";
 import { PerspectiveCamera, Vector3 } from "three";
 export type SeatCameraView = "aerial" | "close-up";
@@ -49,10 +49,11 @@ function ledFacingDestination(place: Vector3, screenPosition: ScenePoint, distan
   return { position: camera.position.toArray(), target: aim.toArray() };
 }
 
-export function seatDestination(snapshot: SeatingSnapshot, layout: VenueLayout, target: FurnitureTarget, aspect = 1.5, view: SeatCameraView = "close-up", screenPosition?: ScenePoint) {
-  const table = snapshot.tables.find(t => t.id === target.tableId), p = layout.tables[target.tableId];
-  if (!table || !p) return null;
-  const chair = target.seatNumber === undefined ? null : physicalChairs(table, p).find(c => c.number === target.seatNumber);
+export function seatDestination(snapshot: SeatingSnapshot, layout: VenueLayout, target: GuideTarget, aspect = 1.5, view: SeatCameraView = "close-up", screenPosition?: ScenePoint) {
+  const p = targetPlacement(layout, target);
+  const table = "tableId" in target ? snapshot.tables.find(t => t.id === target.tableId) : null;
+  if (!p || ("tableId" in target && !table)) return null;
+  const chair = table && "seatNumber" in target && target.seatNumber !== undefined ? physicalChairs(table, p).find(c => c.number === target.seatNumber) : null;
   const angle = p.rotation * Math.PI / 180;
   const x = p.x + (chair && (view === "close-up" || screenPosition) ? chair.x * Math.cos(angle) - chair.y * Math.sin(angle) : 0);
   const y = p.y + (chair && (view === "close-up" || screenPosition) ? chair.x * Math.sin(angle) + chair.y * Math.cos(angle) : 0);
@@ -62,7 +63,7 @@ export function seatDestination(snapshot: SeatingSnapshot, layout: VenueLayout, 
   return { position: [x + distance * .3, -y - distance * (aerial ? .4 : .6), distance] as [number, number, number], target: [x, -y, .4] as [number, number, number] };
 }
 
-export function flightViews(snapshot: SeatingSnapshot, layout: VenueLayout, target: FurnitureTarget, aspect: number, view: SeatCameraView = "aerial", screenPosition?: ScenePoint) {
+export function flightViews(snapshot: SeatingSnapshot, layout: VenueLayout, target: GuideTarget, aspect: number, view: SeatCameraView = "aerial", screenPosition?: ScenePoint) {
   const end = seatDestination(snapshot, layout, target, aspect, view, screenPosition);
   if (!end) return null;
   const parameters = normalizeParameters(layout.parameters);

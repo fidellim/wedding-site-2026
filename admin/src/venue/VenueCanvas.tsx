@@ -1,6 +1,7 @@
 import { placeLandmarkLabels, type LabelObstacle } from "./landmarkLabels";
 import { placeSeatMarker } from "./seatMarker";
 import { flightProgress, flightViews, seatDestination, type SeatCameraView } from "../guest/flight";
+import type { GuideTarget } from "../guest/guideTarget";
 import { useVenueInspection, sameTarget, type FurnitureTarget } from "./VenueInspection";
 import type { SeatingSnapshot } from "../domain/types";
 import { buildFurniture } from "./buildFurniture";
@@ -27,8 +28,8 @@ interface Props {
   ceremonyChairs?: number;
   labelExclusions?: readonly LabelObstacle[];
   cameraLift?: number;
-  highlightTarget?: FurnitureTarget | null;
-  focusRequest?: { target: FurnitureTarget; tour: boolean; view?: SeatCameraView; key: number } | null;
+  highlightTarget?: GuideTarget | null;
+  focusRequest?: { target: GuideTarget; tour: boolean; view?: SeatCameraView; key: number } | null;
   onTourLabel?: (label: string) => void;
   onUnavailable: () => void;
   snapshot?: SeatingSnapshot;
@@ -45,7 +46,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
   const inspectionRef = useRef(inspection); inspectionRef.current = inspection;
   const chairNumbersRef = useRef(chairNumbers); chairNumbersRef.current = chairNumbers;
   const host = useRef<HTMLDivElement>(null);
-  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: FurnitureTarget, tour: boolean, view?: SeatCameraView) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setProductionTables: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
+  const api = useRef<{ setView: (preset: ViewPreset, instant?: boolean) => void; focus: (target: GuideTarget, tour: boolean, view?: SeatCameraView) => void; skip: () => void; stop: () => void; setDusk: (dusk: boolean) => void; setParameters: (parameters: VenueParameters, led: LedLayout) => void; setCocktailFixtures: (visible: boolean) => void; setProductionTables: (visible: boolean) => void; setFurniture: (snapshot?: SeatingSnapshot, layout?: VenueLayout) => void } | null>(null);
   const leaderElements = useRef(new Map<string, SVGGElement>());
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
   const seatLabel = useRef<HTMLSpanElement>(null);
@@ -117,7 +118,8 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     const outline = new THREE.BoxHelper(new THREE.Object3D(), highlightTarget !== undefined ? "#ad6433" : "#edb84b");
     if (highlightTarget !== undefined && !Array.isArray(outline.material)) outline.material.depthTest = false; outline.visible = false; scene.add(outline);
     let outlined: THREE.Object3D | null = null;
-    function highlightedObject(target: FurnitureTarget): THREE.Object3D | null {
+    function highlightedObject(target: GuideTarget): THREE.Object3D | null {
+      if ("eventFurniture" in target) return furniture?.root.getObjectByName("EVENT_COUPLE") ?? null;
       let found: THREE.Object3D | null = null;
       furniture?.root.traverse(object => {
         const candidate: FurnitureTarget | undefined = object.userData.furnitureTarget;
@@ -177,14 +179,14 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
     let frame = 0, last = 0, visible = true, disposed = false;
     let journey: { start: number; positions: THREE.CatmullRomCurve3; targets: THREE.CatmullRomCurve3 } | null = null;
     let shadersReady = false, sceneReady = false;
-    let queuedFocus: { target: FurnitureTarget; tour: boolean; view: SeatCameraView } | null = null;
+    let queuedFocus: { target: GuideTarget; tour: boolean; view: SeatCameraView } | null = null;
     function stop() { queuedFocus = null; inspectionRef.current?.peek(null); transition = null; journey = null; controls.enabled = true; setMoving(false); tourLabel.current?.(""); }
     function skip() {
       if (journey) { camera.position.copy(journey.positions.getPoint(1)); controls.target.copy(journey.targets.getPoint(1)); }
       else if (transition) { camera.position.copy(transition.to); controls.target.copy(transition.toTarget); }
       stop(); controls.update();
     }
-    function focus(target: FurnitureTarget, tour: boolean, view: SeatCameraView = "close-up") {
+    function focus(target: GuideTarget, tour: boolean, view: SeatCameraView = "close-up") {
       if (!sceneReady) { queuedFocus = { target, tour, view }; return; }
       if (!currentSnapshot || !currentLayout) return;
       const screenPosition = venue.weddingLayout.getObjectByName("LED_5_BY_3M_FACE")?.getWorldPosition(new THREE.Vector3()).toArray();
@@ -298,7 +300,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       let seatObstacle: LabelObstacle | null = null;
       if (label) label.style.visibility = "hidden";
       if (leader) leader.style.visibility = "hidden";
-      const ownChair = guestTarget.current?.seatNumber !== undefined ? highlightedObject(guestTarget.current) : null;
+      const ownChair = guestTarget.current && "seatNumber" in guestTarget.current && guestTarget.current.seatNumber !== undefined ? highlightedObject(guestTarget.current) : null;
       if (label && leader && arrow && ownChair) {
         // Anchor the leader to the cushion, using the chair's complete world transform.
         const point = ownChair.localToWorld(new THREE.Vector3(0, 0, .52));
@@ -396,7 +398,7 @@ export function VenueCanvas({ parameters, preset, resetKey, labels, dusk, led, o
       </svg>
       {visibleLandmarks.map(item => <span key={item.id} ref={element => { if (element) labelElements.current.set(item.id, element); else labelElements.current.delete(item.id); }} className={`venue-map-label venue-map-label-${item.id}`}><i />{item.label}</span>)}
     </div>
-    {moving && <button className="venue-skip" onClick={() => api.current?.skip()}>{focusRequest ? "Skip to my seat" : "Skip movement"}</button>}
+    {moving && <button className="venue-skip" onClick={() => api.current?.skip()}>{focusRequest ? "eventFurniture" in focusRequest.target ? "Skip to our table" : "Skip to my seat" : "Skip movement"}</button>}
   </div>;
 }
 

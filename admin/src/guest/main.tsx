@@ -43,7 +43,7 @@ const preview = new URLSearchParams(window.location.search).get("preview");
 const rootElement = document.getElementById("root") as HTMLElement & { guideRoot?: Root };
 const root = rootElement.guideRoot ?? createRoot(rootElement); rootElement.guideRoot = root;
 root.render(
-  import.meta.env.DEV && (preview === "single" || preview === "split")
+  import.meta.env.DEV && (preview === "single" || preview === "split" || preview === "couple")
     ? <main><a className="guide-back" href="/">← Back to your invitation</a><p className="guide-preview-notice">Private development preview · sample names and table positions</p><SeatingGuide data={previewFixture(preview)} /></main>
     : <GuestPage />,
 );

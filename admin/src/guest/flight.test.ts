@@ -4,6 +4,20 @@ import { flightViews, seatDestination } from "./flight";
 import { previewFixture } from "./previewFixtures";
 import { LED_HEIGHT, LED_WIDTH } from "../venue/venueModel";
 
+it.each([.45, 1.5])("flies to the saved couple’s table without guest seats at aspect %s", aspect => {
+  const { snapshot } = previewFixture("couple"), layout = snapshot.venueLayout!;
+  const target = { eventFurniture: "couple" as const };
+  const p = layout.eventFurniture!.couple!;
+  for (const view of ["aerial", "close-up"] as const) {
+    const end = seatDestination(snapshot, layout, target, aspect, view)!;
+    expect(end.target).toEqual([p.x, -p.y, .4]);
+    expect([...end.position, ...end.target].every(Number.isFinite)).toBe(true);
+    expect(flightViews(snapshot, layout, target, aspect, view)?.at(-1)).toEqual(end);
+  }
+  delete layout.eventFurniture;
+  expect(seatDestination(snapshot, layout, target, aspect)).toBeNull();
+});
+
 it.each([.45, 1.5])("keeps the selected seat and either LED arrangement visible at aspect %s", aspect => {
   const { snapshot } = previewFixture("split"), layout = snapshot.venueLayout!;
   const target = { tableId: "sample-long", seatNumber: 6 };

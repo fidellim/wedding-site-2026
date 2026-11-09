@@ -1,9 +1,10 @@
 import type { SeatingSnapshot } from "../domain/types";
 import { defaultVenueLayout } from "../venue/layout";
 import { partyGuide } from "./guideData";
+import { eventFurnitureEstimates } from "../venue/eventFurniture";
 
 /** Synthetic review cases, never real guest data; only mounted in Vite development. */
-export function previewFixture(kind: "single" | "split", chairsApproved = true) {
+export function previewFixture(kind: "single" | "split" | "couple", chairsApproved = true) {
   const layout = defaultVenueLayout();
   layout.tables = {
     "sample-round": { x: -5, y: -4, rotation: 0, width: 1.8, depth: 1.8, dimensionsVerified: false },
@@ -19,5 +20,12 @@ export function previewFixture(kind: "single" | "split", chairsApproved = true) 
     seats: ["sample-round", "sample-long"].flatMap(tableId => Array.from({ length: 8 }, (_, i) => ({ id: `${tableId}-${i + 1}`, tableId, number: i + 1 }))),
     assignments: [{ inviteeId: "Alex", seatId: "sample-round-3" }, ...(kind === "split" ? [{ inviteeId: "Jamie", seatId: "sample-long-6" }] : [])],
   };
+  if (kind === "couple") {
+    party.id = "fidel-jileen";
+    party.label = "Couple’s table preview";
+    snapshot.invitees = [];
+    snapshot.assignments = [];
+    layout.eventFurniture = eventFurnitureEstimates(layout);
+  }
   return partyGuide(snapshot, party.id, chairsApproved)!;
 }

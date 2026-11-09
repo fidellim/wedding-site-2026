@@ -11,6 +11,15 @@ vi.mock("../venue/VenueCanvas", () => ({
 afterEach(cleanup);
 const request = async () => JSON.parse((await screen.findByTestId("camera-request")).textContent!);
 
+it("automatically tours the couple’s table and supports replay and close-up without a seat number", async () => {
+  render(<SeatingGuide data={previewFixture("couple", false)} />);
+  expect(await request()).toMatchObject({ tour: true, view: "aerial", target: { eventFurniture: "couple" } });
+  fireEvent.click(screen.getByRole("button", { name: "Close-up" }));
+  expect(await request()).toMatchObject({ tour: false, view: "close-up", target: { eventFurniture: "couple" } });
+  fireEvent.click(screen.getByRole("button", { name: "Show our table" }));
+  expect((await request()).target).toEqual({ eventFurniture: "couple" });
+});
+
 it("uses the saved crew visibility in the guest 3D view", async () => {
   const data = previewFixture("single");
   data.snapshot.venueLayout!.productionTablesVisible = false;
